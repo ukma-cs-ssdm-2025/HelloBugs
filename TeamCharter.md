@@ -47,7 +47,7 @@
     - Допомагаємо та ділимось знаннями  
     - Чесне та відкрите спілкування щодо проекту  
 ## 8. Підписи  
-- [ ] Демʼянік Катерина (GitHub: @KaterinaDemianik)  
+- [x] Демʼянік Катерина (GitHub: @KaterinaDemianik)  
 - [x] Правило Анастасія (GitHub: @AnastasiiaPravylo)  
 - [ ] Сич Анастасія (GitHub: @nstyaqs)  
 - [ ] Титаренко Владислава (GitHub: @wrthsuii)  
