@@ -49,5 +49,5 @@
 ## 8. Підписи  
 - [x] Демʼянік Катерина (GitHub: @KaterinaDemianik)  
 - [x] Правило Анастасія (GitHub: @AnastasiiaPravylo)  
-- [ ] Сич Анастасія (GitHub: @nstyaqs)  
+- [x] Сич Анастасія (GitHub: @nstyaqs)  
 - [ ] Титаренко Владислава (GitHub: @wrthsuii)  
