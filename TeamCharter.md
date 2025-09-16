@@ -50,4 +50,4 @@
 - [x] Демʼянік Катерина (GitHub: @KaterinaDemianik)  
 - [x] Правило Анастасія (GitHub: @AnastasiiaPravylo)  
 - [x] Сич Анастасія (GitHub: @nstyaqs)  
-- [ ] Титаренко Владислава (GitHub: @wrthsuii)  
+- [x] Титаренко Владислава (GitHub: @wrthsuii)  
