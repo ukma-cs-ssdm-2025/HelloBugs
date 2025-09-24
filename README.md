@@ -1,4 +1,5 @@
 # HelloBugs
+[![CI Test](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml/badge.svg?branch=main)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml)
 
 ## Інформація про команду
 **Склад:**
@@ -7,5 +8,9 @@
 - Сич Анастасія КН-3
 - Титаренко Владислава КН-3 
 
+## Артефакти вимог
 
-[![CI Test](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml/badge.svg?branch=main)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml)
+**Документи з усіма вимогами:**
+- [Користувацькі історії](./docs/requirements/user-stories.md)  
+- [Нефункціональні вимоги](./docs/requirements/requirements.md)  
+- [Матриця простежуваності вимог (RTM)](./docs/requirements/rtm.md)
