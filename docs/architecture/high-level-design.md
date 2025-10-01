@@ -48,10 +48,10 @@
 - Додатково використано Redis для кешування часто використовуваних даних, що *підвищує швидкодію системи*, а Docker *забезпечує стабільне середовище розробки та швидке розгортання на будь-якому сервері*.
 
 ## Технологічний стек
-**Frontend:** HTML, CSS, JavaScript 
-**Backend:** Python, Flask 
-**База даних:** PostgreSQL  
-**Інше:** Docker, Redis  
+**Frontend:** HTML, CSS, JavaScript  
+**Backend:** Python, Flask  
+**База даних:** PostgreSQL   
+**Інше:** Docker, Redis   
 
 ## Як компоненти взаємодіють
 -Frontend і Backend через REST API (HTTPS, JSON)   
