@@ -54,8 +54,8 @@
 **Інше:** Docker, Redis   
 
 ## Як компоненти взаємодіють
--Frontend і Backend через REST API (HTTPS, JSON)   
--AuthService видає JWT токени, які використовуються для авторизації у всіх запитах  
--Backend сервіси (Booking, Admin, Reception, User) працюють із базою даних PostgreSQL  
--Redis використовується як кеш для зменшення навантаження на БД   
--NotificationService відправляє email-повідомлення після створення чи зміни бронювання  
+- Frontend і Backend через REST API (HTTPS, JSON)   
+- AuthService видає JWT токени, які використовуються для авторизації у всіх запитах  
+- Backend сервіси (Booking, Admin, Reception, User) працюють із базою даних PostgreSQL  
+- Redis використовується як кеш для зменшення навантаження на БД   
+- NotificationService відправляє email-повідомлення після створення чи зміни бронювання  
