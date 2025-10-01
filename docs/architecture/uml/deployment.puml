@@ -1,0 +1,86 @@
+@startuml
+title Deployment Diagram: Hotel Reservation System\n(Client-Server Architecture)
+
+skinparam node {
+    BackgroundColor<<client>> LightBlue
+    BackgroundColor<<server>> LightGreen
+    BackgroundColor<<database>> LightYellow
+    BackgroundColor<<external>> LightPink
+}
+
+node "Guest Device" <<client>> as GuestNode {
+    component "Web Browser" as GuestBrowser {
+        artifact "Guest UI" as GuestUI
+    }
+}
+
+node "Staff Device" <<client>> as StaffNode {
+    component "Web Browser" as StaffBrowser {
+        artifact "Reception UI" as ReceptionUI
+        artifact "Admin UI" as AdminUI
+    }
+}
+
+node "Application Server" <<server>> as AppServer {
+    component "Flask Backend\n(via Gunicorn)" as FlaskApp {
+        artifact "BookingService" as BS
+        artifact "UserService" as US
+        artifact "AuthService" as AS
+        artifact "AdminService" as AdminS
+        artifact "ReceptionService" as RS
+        artifact "NotificationService" as NS
+    }
+}
+
+node "Database Server" <<database>> as DBServer {
+    database "PostgreSQL 15" as DB {
+        folder "Tables" {
+            artifact "Account"
+            artifact "Guest"
+            artifact "Booking"
+            artifact "Room"
+            artifact "Amenity"
+            artifact "RoomAmenity"
+            artifact "Rating"
+            artifact "Notification"
+        }
+    }
+}
+
+cloud "External Services" <<external>> {
+    artifact "Email Server\nSMTP" as EmailServer
+}
+
+GuestNode --> AppServer : HTTPS (443)\nREST API + JWT
+StaffNode --> AppServer : HTTPS (443)\nREST API + JWT
+
+AppServer --> DBServer : TCP/IP (5432)\nSQL + SSL/TLS
+
+AppServer --> EmailServer : SMTP (587)\nTLS
+
+note right of AppServer
+    **Backend Server:**
+    - Python 3.11 + Flask 3.0
+    - WSGI: Gunicorn
+    - Port: 5000 (internal)
+    - JWT authentication
+    - Rate limiting
+end note
+
+note right of DBServer
+    **Database:**
+    - PostgreSQL 15
+    - Port: 5432
+    - SSL/TLS encrypted
+    - Connection pooling
+    - Daily backups
+end note
+
+note top of GuestNode
+    **Client Requirements:**
+    - Modern browser
+    - JavaScript enabled
+    - HTTPS support
+end note
+
+@enduml
