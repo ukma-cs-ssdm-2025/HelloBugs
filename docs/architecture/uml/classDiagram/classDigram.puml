@@ -1,0 +1,190 @@
+@startuml
+title Діаграма класів системи бронювання готелю
+
+skinparam class {
+    BackgroundColor LightYellow
+    ArrowColor Black
+    BorderColor Black
+}
+
+enum UserRole {
+    CUSTOMER
+    STAFF
+    ADMIN
+}
+
+enum BookingStatus {
+    ACTIVE
+    COMPLETED
+    CANCELLED
+}
+
+enum RoomStatus {
+    AVAILABLE
+    OCCUPIED
+    MAINTENANCE
+}
+
+enum RoomType {
+    ECONOMY
+    STANDARD
+    DELUXE
+}
+
+enum NotificationType {
+    CONFIRMATION
+    REMINDER
+    CANCELLATION
+}
+
+
+' Класи системи
+class Account {
+    - accountId: Integer
+    - email: String
+    - password: String
+    - firstName: String
+    - lastName: String
+    - phone: String
+    - role: UserRole
+    - createdAt: DateTime
+    __
+    + register(): Boolean
+    + login(): String
+    + checkRole(): UserRole
+    + resetPassword(): Boolean
+}
+
+class CustomerAccount {
+    + getAvailableRooms()
+    + makeBookings()
+    + getBookings()
+    + cancelBookings()
+    + rateRoom()
+    + getNotifications()
+}
+
+class StaffAccount {
+    + getBookingInfo()
+    + searchBookingByGuest()
+}
+
+class AdminAccount {
+    + createRoom()
+    + updateRoomDetails()
+    + deleteRoom()
+    + updateRoomStatus()
+    + viewBookings()
+    + viewOccupancy()
+    + generateReports()
+}
+
+class Guest {
+    - guestId: Integer
+    - email: String
+    - firstName: String
+    - lastName: String
+    - phone: String
+    __
+    + getAvailableRooms()
+    + makeBooking()
+    + getBookingByCode()
+    + cancelBookingByCode()
+    + getNotifications()   
+}
+
+class Room {
+    - roomId: Integer
+    - roomNumber: String
+    - roomType: RoomType
+    - maxGuest: Integer
+    - basePrice: Decimal
+    - status: RoomStatus
+    - description: Text
+    - floor: Integer
+    - sizeSqm: Decimal
+    - mainPhotoUrl: String
+    - photoUrls: List<String>
+    __
+    + isAvailable(): Boolean
+    + updateStatus(): Boolean
+    + getAmenities(): List<Amenity>
+    + addAmenity(): Boolean
+    + removeAmenity(): Boolean
+}
+
+class Amenity {
+    - amenityId: Integer
+    - amenityName: String
+    - iconUrl: String
+}
+
+class RoomAmenity {
+    - roomId: Integer
+    - amenityId: Integer
+    - quantity: Integer
+    - isAvailable: Boolean
+    __
+    + updateAvailability(): Boolean
+    + updateQuantity(): Boolean
+}
+
+class Booking {
+    - bookingCode: String
+    - checkInDate: Date
+    - checkOutDate: Date
+    - specialRequests: Text
+    - status: BookingStatus
+    - createdAt: DateTime
+    - updatedAt: DateTime
+    __
+    + createBooking(): Boolean
+    + generateBookingCode(): String
+    + changeStatus(): Boolean
+    + getNumberOfNights(): Integer
+    + calculateTotalPrice(): Decimal
+}
+
+class Rating {
+    - cleanliness: Integer
+    - comfort: Integer
+    - service: Integer
+    - createdAt: DateTime
+    __
+    + create(): Boolean
+    + update(): Boolean
+    + calculateOverall(): Decimal
+}
+
+class Notification {
+    - notificationId: Integer
+    - subject: String
+    - message: Text
+    - notificationType: NotificationType
+    - sentAt: DateTime
+    - status: String
+    - createdAt: DateTime
+    - errorMessage: Text
+    __
+    + send(): Boolean
+    + markAsSent(): Boolean
+    + markAsFailed(): Boolean
+}
+
+
+' Відношення між класами
+Account "1" -- "0..*" Booking : створює
+Guest "1" -- "1" Booking : робить
+Room "1" -- "0..*" Booking : бронюється
+Room "1" *-- "0..*" RoomAmenity : має >
+RoomAmenity "*" -- "1" Amenity : описує >
+Booking "1" *-- "0..*" Notification : генерує
+Booking "1" *-- "0..1" Rating : має
+Room "1" -- "0..*" Rating : оцінюється
+Account "1" -- "0..*" Rating : залишає
+
+Account <|-- CustomerAccount
+Account <|-- StaffAccount
+Account <|-- AdminAccount
+
+@enduml
