@@ -1,0 +1,52 @@
+@startuml
+actor Guest
+participant WebApp as WA
+participant BookingService as BS
+participant UserService as US
+participant AuthService as AS
+Database Database as DB
+participant NotificationService as NS
+
+
+== View and search rooms ==
+Guest -> WA: Open homepage
+WA -> BS: getAvailableRooms(checkIn, checkOut, filters)
+BS -> DB: queryAvailableRooms()
+DB --> BS: list of available rooms
+BS --> WA: show available rooms
+WA --> Guest: Display available rooms
+
+
+== Select and create booking ==
+Guest -> WA: View room details
+Guest -> WA: Click "Book"
+WA -> Guest: Show booking form (name, email, phone, specialRequests)
+
+
+== Email verification ==
+Guest -> WA: Submit booking form
+WA -> US: checkIfUserExists(email)
+alt User exists
+   US --> WA: user found
+   WA -> Guest: Suggest login
+   Guest -> WA: Enter credentials
+   WA -> AS: authenticate(email, password)
+   AS --> WA: auth success
+else User does not exist
+   US --> WA: no user
+   note right: Booking continues as guest
+end
+
+
+== Booking creation ==
+WA -> BS: createBooking(details)
+BS -> DB: insert booking record
+DB --> BS: success
+BS --> WA: booking created
+
+
+== Sending confirmation ==
+BS -> NS: sendBookingConfirmation(email, booking details)
+NS --> Guest: Confirmation email sent
+
+@enduml
