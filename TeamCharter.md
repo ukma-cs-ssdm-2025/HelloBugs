@@ -22,10 +22,10 @@
 виконує коміти.
 
 ## Додаткові ролі для лабораторної 3:
-**Architecture Lead**: Демʼянік Катерина - координує вибір стилю та діаграму компонентів.
-**Requirements-Architecture Mapper**: Сич Анастасія - створює traceability matrix.
-**UML Lead**: Титаренко Владислава - відповідає за коректність UML.
-**Documentation Lead**: Правило Анастасія - структурує Markdown + ADR.
+**Architecture Lead**: Демʼянік Катерина - координує вибір стилю та діаграму компонентів.  
+**Requirements-Architecture Mapper**: Сич Анастасія - створює traceability matrix.  
+**UML Lead**: Титаренко Владислава - відповідає за коректність UML.  
+**Documentation Lead**: Правило Анастасія - структурує Markdown + ADR.  
 
 ## 3. План комунікації  
 - Основний канал: WhatsApp  
