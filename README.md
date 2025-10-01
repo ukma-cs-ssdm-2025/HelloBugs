@@ -32,6 +32,7 @@
 - [ADR-002](./docs/architecture/decisions/ADR-002.md)
 
 **UML-діаграми:**
-- [Компонентна діаграма](./docs/architecture/uml/components.puml)
-- [Діаграма послідовності](./docs/architecture/uml/deployment.puml)
-- [Діаграму розгортання](./docs/architecture/uml/sequence.puml)
+- [Компонентна діаграма](./docs/architecture/uml/componentsDiagram/components.puml) | [PNG](./docs/architecture/uml/componentsDiagram/components.png)
+- [Діаграма класів](./docs/architecture/uml/classDiagram/classDigram.puml)| [PNG](./docs/architecture/uml/classDiagram/class-diagram.png)
+- [Діаграма послідовності](./docs/architecture/uml/sequenceDiagram/sequenceDiagram.puml) | [PNG](./docs/architecture/uml/sequenceDiagram/seqDiagram.png)
+- [Діаграма розгортання](./docs/architecture/uml/deploymentDiagram/deployment.puml) | [PNG](./docs/architecture/uml/deploymentDiagram/deployment.png)
