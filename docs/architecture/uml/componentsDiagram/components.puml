@@ -1,0 +1,98 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam component {
+    BackgroundColor<<Client>> LightBlue
+    BackgroundColor<<Server>> LightGreen
+    BackgroundColor<<Data>> LightYellow
+    BackgroundColor<<External>> LightPink
+}
+
+title Component Diagram: Hotel Reservation System\n(Client-Server Architecture)
+
+actor Guest
+actor Staff
+actor Administrator
+
+package "Client Side" <<Client>> {
+    [WebApp UI] <<Client>> as UI
+}
+
+package "Server Side (Backend)" <<Server>> {
+    [BookingService] <<Server>> as BS
+    [UserService] <<Server>> as US
+    [AuthService] <<Server>> as AS
+    [AdminService] <<Server>> as Admin
+    [ReceptionService] <<Server>> as Reception
+    [NotificationService] <<Server>> as NS
+}
+
+database "Database\n(PostgreSQL)" <<Data>> as DB
+
+cloud "External Services" <<External>> {
+    [Email Server\n(SMTP)] as Email
+}
+
+' Provided/Required Interfaces
+interface "REST API" as IREST
+interface "SQL" as ISQL
+interface "SMTP" as ISMTP
+
+Guest --> UI
+Staff --> UI
+Administrator --> UI
+
+UI --> IREST
+BS -up- IREST
+US -up- IREST
+AS -up- IREST
+Admin -up- IREST
+Reception -up- IREST
+
+BS --> ISQL
+US --> ISQL
+AS --> ISQL
+Admin --> ISQL
+Reception --> ISQL
+NS --> ISQL
+ISQL -- DB
+
+NS --> ISMTP
+ISMTP -- Email
+
+BS ..> US : verifies user
+BS ..> AS : checks auth
+BS ..> NS : triggers email
+Reception ..> BS : manages bookings
+Admin ..> BS : gets statistics
+
+note right of UI
+    **Frontend:**
+    - HTML/CSS/JavaScript
+    - React/Vue (optional)
+    - User interfaces for all roles
+end note
+
+note right of BS
+    **Backend Services:**
+    - Python + Flask
+    - REST API endpoints
+    - JWT authentication
+    - Business logic
+end note
+
+note right of DB
+    **Database:**
+    - PostgreSQL 15
+    - Tables: Account, Guest,
+      Booking, Room, Amenity,
+      RoomAmenity, Rating,
+      Notification
+end note
+
+note bottom of IREST
+    **Protocol:** HTTPS
+    **Format:** JSON
+    **Auth:** JWT tokens
+end note
+
+@enduml
