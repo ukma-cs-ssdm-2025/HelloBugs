@@ -35,7 +35,7 @@ jobs:
       run: docker build -t flask_api:latest .
 
     - name: Run tests inside container
-      run: docker run --rm flask_api:latest pytest ./tests/
+      run: docker run --rm flask_api:latest python -m pytest tests/
 
   deploy:
     runs-on: ubuntu-latest
