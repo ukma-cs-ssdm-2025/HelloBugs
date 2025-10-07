@@ -158,3 +158,35 @@ class BookingResource(MethodView):
 
             booking["updated_at"] = datetime.now()
             return booking
+
+
+
+    @blp.arguments(BookingInSchema)
+    @blp.response(200, BookingOutSchema, description="Booking replaced successfully.")
+    @blp.alt_response(404, description="Booking not found")
+    @blp.alt_response(400, description="Invalid booking data")
+    @blp.alt_response(403, description="Cannot modify completed/cancelled booking")
+    def put(self, updated_booking, booking_code):
+        """Replace a booking completely
+
+        Replace all details of an existing booking identified by booking_code.
+        The booking's code, creation date, and status remain unchanged.
+        Returns a 404 error if the booking does not exist, or a 403 error if the booking
+        is completed or cancelled.
+        """
+        booking = next((b for b in BOOKINGS if b["booking_code"] == booking_code), None)
+        if not booking:
+            abort(404, message=f"Booking with code {booking_code} not found")
+        
+        if booking["status"] in ["COMPLETED", "CANCELLED"]:
+            abort(403, message="Cannot modify completed or cancelled bookings")
+        
+        updated = dict(updated_booking)
+        updated["booking_code"] = booking["booking_code"]
+        updated["created_at"] = booking["created_at"]
+        updated["status"] = booking["status"]
+        updated["updated_at"] = datetime.now()
+        
+        index = BOOKINGS.index(booking)
+        BOOKINGS[index] = updated
+        return updated

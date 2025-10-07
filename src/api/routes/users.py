@@ -103,3 +103,22 @@ class UserResource(MethodView):
         return user
 
 
+    @blp.arguments(UserInSchema)
+    @blp.response(200, UserOutSchema, description="Replace an existing user.")
+    def put(self, updated_user, user_id):
+        """Replace a user completely
+        
+        Replace all information of an existing user identified by user_id
+        with the provided data. The user's ID and creation date remain unchanged.
+        Returns a 404 error if the user does not exist.
+        """
+        user = next((u for u in USERS if u["id"] == user_id), None)
+        if not user:
+            abort(404, message="User not found")
+        updated = dict(updated_user)
+        updated["id"] = user_id
+        updated["created_at"] = user["created_at"]
+        index = USERS.index(user)
+        USERS[index] = updated
+        return updated
+

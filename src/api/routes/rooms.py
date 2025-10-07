@@ -123,3 +123,24 @@ class RoomResource(MethodView):
             room[k] = v
         return room
 
+
+    @blp.arguments(RoomInSchema)
+    @blp.response(200, RoomOutSchema, description="Room replaced successfully.")
+    @blp.alt_response(404, description="Room not found")
+    @blp.alt_response(400, description="Invalid room data")
+    def put(self, updated_room, room_id):
+        """Replace a room completely
+        
+        Completely replace all details of an existing room identified by room_id.
+        All fields must be provided.
+        Returns a 404 error if the room does not exist.
+        """
+        room = next((r for r in ROOMS if r["id"] == room_id), None)
+        if not room:
+            abort(404, message=f"Room with ID {room_id} not found")
+       
+        updated = dict(updated_room)
+        updated["id"] = room_id
+        index = ROOMS.index(room)
+        ROOMS[index] = updated
+        return updated
