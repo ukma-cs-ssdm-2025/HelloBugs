@@ -112,7 +112,18 @@ class BookingResource(MethodView):
     @blp.alt_response(404, description="Booking not found")
     @blp.alt_response(403, description="Access denied to this booking")
     def get(self, booking_code):
-        """Get a single booking by code"""
+        """Get a single booking by code
+        
+        Retrieve detailed information about a specific booking using its unique booking code.
+        The response includes information such as customer details, room information,
+        booking dates, total price, and current booking status.
+        
+        Customers can view only their own bookings.
+        Staff and admin users can view all bookings.
+        
+        Returns a 404 error if the booking with the given code does not exist,
+        or a 403 error if the user does not have permission to view this booking.
+        """
         booking = next((b for b in BOOKINGS if b["booking_code"] == booking_code), None)
         if not booking:
             abort(404, message=f"Booking with code {booking_code} not found")

@@ -71,7 +71,12 @@ class UserResource(MethodView):
 
     @blp.response(200, UserOutSchema, description="Get a single user by id.")
     def get(self, user_id):
-        """Get a single user"""
+        """Get a single user by ID
+        
+        Retrieve detailed information about a specific user by their unique ID.
+        Includes personal information such as username, email, role, and account creation date.
+        Returns a 404 error if the user with the given ID does not exist.
+        """
         user = next((u for u in USERS if u["id"] == user_id), None)
         if not user:
             abort(404, message="User not found")
