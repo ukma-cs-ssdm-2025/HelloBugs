@@ -1,0 +1,1070 @@
+paths:
+  /api/v1/users/:
+    get:
+      responses:
+        '200':
+          description: List all users.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      summary: Get all users
+      description: 'Returns a complete list of all registered users in the system.
+
+        For admin users: returns all accounts including staff and customers.
+
+        For regular users: access is restricted.'
+      tags:
+      - Users
+    post:
+      responses:
+        '422':
+          $ref: '#/components/responses/UNPROCESSABLE_ENTITY'
+        '201':
+          description: User created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserIn'
+      summary: Create a new user
+      description: 'Creates a new user account with the provided data.
+
+        Automatically assigns a unique ID and creation timestamp.
+
+        Performs basic validation on input fields such as email, role, and password.
+
+        May reject duplicate usernames or emails to maintain uniqueness.'
+      tags:
+      - Users
+  /api/v1/users/{user_id}:
+    get:
+      responses:
+        '200':
+          description: Get a single user by id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      summary: Get a single user by ID
+      description: 'Retrieve detailed information about a specific user by their unique
+        ID.
+
+        Includes personal information such as username, email, role, and account creation
+        date.
+
+        Returns a 404 error if the user with the given ID does not exist.'
+      tags:
+      - Users
+    put:
+      responses:
+        '422':
+          $ref: '#/components/responses/UNPROCESSABLE_ENTITY'
+        '200':
+          description: Replace an existing user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserIn'
+      summary: Replace a user completely
+      description: 'Replace all information of an existing user identified by user_id
+
+        with the provided data. The user''s ID and creation date remain unchanged.
+
+        Returns a 404 error if the user does not exist.'
+      tags:
+      - Users
+    patch:
+      responses:
+        '422':
+          $ref: '#/components/responses/UNPROCESSABLE_ENTITY'
+        '404':
+          description: User not found
+        '400':
+          description: Invalid user data provided
+        '200':
+          description: Partially update a user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPatch'
+      summary: Partially update user fields
+      description: 'This endpoint allows a user to update some of their profile information.
+
+        Accessible to the user through their account.'
+      tags:
+      - Users
+    delete:
+      responses:
+        '404':
+          description: User not found
+        '204':
+          description: User deleted successfully
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      summary: Delete a user
+      description: 'Removes a user from the system by their ID.
+
+        Returns 204 No Content on success.'
+      tags:
+      - Users
+    parameters:
+    - in: path
+      name: user_id
+      required: true
+      schema:
+        type: integer
+        minimum: 0
+  /api/v1/rooms/:
+    get:
+      responses:
+        '500':
+          description: Internal server error
+        '200':
+          description: List of all rooms in the hotel.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoomOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      summary: Get all rooms
+      description: 'Returns a complete list of all rooms in the hotel system with
+        their details,
+
+        including availability status, pricing, and amenities.'
+      tags:
+      - Rooms
+    post:
+      responses:
+        '422':
+          $ref: '#/components/responses/UNPROCESSABLE_ENTITY'
+        '409':
+          description: Room with this number already exists
+        '400':
+          description: Invalid room data provided
+        '201':
+          description: Room created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomIn'
+      summary: Create a new room
+      description: 'Admin operation to add a new room to the hotel inventory.
+
+        Requires authentication with ADMIN role.'
+      tags:
+      - Rooms
+  /api/v1/rooms/{room_id}:
+    get:
+      responses:
+        '404':
+          description: Room not found
+        '200':
+          description: Room details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      summary: Get a single room by ID
+      description: 'Retrieve detailed information about a specific room including
+        all amenities,
+
+        photos, and current availability status.'
+      tags:
+      - Rooms
+    put:
+      responses:
+        '422':
+          $ref: '#/components/responses/UNPROCESSABLE_ENTITY'
+        '400':
+          description: Invalid room data
+        '404':
+          description: Room not found
+        '200':
+          description: Room replaced successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomIn'
+      summary: Replace a room completely
+      description: 'Completely replace all details of an existing room identified
+        by room_id.
+
+        All fields must be provided.
+
+        Returns a 404 error if the room does not exist.'
+      tags:
+      - Rooms
+    patch:
+      responses:
+        '422':
+          $ref: '#/components/responses/UNPROCESSABLE_ENTITY'
+        '404':
+          description: Room not found
+        '400':
+          description: Invalid room data provided
+        '200':
+          description: Partially update a room
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomPatch'
+      summary: Partially update room fields
+      description: 'This endpoint allows an admin to update some details of a room
+        in the hotel inventory,
+
+        such as status, price, or description. Accessible only to users with ADMIN
+        role.'
+      tags:
+      - Rooms
+    delete:
+      responses:
+        '404':
+          description: Room not found
+        '204':
+          description: Room deleted successfully
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      summary: Delete a room
+      description: 'Removes a room from the system by its ID.
+
+        Returns 204 No Content on success.'
+      tags:
+      - Rooms
+    parameters:
+    - in: path
+      name: room_id
+      required: true
+      schema:
+        type: integer
+        minimum: 0
+  /api/v1/bookings/:
+    get:
+      responses:
+        '500':
+          description: Internal server error
+        '200':
+          description: List of all bookings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      summary: Get all bookings
+      description: 'Returns a complete list of all bookings in the system.
+
+        For customers: returns only their own bookings.
+
+        For staff/admin: returns all bookings.'
+      tags:
+      - Bookings
+    post:
+      responses:
+        '422':
+          $ref: '#/components/responses/UNPROCESSABLE_ENTITY'
+        '404':
+          description: Room or user not found
+        '409':
+          description: Room not available for selected dates
+        '400':
+          description: Invalid booking data provided
+        '201':
+          description: Booking created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingIn'
+      summary: Create a new booking
+      description: 'Creates a new room booking for the specified dates.
+
+        Automatically generates a unique booking code.
+
+        Validates room availability and date ranges.'
+      tags:
+      - Bookings
+  /api/v1/bookings/{booking_code}:
+    get:
+      responses:
+        '403':
+          description: Access denied to this booking
+        '404':
+          description: Booking not found
+        '200':
+          description: Booking details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      summary: Get a single booking by code
+      description: 'Retrieve detailed information about a specific booking using its
+        unique booking code.
+
+        The response includes information such as customer details, room information,
+
+        booking dates, total price, and current booking status.
+
+
+        Customers can view only their own bookings.
+
+        Staff and admin users can view all bookings.
+
+
+        Returns a 404 error if the booking with the given code does not exist,
+
+        or a 403 error if the user does not have permission to view this booking.'
+      tags:
+      - Bookings
+    put:
+      responses:
+        '422':
+          $ref: '#/components/responses/UNPROCESSABLE_ENTITY'
+        '403':
+          description: Cannot modify completed/cancelled booking
+        '400':
+          description: Invalid booking data
+        '404':
+          description: Booking not found
+        '200':
+          description: Booking replaced successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingIn'
+      summary: Replace a booking completely
+      description: 'Replace all details of an existing booking identified by booking_code.
+
+        The booking''s code, creation date, and status remain unchanged.
+
+        Returns a 404 error if the booking does not exist, or a 403 error if the booking
+
+        is completed or cancelled.'
+      tags:
+      - Bookings
+    patch:
+      responses:
+        '422':
+          $ref: '#/components/responses/UNPROCESSABLE_ENTITY'
+        '404':
+          description: Booking not found
+        '403':
+          description: Cannot modify completed/cancelled booking
+        '400':
+          description: Invalid booking data provided
+        '200':
+          description: Partially update a booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingOut'
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingPatch'
+      summary: Partially update booking fields
+      description: 'This endpoint allows updating certain details of a booking.
+
+        For active bookings, multiple fields (like dates or special requests) can
+        be modified.
+
+        For completed or cancelled bookings, only the status can be corrected.
+
+        Accessible to authorized staff or admin users.'
+      tags:
+      - Bookings
+    delete:
+      responses:
+        '404':
+          description: Booking not found
+        '204':
+          description: Booking cancelled successfully
+        default:
+          $ref: '#/components/responses/DEFAULT_ERROR'
+      summary: Cancel a booking
+      description: 'Marks a booking as CANCELLED in the system.
+
+        The booking record is preserved for historical purposes.
+
+        Returns 204 No Content on success.'
+      tags:
+      - Bookings
+    parameters:
+    - in: path
+      name: booking_code
+      required: true
+      schema:
+        type: string
+        minLength: 1
+info:
+  title: Hotel Reservation API
+  version: '1.0'
+tags:
+- name: Users
+  description: Operations on users (CRUD).
+- name: Rooms
+  description: Operations on hotel rooms (CRUD). Manage room inventory, types, pricing
+    and availability.
+- name: Bookings
+  description: Operations on room bookings (CRUD). Manage reservations, check availability,
+    and handle booking lifecycle.
+openapi: 3.0.3
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: Error code
+        status:
+          type: string
+          description: Error name
+        message:
+          type: string
+          description: Error message
+        errors:
+          type: object
+          description: Errors
+          additionalProperties: {}
+      additionalProperties: false
+    PaginationMetadata:
+      type: object
+      properties:
+        total:
+          type: integer
+        total_pages:
+          type: integer
+        first_page:
+          type: integer
+        last_page:
+          type: integer
+        page:
+          type: integer
+        previous_page:
+          type: integer
+        next_page:
+          type: integer
+      additionalProperties: false
+    UserOut:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: Unique user ID
+          example: 1
+        first_name:
+          type: string
+          description: User's first name
+          example: John
+        last_name:
+          type: string
+          description: User's last name
+          example: Doe
+        email:
+          type: string
+          format: email
+          description: User email
+          example: guest@example.com
+        phone:
+          type: string
+          description: Phone in international format
+          example: '+380501234567'
+        role:
+          type: string
+          enum:
+          - CUSTOMER
+          - STAFF
+          - ADMIN
+          description: User role
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Creation timestamp
+          example: '2025-10-06T19:27:00Z'
+      required:
+      - email
+      - first_name
+      - last_name
+      - phone
+      - role
+      additionalProperties: false
+    UserIn:
+      type: object
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          description: User's first name
+          example: John
+        last_name:
+          type: string
+          minLength: 1
+          description: User's last name
+          example: Doe
+        email:
+          type: string
+          format: email
+          description: Email address
+          example: guest@example.com
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+          description: Password (min 8 chars). Will not be returned in responses.
+          example: strongP@ssw0rd
+        phone:
+          type: string
+          pattern: ^\+?[\d\s\-\(\)]+$
+          description: Phone number
+          example: '+380501234567'
+        role:
+          type: string
+          enum:
+          - CUSTOMER
+          - STAFF
+          - ADMIN
+          description: User role
+          example: CUSTOMER
+      required:
+      - email
+      - first_name
+      - last_name
+      - password
+      - phone
+      - role
+    UserPatch:
+      type: object
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          description: User's first name
+          example: John
+        last_name:
+          type: string
+          minLength: 1
+          description: User's last name
+          example: Doe
+        email:
+          type: string
+          format: email
+          description: Email address
+          example: guest@example.com
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+          description: Password (min 8 chars). Will not be returned in responses.
+          example: strongP@ssw0rd
+        phone:
+          type: string
+          pattern: ^\+?[\d\s\-\(\)]+$
+          description: Phone number
+          example: '+380501234567'
+        role:
+          type: string
+          enum:
+          - CUSTOMER
+          - STAFF
+          - ADMIN
+          description: User role
+          example: CUSTOMER
+    RoomOut:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: Unique room ID
+          example: 1
+        room_number:
+          type: string
+          description: Room number
+          example: '101'
+        room_type:
+          type: string
+          enum:
+          - ECONOMY
+          - STANDARD
+          - DELUXE
+          description: Room type
+          example: STANDARD
+        max_guest:
+          type: integer
+          description: Max guests
+          example: 2
+        base_price:
+          type: number
+          description: Price per night
+          example: '120.00'
+        status:
+          type: string
+          enum:
+          - AVAILABLE
+          - OCCUPIED
+          - MAINTENANCE
+          description: Room status
+          example: AVAILABLE
+        description:
+          type: string
+          description: Room description
+          example: Spacious room with city view
+        floor:
+          type: integer
+          description: Floor number
+          example: 2
+        size_sqm:
+          type: number
+          description: Room size (m²)
+          example: '25.0'
+        main_photo_url:
+          type: string
+          description: Main photo URL
+          example: https://example.com/rooms/101-main.jpg
+        photo_urls:
+          type: array
+          description: Additional photo URLs
+          example:
+          - https://example.com/rooms/101-1.jpg
+          items:
+            type: string
+      required:
+      - base_price
+      - description
+      - floor
+      - main_photo_url
+      - max_guest
+      - photo_urls
+      - room_number
+      - room_type
+      - size_sqm
+      - status
+      additionalProperties: false
+    RoomIn:
+      type: object
+      properties:
+        room_number:
+          type: string
+          minLength: 1
+          maxLength: 10
+          description: Unique room number
+          example: '101'
+        room_type:
+          type: string
+          enum:
+          - ECONOMY
+          - STANDARD
+          - DELUXE
+          description: Room type
+          example: STANDARD
+        max_guest:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Max guests (1-10)
+          example: 2
+        base_price:
+          type: number
+          minimum: '0'
+          description: Base price per night
+          example: '120.00'
+        status:
+          type: string
+          enum:
+          - AVAILABLE
+          - OCCUPIED
+          - MAINTENANCE
+          description: Room status
+          example: AVAILABLE
+        description:
+          type: string
+          minLength: 10
+          maxLength: 1000
+          description: Room description
+          example: Comfortable standard room
+        floor:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: Floor number
+          example: 2
+        size_sqm:
+          type: number
+          minimum: '10'
+          maximum: '500'
+          description: Room size (m²)
+          example: '25.0'
+        main_photo_url:
+          type: string
+          description: Main photo URL
+          example: https://example.com/rooms/101-main.jpg
+        photo_urls:
+          type: array
+          description: Photo URLs
+          example:
+          - https://example.com/rooms/101-1.jpg
+          items:
+            type: string
+      required:
+      - base_price
+      - description
+      - floor
+      - main_photo_url
+      - max_guest
+      - room_number
+      - room_type
+      - size_sqm
+      - status
+    RoomPatch:
+      type: object
+      properties:
+        room_number:
+          type: string
+          minLength: 1
+          maxLength: 10
+          description: Room number
+          example: '101'
+        room_type:
+          type: string
+          enum:
+          - ECONOMY
+          - STANDARD
+          - DELUXE
+          description: Room type
+          example: STANDARD
+        max_guest:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Max guests
+          example: 3
+        base_price:
+          type: number
+          minimum: '0'
+          description: Base price per night
+          example: '150.00'
+        status:
+          type: string
+          enum:
+          - AVAILABLE
+          - OCCUPIED
+          - MAINTENANCE
+          description: Room status
+          example: MAINTENANCE
+        description:
+          type: string
+          minLength: 10
+          maxLength: 1000
+          description: Description
+          example: Updated description
+        floor:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: Floor number
+          example: 2
+        size_sqm:
+          type: number
+          minimum: '10'
+          maximum: '500'
+          description: Room size (m²)
+          example: '25.0'
+        main_photo_url:
+          type: string
+          description: Main photo URL
+          example: https://example.com/rooms/101-main.jpg
+        photo_urls:
+          type: array
+          description: Photo URLs list
+          example:
+          - https://example.com/rooms/101-1.jpg
+          items:
+            type: string
+    BookingOut:
+      type: object
+      properties:
+        booking_code:
+          type: string
+          description: Unique booking code
+          example: BK001ABC
+        user_id:
+          type: integer
+          description: Registered user ID (null for guest)
+          example: 1
+          nullable: true
+        guest_email:
+          type: string
+          format: email
+          description: Guest email
+          example: guest@example.com
+        guest_first_name:
+          type: string
+          description: Guest first name
+          example: John
+        guest_last_name:
+          type: string
+          description: Guest last name
+          example: Doe
+        guest_phone:
+          type: string
+          description: Guest phone
+          example: '+380501234567'
+        room_id:
+          type: integer
+          description: Booked room ID
+          example: 1
+        check_in_date:
+          type: string
+          format: date
+          description: Check-in date
+          example: '2025-10-15'
+        check_out_date:
+          type: string
+          format: date
+          description: Check-out date
+          example: '2025-10-18'
+        special_requests:
+          type: string
+          description: Guest's special requests
+          example: Late check-in
+          nullable: true
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - COMPLETED
+          - CANCELLED
+          description: Booking status
+          example: ACTIVE
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Created at
+          example: '2025-10-06T19:27:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Updated at
+          example: '2025-10-07T10:15:00Z'
+      required:
+      - booking_code
+      - check_in_date
+      - check_out_date
+      - guest_email
+      - guest_first_name
+      - guest_last_name
+      - guest_phone
+      - room_id
+      - status
+      additionalProperties: false
+    BookingIn:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: User ID (optional for guests)
+          example: 1
+          nullable: true
+        guest_email:
+          type: string
+          format: email
+          description: Guest email
+          example: guest@example.com
+        guest_first_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Guest first name
+          example: John
+        guest_last_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Guest last name
+          example: Doe
+        guest_phone:
+          type: string
+          pattern: ^\+?[\d\s\-\(\)]+$
+          description: Guest phone number
+          example: '+380501234567'
+        room_id:
+          type: integer
+          minimum: 1
+          description: Room ID
+          example: 1
+        check_in_date:
+          type: string
+          format: date
+          description: Check-in date
+          example: '2025-10-15'
+        check_out_date:
+          type: string
+          format: date
+          description: Check-out date
+          example: '2025-10-18'
+        special_requests:
+          type: string
+          maxLength: 1000
+          description: Special requests
+          example: Extra towels
+          nullable: true
+      required:
+      - check_in_date
+      - check_out_date
+      - guest_email
+      - guest_first_name
+      - guest_last_name
+      - guest_phone
+      - room_id
+    BookingPatch:
+      type: object
+      properties:
+        guest_email:
+          type: string
+          format: email
+          description: Guest email
+          example: new@example.com
+        guest_first_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Guest first name
+          example: John
+        guest_last_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Guest last name
+          example: Doe
+        guest_phone:
+          type: string
+          pattern: ^\+?[\d\s\-\(\)]+$
+          description: Guest phone
+          example: '+380501234567'
+        room_id:
+          type: integer
+          minimum: 1
+          description: Room ID
+          example: 2
+        check_in_date:
+          type: string
+          format: date
+          description: New check-in date
+          example: '2025-10-16'
+        check_out_date:
+          type: string
+          format: date
+          description: New check-out date
+          example: '2025-10-19'
+        special_requests:
+          type: string
+          maxLength: 1000
+          description: Updated requests
+          example: Late checkout
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - COMPLETED
+          - CANCELLED
+          description: Booking status
+          example: CANCELLED
+  responses:
+    DEFAULT_ERROR:
+      description: Default error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UNPROCESSABLE_ENTITY:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
