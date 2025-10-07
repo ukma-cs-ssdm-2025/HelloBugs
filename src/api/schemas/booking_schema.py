@@ -13,7 +13,6 @@ class BookingOutSchema(Schema):
     class Meta:
         ordered = True
 
-    id = fields.Int(dump_only=True, metadata={"description": "Unique booking ID", "example": 1})
     booking_code = fields.Str(required=True, metadata={"description": "Unique booking code", "example": "BK001ABC"})
     user_id = fields.Int(allow_none=True, metadata={"description": "Registered user ID (null for guest)", "example": 1})
     guest_email = fields.Email(required=True, metadata={"description": "Guest email", "example": "guest@example.com"})
