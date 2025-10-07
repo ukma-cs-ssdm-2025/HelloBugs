@@ -1,8 +1,6 @@
 from flask import Flask
 from flask_smorest import Api
-
-
-from api.routes.users import blp as users_blp
+from routes.users import blp as users_blp
 
 app = Flask(__name__)
 app.config["API_TITLE"] = "Hotel Reservation API"
