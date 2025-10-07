@@ -1,0 +1,5 @@
+Flask==3.1.2
+flask-smorest==0.46.2
+marshmallow==4.0.1
+PyYAML==6.0.3
+Werkzeug==3.1.3
