@@ -40,13 +40,24 @@ class UserList(MethodView):
 
     @blp.response(200, UserOutSchema(many=True), description="List all users.")
     def get(self):
-        """Get all users"""
+        """Get all users
+        
+        Returns a complete list of all registered users in the system.
+        For admin users: returns all accounts including staff and customers.
+        For regular users: access is restricted.
+        """
         return USERS
 
     @blp.arguments(UserInSchema)
     @blp.response(201, UserOutSchema, description="User created successfully.")
     def post(self, new_user):
-        """Create a new user"""
+        """Create a new user
+        
+        Creates a new user account with the provided data.
+        Automatically assigns a unique ID and creation timestamp.
+        Performs basic validation on input fields such as email, role, and password.
+        May reject duplicate usernames or emails to maintain uniqueness.
+        """
         new_user = dict(new_user)
         new_user.pop("id", None)
         new_user["id"] = max((u["id"] for u in USERS), default=0) + 1
