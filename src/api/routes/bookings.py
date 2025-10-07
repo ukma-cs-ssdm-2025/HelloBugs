@@ -190,3 +190,23 @@ class BookingResource(MethodView):
         index = BOOKINGS.index(booking)
         BOOKINGS[index] = updated
         return updated
+
+    @blp.response(204, description="Booking cancelled successfully")
+    @blp.alt_response(404, description="Booking not found")
+    def delete(self, booking_code):
+        """Cancel a booking
+        
+        Marks a booking as CANCELLED in the system.
+        The booking record is preserved for historical purposes.
+        Returns 204 No Content on success.
+        """
+        booking = next((b for b in BOOKINGS if b["booking_code"] == booking_code), None)
+        if not booking:
+            abort(404, message=f"Booking with code {booking_code} not found")
+        
+        if booking["status"] == "CANCELLED":
+            return "", 204
+            
+        booking["status"] = "CANCELLED"
+        booking["updated_at"] = datetime.now()
+        return "", 204

@@ -122,3 +122,18 @@ class UserResource(MethodView):
         USERS[index] = updated
         return updated
 
+    @blp.response(204, description="User deleted successfully")
+    @blp.alt_response(404, description="User not found")
+    def delete(self, user_id):
+        """Delete a user
+        
+        Removes a user from the system by their ID.
+        Returns 204 No Content on success.
+        """
+        user = next((u for u in USERS if u["id"] == user_id), None)
+        if not user:
+            abort(404, message=f"User with ID {user_id} not found")
+        
+        USERS.remove(user)
+        return "", 204
+

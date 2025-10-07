@@ -144,3 +144,18 @@ class RoomResource(MethodView):
         index = ROOMS.index(room)
         ROOMS[index] = updated
         return updated
+
+    @blp.response(204, description="Room deleted successfully")
+    @blp.alt_response(404, description="Room not found")
+    def delete(self, room_id):
+        """Delete a room
+        
+        Removes a room from the system by its ID.
+        Returns 204 No Content on success.
+        """
+        room = next((r for r in ROOMS if r["id"] == room_id), None)
+        if not room:
+            abort(404, message=f"Room with ID {room_id} not found")
+        
+        ROOMS.remove(room)
+        return "", 204
