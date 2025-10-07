@@ -1,6 +1,6 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from api.schemas.user_schema import UserInSchema, UserOutSchema, UserPatchSchema, UserRole
+from src.api.schemas.user_schema import UserInSchema, UserOutSchema, UserPatchSchema, UserRole
 from datetime import datetime
 from flask import current_app
 
@@ -81,4 +81,25 @@ class UserResource(MethodView):
         if not user:
             abort(404, message="User not found")
         return user
+
+
+    @blp.arguments(UserPatchSchema)
+    @blp.response(200, UserOutSchema, description="Partially update a user")
+    @blp.alt_response(400, description="Invalid user data provided")
+    @blp.alt_response(404, description="User not found")
+    def patch(self, patch_data, user_id):
+        """ Partially update user fields
+
+        This endpoint allows a user to update some of their profile information.
+        Accessible to the user through their account.
+        """
+        user = next((u for u in USERS if u["id"] == user_id), None)
+        if not user:
+            abort(404, message="User not found")
+        for k, v in patch_data.items():
+            if k in ("id", "created_at"):
+                continue
+            user[k] = v
+        return user
+
 

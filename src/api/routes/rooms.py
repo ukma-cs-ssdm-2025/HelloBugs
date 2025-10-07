@@ -1,6 +1,6 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from ..schemas.room_schema import RoomInSchema, RoomOutSchema
+from ..schemas.room_schema import RoomInSchema, RoomOutSchema, RoomPatchSchema
 from datetime import datetime
 
 blp = Blueprint(
@@ -101,3 +101,25 @@ class RoomResource(MethodView):
         if not room:
             abort(404, message=f"Room with ID {room_id} not found")
         return room
+
+
+    @blp.arguments(RoomPatchSchema)
+    @blp.response(200, RoomOutSchema, description="Partially update a room")
+    @blp.alt_response(400, description="Invalid room data provided")
+    @blp.alt_response(404, description="Room not found")
+    def patch(self, patch_data, room_id):
+        """Partially update room fields
+
+        This endpoint allows an admin to update some details of a room in the hotel inventory,
+        such as status, price, or description. Accessible only to users with ADMIN role.
+        """
+        room = next((r for r in ROOMS if r["id"] == room_id), None)
+        if not room:
+            abort(404, message=f"Room with ID {room_id} not found")
+
+        for k, v in patch_data.items():
+            if k == "id":
+                continue
+            room[k] = v
+        return room
+

@@ -1,6 +1,6 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from ..schemas.booking_schema import BookingInSchema, BookingOutSchema
+from ..schemas.booking_schema import BookingInSchema, BookingOutSchema, BookingPatchSchema
 from datetime import datetime, timedelta
 import secrets
 
@@ -128,3 +128,33 @@ class BookingResource(MethodView):
         if not booking:
             abort(404, message=f"Booking with code {booking_code} not found")
         return booking
+
+
+    @blp.arguments(BookingPatchSchema)
+    @blp.response(200, BookingOutSchema, description="Partially update a booking")
+    @blp.alt_response(400, description="Invalid booking data provided")
+    @blp.alt_response(403, description="Cannot modify completed/cancelled booking")
+    @blp.alt_response(404, description="Booking not found")
+    def patch(self, patch_data, booking_code):
+        """Partially update booking fields
+
+        This endpoint allows updating certain details of a booking.
+        For active bookings, multiple fields (like dates or special requests) can be modified.
+        For completed or cancelled bookings, only the status can be corrected.
+        Accessible to authorized staff or admin users.
+        """
+        booking = next((b for b in BOOKINGS if b["booking_code"] == booking_code), None)
+        if not booking:
+            abort(404, message=f"Booking with code {booking_code} not found")
+
+        if booking["status"] in ["COMPLETED", "CANCELLED"]:
+            if set(patch_data.keys()) - {"status"}:
+                abort(403, message="Can only change status for completed/cancelled bookings")
+
+            for k, v in patch_data.items():
+                if k in ("booking_code", "created_at"):
+                    continue
+                booking[k] = v
+
+            booking["updated_at"] = datetime.now()
+            return booking
