@@ -1,5 +1,6 @@
 # HelloBugs
 [![CI Test](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml/badge.svg?branch=main)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml)
+[![Flask API CI/CD](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml/badge.svg)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml)
 
 ## Інформація про команду
 **Склад:**
@@ -36,3 +37,30 @@
 - [Діаграма класів](./docs/architecture/uml/classDiagram/classDigram.puml)| [PNG](./docs/architecture/uml/classDiagram/class-diagram.png)
 - [Діаграма послідовності](./docs/architecture/uml/sequenceDiagram/sequenceDiagram.puml) | [PNG](./docs/architecture/uml/sequenceDiagram/seqDiagram.png)
 - [Діаграма розгортання](./docs/architecture/uml/deploymentDiagram/deployment.puml) | [PNG](./docs/architecture/uml/deploymentDiagram/deployment.png)
+
+**Документація API**
+- [API Design Documentation](docs/api/api-design.md)  
+- [Quality Attributes](docs/api/quality-attributes.md)  
+- GitHub Pages: [https://ukma-cs-ssdm-2025.github.io/HelloBugs/](https://ukma-cs-ssdm-2025.github.io/HelloBugs/)
+
+
+## Як запустити проєкт
+
+### Передумови
+- Акаунт на [Docker Hub](https://www.docker.com/products/docker-hub/)
+- Встановлений [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+### 0. Клонувати репозиторій
+```bash
+git clone https://github.com/ukma-cs-ssdm-2025/HelloBugs.git
+cd HelloBugs
+```
+### 1. Завантажити образ з Docker Hub
+```bash
+docker pull wrthsuii/flask_api:latest
+```
+### 2. Запустити контейнер
+```bash
+docker run -p 3000:3000 wrthsuii/flask_api:latest
+```
+Додаток буде доступний за адресою: http://localhost:3000.

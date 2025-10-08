@@ -4,7 +4,7 @@ from src.api.app import app, api
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-docs_dir = os.path.join(project_root, "docs", "api")
+docs_dir = os.path.join(project_root, "docs")
 os.makedirs(docs_dir, exist_ok=True)
 
 yaml_path = os.path.join(docs_dir, "openapi-generated.yaml")

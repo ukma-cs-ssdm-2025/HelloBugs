@@ -22,4 +22,4 @@ api.register_blueprint(rooms_blp)
 api.register_blueprint(bookings_blp)
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    app.run(port=3000, debug=True)
