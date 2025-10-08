@@ -37,3 +37,8 @@
 - [Діаграма класів](./docs/architecture/uml/classDiagram/classDigram.puml)| [PNG](./docs/architecture/uml/classDiagram/class-diagram.png)
 - [Діаграма послідовності](./docs/architecture/uml/sequenceDiagram/sequenceDiagram.puml) | [PNG](./docs/architecture/uml/sequenceDiagram/seqDiagram.png)
 - [Діаграма розгортання](./docs/architecture/uml/deploymentDiagram/deployment.puml) | [PNG](./docs/architecture/uml/deploymentDiagram/deployment.png)
+
+**Документація API**
+- [API Design Documentation](docs/api/api-design.md)  
+- [Quality Attributes](docs/api/quality-attributes.md)  
+- GitHub Pages: [https://ukma-cs-ssdm-2025.github.io/HelloBugs/](https://ukma-cs-ssdm-2025.github.io/HelloBugs/)
