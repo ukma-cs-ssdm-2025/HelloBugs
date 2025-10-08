@@ -42,3 +42,25 @@
 - [API Design Documentation](docs/api/api-design.md)  
 - [Quality Attributes](docs/api/quality-attributes.md)  
 - GitHub Pages: [https://ukma-cs-ssdm-2025.github.io/HelloBugs/](https://ukma-cs-ssdm-2025.github.io/HelloBugs/)
+
+
+## Як запустити проєкт
+
+### Передумови
+- Акаунт на [Docker Hub](https://www.docker.com/products/docker-hub/)
+- Встановлений [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+### 0. Клонувати репозиторій
+```bash
+git clone https://github.com/ukma-cs-ssdm-2025/HelloBugs.git
+cd HelloBugs
+```
+### 1. Завантажити образ з Docker Hub
+```bash
+docker pull wrthsuii/flask_api:latest
+```
+### 2. Запустити контейнер
+```bash
+docker run -p 3000:3000 wrthsuii/flask_api:latest
+```
+Додаток буде доступний за адресою: http://localhost:3000.
