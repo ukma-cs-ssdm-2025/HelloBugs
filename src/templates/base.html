@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Готель Хрещатик{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-top">
+                <div class="header-address">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 0C4.69 0 2 2.69 2 6c0 4.5 6 10 6 10s6-5.5 6-10c0-3.31-2.69-6-6-6zm0 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="#B8963E"/>
+                    </svg>
+                    <span>м. Київ, Хрещатик, 5</span>
+                </div>
+                <div class="header-logo">
+                    <a href="/">
+                        <h1>Хрещатик</h1>
+                    </a>
+                </div>
+                <div class="header-contacts">
+                    <div class="contact-item">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M3.5 1.5A2.5 2.5 0 011 4v8a2.5 2.5 0 002.5 2.5h9A2.5 2.5 0 0014.5 12V4a2.5 2.5 0 00-2.5-2.5h-9zM2 4a1.5 1.5 0 011.5-1.5h9A1.5 1.5 0 0114 4v.217l-5.928 4.428a.5.5 0 01-.594 0L2 4.217V4z" fill="#B8963E"/>
+                        </svg>
+                        <span>+380 95 666 66 66</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="nav">
+                <ul class="nav-list">
+                    <li class="nav-item dropdown">
+                        <a href="/about" class="nav-link">♦ ПРО ГОТЕЛЬ</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/about/reviews">♦ Відгуки</a></li>
+                            <li><a href="/about/rules">♦ Правила проживання</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a href="/rooms" class="nav-link">♦ НОМЕРИ</a></li>
+                    <li class="nav-item"><a href="/booking" class="nav-link">♦ БРОНЮВАННЯ</a></li>
+                    <li class="nav-item"><a href="/contacts" class="nav-link">♦ КОНТАКТИ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Готель Хрещатик</h3>
+                    <p>м. Київ, Хрещатик, 5</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Контакти</h3>
+                    <p>Телефон: +38 095 666 66 66</p>
+                    <p>Email: info@hotel_chreshatyk.com</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Режим роботи</h3>
+                    <p>Цілодобово</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Готель Хрещатик. Всі права захищені.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

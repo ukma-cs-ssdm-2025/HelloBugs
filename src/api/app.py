@@ -1,11 +1,22 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_smorest import Api
+from flask_cors import CORS
 from src.api.routes.users import blp as users_blp
 from src.api.routes.rooms import blp as rooms_blp
 from src.api.routes.bookings import blp as bookings_blp
+import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.dirname(BASE_DIR) 
 
-app = Flask(__name__)
+template_dir = os.path.join(PARENT_DIR, 'templates')
+static_dir = os.path.join(PARENT_DIR, 'static')
+
+app = Flask(__name__, 
+            template_folder=template_dir,
+            static_folder=static_dir)
+
+CORS(app)
 app.config["API_TITLE"] = "Hotel Reservation API"
 app.config["API_VERSION"] = "1.0"
 app.config["API_PREFIX"] = "/api/v1"
@@ -20,6 +31,12 @@ api = Api(app)
 api.register_blueprint(users_blp)
 api.register_blueprint(rooms_blp)
 api.register_blueprint(bookings_blp)
+
+
+@app.route('/')
+def index():
+    """Головна сторінка"""
+    return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(port=3000, debug=True)
