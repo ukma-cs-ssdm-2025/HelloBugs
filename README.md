@@ -63,4 +63,10 @@ docker pull wrthsuii/flask_api:latest
 ```bash
 docker run -p 3000:3000 wrthsuii/flask_api:latest
 ```
-Додаток буде доступний за адресою: http://localhost:3000.
+Додаток буде доступний за адресою: http://localhost:3000
+
+Також автоматично розгорнутий за посиланнями: 
+
+🌓 **Staging версія:** https://hellobugs-hotel-staging.up.railway.app/
+
+🌕️ **Production версія:** https://hellobugs-hotel-production.up.railway.app/
