@@ -39,8 +39,8 @@ enum NotificationType {
 
 
 ' Класи системи
-class Account {
-    - accountId: Integer
+class User {
+    - user_id: Integer
     - email: String
     - password: String
     - firstName: String
@@ -48,7 +48,13 @@ class Account {
     - phone: String
     - role: UserRole
     - createdAt: DateTime
-    __
+    - isRegistered: Boolean
+    --
+    + getAvailableRooms()
+    + makeBooking()
+    + getBookingByCode()
+    + cancelBookingByCode()
+    + getNotifications()
     + register(): Boolean
     + login(): String
     + checkRole(): UserRole
@@ -56,12 +62,9 @@ class Account {
 }
 
 class CustomerAccount {
-    + getAvailableRooms()
-    + makeBookings()
     + getBookings()
     + cancelBookings()
     + rateRoom()
-    + getNotifications()
 }
 
 class StaffAccount {
@@ -77,20 +80,6 @@ class AdminAccount {
     + viewBookings()
     + viewOccupancy()
     + generateReports()
-}
-
-class Guest {
-    - guestId: Integer
-    - email: String
-    - firstName: String
-    - lastName: String
-    - phone: String
-    __
-    + getAvailableRooms()
-    + makeBooking()
-    + getBookingByCode()
-    + cancelBookingByCode()
-    + getNotifications()   
 }
 
 class Room {
@@ -173,18 +162,17 @@ class Notification {
 
 
 ' Відношення між класами
-Account "1" -- "0..*" Booking : створює
-Guest "1" -- "1" Booking : робить
+User "1" -- "0..*" Booking : створює
 Room "1" -- "0..*" Booking : бронюється
 Room "1" *-- "0..*" RoomAmenity : має >
 RoomAmenity "*" -- "1" Amenity : описує >
 Booking "1" *-- "0..*" Notification : генерує
 Booking "1" *-- "0..1" Rating : має
 Room "1" -- "0..*" Rating : оцінюється
-Account "1" -- "0..*" Rating : залишає
+User "1" -- "0..*" Rating : залишає
 
-Account <|-- CustomerAccount
-Account <|-- StaffAccount
-Account <|-- AdminAccount
+User <|-- CustomerAccount
+User <|-- StaffAccount
+User <|-- AdminAccount
 
 @enduml
