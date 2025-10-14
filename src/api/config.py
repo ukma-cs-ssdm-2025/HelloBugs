@@ -14,8 +14,25 @@ class Config:
 
 
 class DevelopmentConfig(Config):
+    """
+    Локальна розробка
+    """
     DEBUG = True
     ENV = 'development'
+
+
+class TestingConfig(Config):
+    """
+    Винятково для тестування
+    """
+    TESTING = True
+    DEBUG = True
+    ENV = 'testing'
+    DATABASE_URL = "postgresql://postgres:password123@db_test:5432/hotel_db_test"
+
+
+    if 'test' not in DATABASE_URL:
+        raise RuntimeError(f"Unsafe DATABASE_URL for testing: {DATABASE_URL}")
 
 
 class StagingConfig(Config):
@@ -35,5 +52,7 @@ def get_config():
         return ProductionConfig
     elif env == 'staging':
         return StagingConfig
+    elif env == 'testing':
+        return TestingConfig
     else:
         return DevelopmentConfig

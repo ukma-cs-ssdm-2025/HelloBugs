@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    environment:
+      - FLASK_APP=src/api/app.py
+      - DATABASE_URL=postgresql://postgres:password123@db_local:5432/hotel_db
+      - PYTHONPATH=/app
+    depends_on:
+      - db_local
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    command: flask run --host=0.0.0.0 --port=3000
+
+  db_local:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: hotel_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5433:5432"
+    volumes:
+      - hotel_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hotel_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  hotel_db_data:

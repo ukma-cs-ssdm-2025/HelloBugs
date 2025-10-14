@@ -15,10 +15,6 @@ class BookingOutSchema(Schema):
 
     booking_code = fields.Str(required=True, metadata={"description": "Unique booking code", "example": "BK001ABC"})
     user_id = fields.Int(allow_none=True, metadata={"description": "Registered user ID (null for guest)", "example": 1})
-    guest_email = fields.Email(required=True, metadata={"description": "Guest email", "example": "guest@example.com"})
-    guest_first_name = fields.Str(required=True, metadata={"description": "Guest first name", "example": "John"})
-    guest_last_name = fields.Str(required=True, metadata={"description": "Guest last name", "example": "Doe"})
-    guest_phone = fields.Str(required=True, metadata={"description": "Guest phone", "example": "+380501234567"})
     room_id = fields.Int(required=True, metadata={"description": "Booked room ID", "example": 1})
     check_in_date = fields.Date(required=True, metadata={"description": "Check-in date", "example": "2025-10-15"})
     check_out_date = fields.Date(required=True, metadata={"description": "Check-out date", "example": "2025-10-18"})
@@ -35,10 +31,6 @@ class BookingInSchema(Schema):
         ordered = True
 
     user_id = fields.Int(allow_none=True, metadata={"description": "User ID (optional for guests)", "example": 1})
-    guest_email = fields.Email(required=True, metadata={"description": "Guest email", "example": "guest@example.com"})
-    guest_first_name = fields.Str(required=True, validate=validate.Length(min=1, max=100), metadata={"description": "Guest first name", "example": "John"})
-    guest_last_name = fields.Str(required=True, validate=validate.Length(min=1, max=100), metadata={"description": "Guest last name", "example": "Doe"})
-    guest_phone = fields.Str(required=True, validate=validate.Regexp(r'^\+?[\d\s\-\(\)]+$'), metadata={"description": "Guest phone number", "example": "+380501234567"})
     room_id = fields.Int(required=True, validate=validate.Range(min=1), metadata={"description": "Room ID", "example": 1})
     check_in_date = fields.Date(required=True, metadata={"description": "Check-in date", "example": "2025-10-15"})
     check_out_date = fields.Date(required=True, metadata={"description": "Check-out date", "example": "2025-10-18"})
@@ -57,10 +49,6 @@ class BookingPatchSchema(Schema):
         unknown = EXCLUDE
         ordered = True
 
-    guest_email = fields.Email(metadata={"description": "Guest email", "example": "new@example.com"})
-    guest_first_name = fields.Str(validate=validate.Length(min=1, max=100), metadata={"description": "Guest first name", "example": "John"})
-    guest_last_name = fields.Str(validate=validate.Length(min=1, max=100), metadata={"description": "Guest last name", "example": "Doe"})
-    guest_phone = fields.Str(validate=validate.Regexp(r'^\+?[\d\s\-\(\)]+$'), metadata={"description": "Guest phone", "example": "+380501234567"})
     room_id = fields.Int(validate=validate.Range(min=1), metadata={"description": "Room ID", "example": 2})
     check_in_date = fields.Date(metadata={"description": "New check-in date", "example": "2025-10-16"})
     check_out_date = fields.Date(metadata={"description": "New check-out date", "example": "2025-10-19"})
