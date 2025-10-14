@@ -9,10 +9,11 @@ from .db import db
 # Secret key for JWT - in production, use a strong secret key from environment variables
 SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
 
-def create_token(user_id, is_admin=False):
+def create_token(user_id, role=None, is_admin=False):
     """Generate JWT token for a user"""
     payload = {
         'user_id': user_id,
+        'role': role,
         'is_admin': is_admin,
         'exp': datetime.utcnow() + timedelta(days=1)  # Token expires in 1 day
     }
@@ -64,6 +65,36 @@ def admin_required(f):
             return jsonify({'message': 'Admin access required'}), 403
         return f(*args, **kwargs)
     return decorated
+
+def staff_required(f):
+    """Decorator to require staff privileges (STAFF or ADMIN)"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not hasattr(g, 'current_user'):
+            return jsonify({'message': 'Authentication required'}), 401
+        
+        user_role = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
+        
+        if user_role not in ['STAFF', 'ADMIN']:
+            return jsonify({'message': 'Staff access required'}), 403
+        return f(*args, **kwargs)
+    return decorated
+
+def role_required(*allowed_roles):
+    """Decorator to require specific roles"""
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if not hasattr(g, 'current_user'):
+                return jsonify({'message': 'Authentication required'}), 401
+            
+            user_role = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
+            
+            if user_role not in allowed_roles:
+                return jsonify({'message': f'Access denied. Required roles: {", ".join(allowed_roles)}'}), 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
 
 def login_required_web(f):
     """Decorator for web routes that require authentication"""

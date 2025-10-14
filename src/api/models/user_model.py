@@ -55,7 +55,8 @@ class User(Base):
     def generate_auth_token(self):
         """Generate JWT token for the user."""
         from ..auth import create_token
-        return create_token(self.user_id, self.role == UserRole.ADMIN)
+        role_value = self.role.value if self.role else 'GUEST'
+        return create_token(self.user_id, role=role_value, is_admin=self.role == UserRole.ADMIN)
     
     @staticmethod
     def verify_auth_token(token):
@@ -77,6 +78,20 @@ class User(Base):
     def is_staff(self):
         """Check if user has staff role."""
         return self.role in [UserRole.STAFF, UserRole.ADMIN]
+    
+    @property
+    def is_guest(self):
+        """Check if user has guest role."""
+        return self.role == UserRole.GUEST
+    
+    def get_role_name(self):
+        """Get user role name in Ukrainian."""
+        role_names = {
+            UserRole.GUEST: 'Гість',
+            UserRole.STAFF: 'Співробітник',
+            UserRole.ADMIN: 'Адміністратор'
+        }
+        return role_names.get(self.role, 'Невідомо')
 
 
 # @event.listens_for(User.__table__, 'after_create')
