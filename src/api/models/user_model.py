@@ -3,7 +3,7 @@ from src.api.db import Base, db
 from sqlalchemy.orm import relationship
 import enum
 import datetime
-import bcrypt
+# import bcrypt
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 
