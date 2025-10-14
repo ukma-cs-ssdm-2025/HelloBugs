@@ -90,6 +90,7 @@ def register_page():
     """Реєстрація в системі"""
     return render_template('register.html')
 
+<<<<<<< HEAD
 @app.route('/logout')
 def logout():
     """Вихід з системи"""
@@ -110,6 +111,17 @@ def admin_panel():
     """Адмін панель"""
     from flask import g
     return render_template('admin.html', user=g.current_user)
+=======
+@app.route('/booking')
+def bookings_page():
+    """Бронювання"""
+    return render_template('bookings.html')
+
+@app.route('/booking/create')
+def booking_create():
+    """Форма створення бронювання"""
+    return render_template('booking_create.html')
+>>>>>>> 2e8508d (Add bookings and bookings_create pages)
 
 if __name__ == "__main__":
     # Create tables if they don't exist

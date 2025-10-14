@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span>Поверх: ${room.floor}</span>
                             <span>Площа: ${room.size_sqm} м²</span>
                         </div>
-                        <button class="btn btn-primary">Забронювати</button>
+                        <button class="btn btn-primary" onclick="bookRoom(${room.id})">Забронювати</button>
                     </div>
                 `;
                 roomsContainer.appendChild(card);
@@ -40,6 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
         applyBtn.addEventListener('click', applyFilters);
     }
 });
+
+function bookRoom(roomId) {
+    localStorage.setItem('selected_room_id', roomId);
+    
+    window.location.href = `/booking/create?room_id=${roomId}`;
+}
 
 function applyFilters() {
     const capacity = document.getElementById('filter-capacity').value;
@@ -87,3 +93,5 @@ function applyFilters() {
         existingMessage.remove();
     }
 }
+
+window.bookRoom = bookRoom;

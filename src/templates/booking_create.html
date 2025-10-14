@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Створити бронювання - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">СТВОРИТИ БРОНЮВАННЯ</h1>
+        <p class="page-subtitle">Заповніть форму для бронювання номера</p>
+    </div>
+</section>
+
+<section class="booking-form-section">
+    <div class="container">
+        <div class="booking-wrapper">
+            <div class="form-container">
+                <h2>Деталі бронювання</h2>
+                <form id="create-booking-form" class="booking-form">
+                    <input type="hidden" id="room_id" name="room_id">
+                    <input type="hidden" id="user_id" name="user_id">
+
+                    <div class="form-group">
+                        <label for="selected-room">Обраний номер *</label>
+                        <div class="selected-room-display" id="selected-room-display">
+                            Номер не обрано
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="check_in_date">Дата заїзду *</label>
+                            <input type="date" id="check_in_date" name="check_in_date" required class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="check_out_date">Дата виїзду *</label>
+                            <input type="date" id="check_out_date" name="check_out_date" required class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="special_requests">Особливі побажання</label>
+                        <textarea id="special_requests" name="special_requests" rows="4" class="form-input" 
+                                  placeholder="Додаткові побажання або коментарі..." maxlength="1000"></textarea>
+                        <small>Максимум 1000 символів</small>
+                    </div>
+
+                    <div class="nights-display">
+                        <span>Кількість ночей:</span>
+                        <strong id="nights-count">0</strong>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" onclick="window.location.href='/rooms'" class="btn btn-secondary">
+                            Назад до номерів
+                        </button>
+                        <button type="submit" class="btn btn-primary">СТВОРИТИ БРОНЮВАННЯ</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="booking-info">
+                <div class="info-card">
+                    <h3>Інформація про номер</h3>
+                    <div id="room-info" class="room-details-display">
+                        <p>Оберіть номер на сторінці номерів</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>Важлива інформація</h3>
+                    <ul class="info-list">
+                        <li>✓ Заселення після 14:00</li>
+                        <li>✓ Виселення до 12:00</li>
+                        <li>✓ Безкоштовне скасування за 24 години</li>
+                        <li>✓ Сніданок включено у вартість</li>
+                        <li>✓ Безкоштовний Wi-Fi</li>
+                    </ul>
+                </div>
+
+                <div class="info-card help-card">
+                    <h3>Потрібна допомога?</h3>
+                    <p>Зв'яжіться з нами:</p>
+                    <p><strong>+380 95 666 66 66</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/booking_create.js') }}"></script>
+{% endblock %}
