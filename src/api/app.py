@@ -38,5 +38,10 @@ def index():
     """Головна сторінка"""
     return render_template('index.html')
 
+@app.route('/rooms')
+def rooms_page():
+    """Каталог номерів"""
+    return render_template('rooms.html')
+
 if __name__ == "__main__":
     app.run(port=3000, debug=True)

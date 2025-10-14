@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Номери - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">НАШІ НОМЕРИ</h1>
+        <p class="page-subtitle">Оберіть ідеальний номер для вашого комфортного перебування</p>
+    </div>
+</section>
+
+<section class="filters-section">
+    <div class="container">
+        <div class="filters">
+            <div class="filter-group">
+                <label for="filter-capacity">Кількість гостей:</label>
+                <select id="filter-capacity" class="filter-select">
+                    <option value="">Всі</option>
+                    <option value="1">1 гість</option>
+                    <option value="2">2 гостей</option>
+                    <option value="3">3 гостей</option>
+                    <option value="4">4+ гостей</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="filter-price">Ціна за ніч:</label>
+                <select id="filter-price" class="filter-select">
+                    <option value="">Всі</option>
+                    <option value="0-2000">До 2000 грн</option>
+                    <option value="2000-4000">2000 - 4000 грн</option>
+                    <option value="4000-6000">4000 - 6000 грн</option>
+                    <option value="6000+">Від 6000 грн</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-primary" onclick="applyFilters()">Застосувати</button>
+        </div>
+    </div>
+</section>
+
+
+<section class="rooms-section">
+    <div class="container">
+        <div id="rooms-container" class="rooms-grid">
+            <div class="loading">Завантаження номерів...</div>
+        </div>
+    </div>
+</section>
+
+
+<section class="amenities-section">
+    <div class="container">
+        <h2 class="section-title">ЗРУЧНОСТІ В УСІХ НОМЕРАХ</h2>
+        <div class="amenities-grid">
+            <div class="amenity-item">
+                <h3>Безкоштовний Wi-Fi</h3>
+            </div>
+            <div class="amenity-item">
+                <h3>Кондиціонер</h3>
+            </div>
+            <div class="amenity-item">
+                <h3>Міні-бар</h3>
+            </div>
+            <div class="amenity-item">
+                <h3>Сейф</h3>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/rooms.js') }}"></script>
+{% endblock %}
