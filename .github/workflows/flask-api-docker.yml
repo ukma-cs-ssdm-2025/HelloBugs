@@ -73,7 +73,6 @@ jobs:
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/flask_api:latest
 
   deploy-staging:
-    name: Deploy to Staging
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
     needs: deploy-dockerhub
