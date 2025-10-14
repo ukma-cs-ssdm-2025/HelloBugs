@@ -6,7 +6,8 @@ class Config:
     DATABASE_URL = os.environ.get('DATABASE_URL')
 
     if not DATABASE_URL:
-        DATABASE_URL = 'postgresql://postgres:password123@localhost:5433/hotel_db'
+        # PostgreSQL database for development and production
+        DATABASE_URL = 'postgresql://postgres@localhost:5432/hotel_db'
 
     DEBUG = False
     TESTING = False

@@ -30,8 +30,8 @@ class Room(Base):
     main_photo_url = Column(String, nullable=True)
     photo_urls = Column(JSON, nullable=True)
 
-    bookings = relationship("Booking", back_populates="room")
-    amenities = relationship("RoomAmenity", back_populates="room")
+    # bookings = relationship("Booking", back_populates="room")
+    # amenities = relationship("RoomAmenity", back_populates="room")
 
 
 class Amenity(Base):
@@ -41,7 +41,7 @@ class Amenity(Base):
     amenity_name = Column(String, nullable=False)
     icon_url = Column(String, nullable=True)
 
-    rooms = relationship("RoomAmenity", back_populates="amenity")
+    # rooms = relationship("RoomAmenity", back_populates="amenity")
 
 
 class RoomAmenity(Base):
@@ -56,5 +56,5 @@ class RoomAmenity(Base):
         PrimaryKeyConstraint("room_id", "amenity_id", name="pk_room_amenity"),
     )
 
-    room = relationship("Room", back_populates="amenities")
-    amenity = relationship("Amenity", back_populates="rooms")
+    # room = relationship("Room", back_populates="amenities")
+    # amenity = relationship("Amenity", back_populates="rooms")

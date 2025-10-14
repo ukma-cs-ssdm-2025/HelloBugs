@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Профіль - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">Мій профіль</h1>
+        <p class="page-subtitle">Управління вашим акаунтом</p>
+    </div>
+</section>
+
+<section class="profile-section">
+    <div class="container">
+        <div class="profile-container">
+            <div class="profile-info">
+                <h2>Інформація про користувача</h2>
+                <div class="profile-details">
+                    <div class="detail-item">
+                        <label>Ім'я:</label>
+                        <span>{{ user.first_name }} {{ user.last_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email:</label>
+                        <span>{{ user.email }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Телефон:</label>
+                        <span>{{ user.phone }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Роль:</label>
+                        <span>{{ user.role.value }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Дата реєстрації:</label>
+                        <span>{{ user.created_at.strftime('%d.%m.%Y') }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-actions">
+                <h3>Дії</h3>
+                <div class="action-buttons">
+                    <a href="/bookings" class="btn btn-primary">Мої бронювання</a>
+                    <button onclick="authManager.logout()" class="btn btn-secondary">Вийти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.profile-section {
+    padding: 60px 0;
+    background-color: var(--gray-light);
+}
+
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: var(--white);
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.profile-info h2 {
+    color: var(--dark-blue);
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+.profile-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-item label {
+    font-weight: 500;
+    color: var(--gray);
+    min-width: 150px;
+}
+
+.detail-item span {
+    color: var(--dark-blue);
+    font-weight: 500;
+}
+
+.profile-actions h3 {
+    color: var(--dark-blue);
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-secondary {
+    background-color: #dc3545;
+    color: var(--white);
+    border-color: #dc3545;
+}
+
+.btn-secondary:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+@media (max-width: 768px) {
+    .detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
