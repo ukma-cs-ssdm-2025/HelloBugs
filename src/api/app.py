@@ -43,5 +43,15 @@ def rooms_page():
     """Каталог номерів"""
     return render_template('rooms.html')
 
+@app.route('/login')
+def login_page():
+    """Вхід в систему"""
+    return render_template('login.html')
+
+@app.route('/register')
+def register_page():
+    """Реєстрація в системі"""
+    return render_template('register.html')
+
 if __name__ == "__main__":
     app.run(port=3000, debug=True)

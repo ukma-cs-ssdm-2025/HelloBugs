@@ -779,3 +779,68 @@ h1, h2, h3, h4 {
         width: 100%;
     }
 }
+
+/* Вхід в систему */
+.auth-section {
+    padding: 80px 0;
+    background-color: var(--gray-light);
+}
+
+.auth-container {
+    max-width: 450px;
+    margin: 0 auto;
+    background-color: var(--white);
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.auth-title {
+    text-align: center;
+    color: var(--dark-blue);
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+    font-size: 28px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.auth-form label {
+    font-weight: 500;
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.auth-form input {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.auth-form input:focus {
+    border-color: var(--gold);
+    outline: none;
+}
+
+.auth-text {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--gray);
+}
+
+.auth-link {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+}
