@@ -7,13 +7,18 @@ services:
       - FLASK_APP=src/api/app.py
       - DATABASE_URL=postgresql://postgres:password123@db_local:5432/hotel_db
       - PYTHONPATH=/app
+      - RAILWAY_ENVIRONMENT=development
     depends_on:
-      - db_local
+      db_local:
+        condition: service_healthy
     ports:
       - "3000:3000"
     volumes:
       - .:/app
-    command: flask run --host=0.0.0.0 --port=3000
+    command: >
+      sh -c "python src/api/init_db.py &&
+             flask run --host=0.0.0.0 --port=3000"
+    working_dir: /app
 
   db_local:
     image: postgres:15
@@ -29,7 +34,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres -d hotel_db"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
 
 volumes:
   hotel_db_data:

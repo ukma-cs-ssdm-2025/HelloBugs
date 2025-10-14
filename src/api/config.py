@@ -1,4 +1,5 @@
 import os
+from sqlalchemy import create_engine
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'default-dev-secret-key-4-everyone')
@@ -6,8 +7,7 @@ class Config:
     DATABASE_URL = os.environ.get('DATABASE_URL')
 
     if not DATABASE_URL:
-        # PostgreSQL database for development and production
-        DATABASE_URL = 'postgresql://postgres@localhost:5432/hotel_db'
+        DATABASE_URL = 'postgresql://postgres@db_local:5432/hotel_db'
 
     DEBUG = False
     TESTING = False
@@ -57,3 +57,6 @@ def get_config():
         return TestingConfig
     else:
         return DevelopmentConfig
+
+ConfigClass = get_config()
+engine = create_engine(ConfigClass.DATABASE_URL)

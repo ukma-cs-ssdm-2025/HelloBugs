@@ -9,6 +9,7 @@ from src.api.routes.auth_routes import blp as auth_blp
 from src.api.auth import login_required_web, admin_required
 import os
 from dotenv import load_dotenv
+from src.api.db import create_tables
 
 # Load environment variables
 load_dotenv()
@@ -121,6 +122,5 @@ def booking_create():
 
 if __name__ == "__main__":
     # Create tables if they don't exist
-    from src.api.db import create_tables
     create_tables()
     app.run(port=3000, debug=True)
