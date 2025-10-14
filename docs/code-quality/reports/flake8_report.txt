@@ -1,0 +1,258 @@
+./src/api/app.py:10:39: W291 trailing whitespace
+./src/api/app.py:15:22: W291 trailing whitespace
+./src/api/app.py:27:80: E501 line too long (86 > 79 characters)
+./src/api/app.py:41:1: E305 expected 2 blank lines after class or function definition, found 1
+./src/api/config.py:3:1: E302 expected 2 blank lines, found 1
+./src/api/config.py:4:80: E501 line too long (82 > 79 characters)
+./src/api/config.py:9:80: E501 line too long (82 > 79 characters)
+./src/api/config.py:39:33: W292 no newline at end of file
+./src/api/db.py:1:1: F401 'os' imported but unused
+./src/api/db.py:15:1: E302 expected 2 blank lines, found 1
+./src/api/db.py:22:1: E302 expected 2 blank lines, found 1
+./src/api/db.py:23:42: W292 no newline at end of file
+./src/api/generate_openapi.py:5:80: E501 line too long (83 > 79 characters)
+./src/api/init_db.py:8:1: E302 expected 2 blank lines, found 1
+./src/api/init_db.py:30:20: W292 no newline at end of file
+./src/api/models/__init__.py:5:64: W292 no newline at end of file
+./src/api/models/booking_model.py:1:80: E501 line too long (80 > 79 characters)
+./src/api/models/booking_model.py:7:1: E302 expected 2 blank lines, found 1
+./src/api/models/booking_model.py:12:1: E302 expected 2 blank lines, found 1
+./src/api/models/booking_model.py:21:80: E501 line too long (86 > 79 characters)
+./src/api/models/booking_model.py:23:80: E501 line too long (102 > 79 characters)
+./src/api/models/room_model.py:8:1: E302 expected 2 blank lines, found 1
+./src/api/models/room_model.py:13:1: E302 expected 2 blank lines, found 1
+./src/api/models/room_model.py:18:1: E302 expected 2 blank lines, found 1
+./src/api/models/room_model.py:26:80: E501 line too long (83 > 79 characters)
+./src/api/models/room_model.py:51:80: E501 line too long (84 > 79 characters)
+./src/api/models/room_model.py:60:62: W292 no newline at end of file
+./src/api/models/user_model.py:7:1: E302 expected 2 blank lines, found 1
+./src/api/models/user_model.py:12:1: E302 expected 2 blank lines, found 1
+./src/api/models/user_model.py:40:62: W292 no newline at end of file
+./src/api/routes/bookings.py:3:80: E501 line too long (90 > 79 characters)
+./src/api/routes/bookings.py:11:80: E501 line too long (124 > 79 characters)
+./src/api/routes/bookings.py:14:12: W291 trailing whitespace
+./src/api/routes/bookings.py:48:1: E302 expected 2 blank lines, found 1
+./src/api/routes/bookings.py:52:1: E302 expected 2 blank lines, found 1
+./src/api/routes/bookings.py:55:80: E501 line too long (88 > 79 characters)
+./src/api/routes/bookings.py:59:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:67:80: E501 line too long (85 > 79 characters)
+./src/api/routes/bookings.py:73:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:79:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:82:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:85:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:88:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:91:32: W291 trailing whitespace
+./src/api/routes/bookings.py:92:39: W291 trailing whitespace
+./src/api/routes/bookings.py:94:80: E501 line too long (88 > 79 characters)
+./src/api/routes/bookings.py:96:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:98:80: E501 line too long (89 > 79 characters)
+./src/api/routes/bookings.py:99:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:104:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:108:1: E302 expected 2 blank lines, found 1
+./src/api/routes/bookings.py:111:80: E501 line too long (95 > 79 characters)
+./src/api/routes/bookings.py:116:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:117:80: E501 line too long (93 > 79 characters)
+./src/api/routes/bookings.py:118:80: E501 line too long (85 > 79 characters)
+./src/api/routes/bookings.py:120:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:123:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:125:80: E501 line too long (81 > 79 characters)
+./src/api/routes/bookings.py:127:80: E501 line too long (88 > 79 characters)
+./src/api/routes/bookings.py:133:5: E303 too many blank lines (2)
+./src/api/routes/bookings.py:134:80: E501 line too long (82 > 79 characters)
+./src/api/routes/bookings.py:136:80: E501 line too long (83 > 79 characters)
+./src/api/routes/bookings.py:142:80: E501 line too long (94 > 79 characters)
+./src/api/routes/bookings.py:146:80: E501 line too long (88 > 79 characters)
+./src/api/routes/bookings.py:152:80: E501 line too long (93 > 79 characters)
+./src/api/routes/bookings.py:164:5: E303 too many blank lines (3)
+./src/api/routes/bookings.py:165:80: E501 line too long (86 > 79 characters)
+./src/api/routes/bookings.py:168:80: E501 line too long (83 > 79 characters)
+./src/api/routes/bookings.py:174:80: E501 line too long (88 > 79 characters)
+./src/api/routes/bookings.py:177:80: E501 line too long (88 > 79 characters)
+./src/api/routes/bookings.py:180:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:183:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:189:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:198:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:203:80: E501 line too long (88 > 79 characters)
+./src/api/routes/bookings.py:206:1: W293 blank line contains whitespace
+./src/api/routes/bookings.py:209:1: W293 blank line contains whitespace
+./src/api/routes/rooms.py:4:1: F401 'datetime.datetime' imported but unused
+./src/api/routes/rooms.py:10:80: E501 line too long (107 > 79 characters)
+./src/api/routes/rooms.py:26:80: E501 line too long (100 > 79 characters)
+./src/api/routes/rooms.py:52:80: E501 line too long (139 > 79 characters)
+./src/api/routes/rooms.py:56:1: E302 expected 2 blank lines, found 1
+./src/api/routes/rooms.py:59:80: E501 line too long (95 > 79 characters)
+./src/api/routes/rooms.py:63:1: W293 blank line contains whitespace
+./src/api/routes/rooms.py:64:80: E501 line too long (84 > 79 characters)
+./src/api/routes/rooms.py:75:1: W293 blank line contains whitespace
+./src/api/routes/rooms.py:80:1: W293 blank line contains whitespace
+./src/api/routes/rooms.py:82:80: E501 line too long (92 > 79 characters)
+./src/api/routes/rooms.py:83:1: W293 blank line contains whitespace
+./src/api/routes/rooms.py:89:1: E302 expected 2 blank lines, found 1
+./src/api/routes/rooms.py:92:80: E501 line too long (89 > 79 characters)
+./src/api/routes/rooms.py:96:1: W293 blank line contains whitespace
+./src/api/routes/rooms.py:97:80: E501 line too long (84 > 79 characters)
+./src/api/routes/rooms.py:106:5: E303 too many blank lines (2)
+./src/api/routes/rooms.py:113:80: E501 line too long (94 > 79 characters)
+./src/api/routes/rooms.py:114:80: E501 line too long (88 > 79 characters)
+./src/api/routes/rooms.py:127:5: E303 too many blank lines (2)
+./src/api/routes/rooms.py:128:80: E501 line too long (80 > 79 characters)
+./src/api/routes/rooms.py:133:1: W293 blank line contains whitespace
+./src/api/routes/rooms.py:134:80: E501 line too long (81 > 79 characters)
+./src/api/routes/rooms.py:141:1: W293 blank line contains whitespace
+./src/api/routes/rooms.py:152:1: W293 blank line contains whitespace
+./src/api/routes/rooms.py:159:1: W293 blank line contains whitespace
+./src/api/routes/users.py:3:1: F401 'src.api.schemas.user_schema.UserRole' imported but unused
+./src/api/routes/users.py:3:80: E501 line too long (94 > 79 characters)
+./src/api/routes/users.py:5:1: F401 'flask.current_app' imported but unused
+./src/api/routes/users.py:38:1: E302 expected 2 blank lines, found 1
+./src/api/routes/users.py:44:1: W293 blank line contains whitespace
+./src/api/routes/users.py:55:1: W293 blank line contains whitespace
+./src/api/routes/users.py:58:80: E501 line too long (84 > 79 characters)
+./src/api/routes/users.py:67:1: W293 blank line contains whitespace
+./src/api/routes/users.py:75:1: W293 blank line contains whitespace
+./src/api/routes/users.py:77:80: E501 line too long (95 > 79 characters)
+./src/api/routes/users.py:86:5: E303 too many blank lines (2)
+./src/api/routes/users.py:93:80: E501 line too long (80 > 79 characters)
+./src/api/routes/users.py:106:5: E303 too many blank lines (2)
+./src/api/routes/users.py:110:1: W293 blank line contains whitespace
+./src/api/routes/users.py:112:80: E501 line too long (81 > 79 characters)
+./src/api/routes/users.py:129:1: W293 blank line contains whitespace
+./src/api/routes/users.py:136:1: W293 blank line contains whitespace
+./src/api/routes/users.py:139:1: W391 blank line at end of file
+./src/api/schemas/booking_schema.py:1:1: F401 'marshmallow.validates' imported but unused
+./src/api/schemas/booking_schema.py:1:80: E501 line too long (103 > 79 characters)
+./src/api/schemas/booking_schema.py:16:80: E501 line too long (116 > 79 characters)
+./src/api/schemas/booking_schema.py:17:80: E501 line too long (120 > 79 characters)
+./src/api/schemas/booking_schema.py:18:80: E501 line too long (118 > 79 characters)
+./src/api/schemas/booking_schema.py:19:80: E501 line too long (113 > 79 characters)
+./src/api/schemas/booking_schema.py:20:80: E501 line too long (110 > 79 characters)
+./src/api/schemas/booking_schema.py:21:80: E501 line too long (112 > 79 characters)
+./src/api/schemas/booking_schema.py:22:80: E501 line too long (97 > 79 characters)
+./src/api/schemas/booking_schema.py:23:80: E501 line too long (114 > 79 characters)
+./src/api/schemas/booking_schema.py:24:80: E501 line too long (116 > 79 characters)
+./src/api/schemas/booking_schema.py:25:80: E501 line too long (132 > 79 characters)
+./src/api/schemas/booking_schema.py:26:80: E501 line too long (162 > 79 characters)
+./src/api/schemas/booking_schema.py:27:80: E501 line too long (123 > 79 characters)
+./src/api/schemas/booking_schema.py:28:80: E501 line too long (123 > 79 characters)
+./src/api/schemas/booking_schema.py:37:80: E501 line too long (114 > 79 characters)
+./src/api/schemas/booking_schema.py:38:80: E501 line too long (118 > 79 characters)
+./src/api/schemas/booking_schema.py:39:80: E501 line too long (155 > 79 characters)
+./src/api/schemas/booking_schema.py:40:80: E501 line too long (152 > 79 characters)
+./src/api/schemas/booking_schema.py:41:80: E501 line too long (168 > 79 characters)
+./src/api/schemas/booking_schema.py:42:80: E501 line too long (122 > 79 characters)
+./src/api/schemas/booking_schema.py:43:80: E501 line too long (114 > 79 characters)
+./src/api/schemas/booking_schema.py:44:80: E501 line too long (116 > 79 characters)
+./src/api/schemas/booking_schema.py:45:80: E501 line too long (159 > 79 characters)
+./src/api/schemas/booking_schema.py:51:80: E501 line too long (83 > 79 characters)
+./src/api/schemas/booking_schema.py:60:80: E501 line too long (101 > 79 characters)
+./src/api/schemas/booking_schema.py:61:80: E501 line too long (140 > 79 characters)
+./src/api/schemas/booking_schema.py:62:80: E501 line too long (137 > 79 characters)
+./src/api/schemas/booking_schema.py:63:80: E501 line too long (146 > 79 characters)
+./src/api/schemas/booking_schema.py:64:80: E501 line too long (107 > 79 characters)
+./src/api/schemas/booking_schema.py:65:80: E501 line too long (103 > 79 characters)
+./src/api/schemas/booking_schema.py:66:80: E501 line too long (105 > 79 characters)
+./src/api/schemas/booking_schema.py:67:80: E501 line too long (143 > 79 characters)
+./src/api/schemas/booking_schema.py:68:80: E501 line too long (150 > 79 characters)
+./src/api/schemas/room_schema.py:22:80: E501 line too long (93 > 79 characters)
+./src/api/schemas/room_schema.py:23:80: E501 line too long (102 > 79 characters)
+./src/api/schemas/room_schema.py:24:80: E501 line too long (157 > 79 characters)
+./src/api/schemas/room_schema.py:25:80: E501 line too long (95 > 79 characters)
+./src/api/schemas/room_schema.py:26:80: E501 line too long (128 > 79 characters)
+./src/api/schemas/room_schema.py:27:80: E501 line too long (159 > 79 characters)
+./src/api/schemas/room_schema.py:28:80: E501 line too long (132 > 79 characters)
+./src/api/schemas/room_schema.py:29:80: E501 line too long (93 > 79 characters)
+./src/api/schemas/room_schema.py:30:80: E501 line too long (123 > 79 characters)
+./src/api/schemas/room_schema.py:31:80: E501 line too long (143 > 79 characters)
+./src/api/schemas/room_schema.py:32:80: E501 line too long (160 > 79 characters)
+./src/api/schemas/room_schema.py:41:80: E501 line too long (150 > 79 characters)
+./src/api/schemas/room_schema.py:42:80: E501 line too long (157 > 79 characters)
+./src/api/schemas/room_schema.py:43:80: E501 line too long (142 > 79 characters)
+./src/api/schemas/room_schema.py:44:80: E501 line too long (165 > 79 characters)
+./src/api/schemas/room_schema.py:45:80: E501 line too long (159 > 79 characters)
+./src/api/schemas/room_schema.py:46:80: E501 line too long (173 > 79 characters)
+./src/api/schemas/room_schema.py:47:80: E501 line too long (133 > 79 characters)
+./src/api/schemas/room_schema.py:48:80: E501 line too long (165 > 79 characters)
+./src/api/schemas/room_schema.py:49:80: E501 line too long (168 > 79 characters)
+./src/api/schemas/room_schema.py:50:80: E501 line too long (192 > 79 characters)
+./src/api/schemas/room_schema.py:59:80: E501 line too long (128 > 79 characters)
+./src/api/schemas/room_schema.py:60:80: E501 line too long (142 > 79 characters)
+./src/api/schemas/room_schema.py:61:80: E501 line too long (120 > 79 characters)
+./src/api/schemas/room_schema.py:62:80: E501 line too long (150 > 79 characters)
+./src/api/schemas/room_schema.py:63:80: E501 line too long (146 > 79 characters)
+./src/api/schemas/room_schema.py:64:80: E501 line too long (147 > 79 characters)
+./src/api/schemas/room_schema.py:65:80: E501 line too long (118 > 79 characters)
+./src/api/schemas/room_schema.py:66:80: E501 line too long (150 > 79 characters)
+./src/api/schemas/room_schema.py:67:80: E501 line too long (153 > 79 characters)
+./src/api/schemas/room_schema.py:68:80: E501 line too long (162 > 79 characters)
+./src/api/schemas/user_schema.py:4:1: E302 expected 2 blank lines, found 1
+./src/api/schemas/user_schema.py:10:1: E302 expected 2 blank lines, found 1
+./src/api/schemas/user_schema.py:14:80: E501 line too long (93 > 79 characters)
+./src/api/schemas/user_schema.py:15:80: E501 line too long (108 > 79 characters)
+./src/api/schemas/user_schema.py:16:80: E501 line too long (105 > 79 characters)
+./src/api/schemas/user_schema.py:17:80: E501 line too long (111 > 79 characters)
+./src/api/schemas/user_schema.py:18:80: E501 line too long (124 > 79 characters)
+./src/api/schemas/user_schema.py:19:80: E501 line too long (129 > 79 characters)
+./src/api/schemas/user_schema.py:20:80: E501 line too long (131 > 79 characters)
+./src/api/schemas/user_schema.py:23:1: E302 expected 2 blank lines, found 1
+./src/api/schemas/user_schema.py:25:26: W291 trailing whitespace
+./src/api/schemas/user_schema.py:28:80: E501 line too long (141 > 79 characters)
+./src/api/schemas/user_schema.py:29:80: E501 line too long (138 > 79 characters)
+./src/api/schemas/user_schema.py:30:80: E501 line too long (114 > 79 characters)
+./src/api/schemas/user_schema.py:31:80: E501 line too long (206 > 79 characters)
+./src/api/schemas/user_schema.py:32:80: E501 line too long (156 > 79 characters)
+./src/api/schemas/user_schema.py:33:80: E501 line too long (152 > 79 characters)
+./src/api/schemas/user_schema.py:36:1: E302 expected 2 blank lines, found 1
+./src/api/schemas/user_schema.py:41:80: E501 line too long (126 > 79 characters)
+./src/api/schemas/user_schema.py:42:80: E501 line too long (123 > 79 characters)
+./src/api/schemas/user_schema.py:43:80: E501 line too long (99 > 79 characters)
+./src/api/schemas/user_schema.py:44:80: E501 line too long (191 > 79 characters)
+./src/api/schemas/user_schema.py:45:80: E501 line too long (141 > 79 characters)
+./src/api/schemas/user_schema.py:46:80: E501 line too long (137 > 79 characters)
+./tests/conftest.py:4:1: E302 expected 2 blank lines, found 1
+./tests/conftest.py:12:1: E302 expected 2 blank lines, found 1
+./tests/conftest.py:17:1: E302 expected 2 blank lines, found 1
+./tests/test_bookings.py:26:80: E501 line too long (112 > 79 characters)
+./tests/test_bookings.py:56:80: E501 line too long (93 > 79 characters)
+./tests/test_bookings.py:64:80: E501 line too long (82 > 79 characters)
+./tests/test_bookings.py:83:80: E501 line too long (95 > 79 characters)
+./tests/test_bookings.py:86:80: E501 line too long (88 > 79 characters)
+./tests/test_bookings.py:88:80: E501 line too long (111 > 79 characters)
+./tests/test_bookings.py:89:80: E501 line too long (85 > 79 characters)
+./tests/test_bookings.py:99:80: E501 line too long (90 > 79 characters)
+./tests/test_bookings.py:115:80: E501 line too long (87 > 79 characters)
+./tests/test_bookings.py:116:80: E501 line too long (89 > 79 characters)
+./tests/test_bookings.py:117:1: W293 blank line contains whitespace
+./tests/test_bookings.py:123:1: W293 blank line contains whitespace
+./tests/test_bookings.py:125:80: E501 line too long (87 > 79 characters)
+./tests/test_bookings.py:128:80: E501 line too long (92 > 79 characters)
+./tests/test_bookings.py:129:80: E501 line too long (82 > 79 characters)
+./tests/test_bookings.py:130:80: E501 line too long (86 > 79 characters)
+./tests/test_bookings.py:131:80: E501 line too long (114 > 79 characters)
+./tests/test_bookings.py:132:80: E501 line too long (103 > 79 characters)
+./tests/test_bookings.py:133:80: E501 line too long (105 > 79 characters)
+./tests/test_bookings.py:141:80: E501 line too long (90 > 79 characters)
+./tests/test_bookings.py:145:80: E501 line too long (116 > 79 characters)
+./tests/test_bookings.py:147:80: E501 line too long (106 > 79 characters)
+./tests/test_bookings.py:149:80: E501 line too long (129 > 79 characters)
+./tests/test_rooms.py:38:80: E501 line too long (85 > 79 characters)
+./tests/test_rooms.py:72:80: E501 line too long (126 > 79 characters)
+./tests/test_rooms.py:82:24: W291 trailing whitespace
+./tests/test_rooms.py:83:80: E501 line too long (98 > 79 characters)
+./tests/test_rooms.py:87:1: E303 too many blank lines (3)
+./tests/test_rooms.py:105:80: E501 line too long (85 > 79 characters)
+./tests/test_rooms.py:111:1: W293 blank line contains whitespace
+./tests/test_rooms.py:117:80: E501 line too long (112 > 79 characters)
+./tests/test_rooms.py:140:80: E501 line too long (112 > 79 characters)
+./tests/test_rooms.py:168:80: E501 line too long (126 > 79 characters)
+./tests/test_rooms.py:170:80: E501 line too long (95 > 79 characters)
+./tests/test_users.py:3:1: E302 expected 2 blank lines, found 1
+./tests/test_users.py:14:29: W291 trailing whitespace
+25    E302 expected 2 blank lines, found 1
+7     E303 too many blank lines (2)
+1     E305 expected 2 blank lines after class or function definition, found 1
+159   E501 line too long (86 > 79 characters)
+5     F401 'os' imported but unused
+8     W291 trailing whitespace
+6     W292 no newline at end of file
+37    W293 blank line contains whitespace
+1     W391 blank line at end of file
