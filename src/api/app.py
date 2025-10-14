@@ -97,11 +97,9 @@ def logout():
     return render_template('index.html')
 
 @app.route('/profile')
-@login_required_web
 def profile():
     """Профіль користувача"""
-    from flask import g
-    return render_template('profile.html', user=g.current_user)
+    return render_template('profile.html')
 
 @app.route('/admin')
 @login_required_web

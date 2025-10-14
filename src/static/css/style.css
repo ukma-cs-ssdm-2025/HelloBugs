@@ -1398,3 +1398,180 @@ h1, h2, h3, h4 {
 .btn.btn-primary:hover {
     background-color: #a18435;
 }
+
+/* Dropdown Menu Styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: var(--white);
+    min-width: 200px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    z-index: 1000;
+    border-radius: 4px;
+    padding: 10px 0;
+    margin-top: 10px;
+    list-style: none;
+}
+
+.dropdown.show .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu li {
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 10px 20px;
+    color: var(--navy);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.dropdown-item:hover {
+    background-color: var(--gray-light);
+    color: var(--gold);
+}
+
+/* Prevent menu from closing when clicking inside */
+.dropdown-menu a {
+    display: block;
+}
+
+/* Header links hover effect */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--gold);
+}
+
+/* Login button styles */
+.login-btn {
+    background-color: var(--gold);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: var(--gold-light);
+    color: white;
+}
+
+/* Dropdown Menu Styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: var(--white);
+    min-width: 200px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    z-index: 1000;
+    border-radius: 4px;
+    padding: 10px 0;
+    margin-top: 5px;
+    list-style: none;
+}
+
+.dropdown-menu.show {
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-menu li {
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 10px 20px;
+    color: var(--navy);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.dropdown-item:hover {
+    background-color: var(--gray-light);
+    color: var(--gold);
+}
+
+/* Стилі для стрілочки */
+.dropdown-arrow {
+    font-size: 10px;
+    margin-left: 5px;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.dropdown-arrow.rotated {
+    transform: rotate(180deg);
+}
+
+/* Запобігаємо закриттю при кліку на меню */
+.dropdown-menu a {
+    display: block;
+}
+
+/* Стилі для посилань в навігації */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.3s ease;
+    position: relative;
+    padding-right: 15px;
+}
+
+.nav-link:hover {
+    color: var(--gold);
+}
+
+/* Стилі для кнопки входу */
+.login-btn {
+    background-color: var(--gold);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: var(--gold-light);
+    color: white;
+}
+
+/* Анімація для плавного з'явлення/зникнення */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

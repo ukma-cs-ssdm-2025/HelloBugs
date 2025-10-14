@@ -60,20 +60,53 @@ class AuthManager {
         
         const userMenu = document.createElement('li');
         userMenu.className = 'dropdown';
+        
         userMenu.innerHTML = `
-            <a href="#" class="nav-link">
+            <a href="#" class="nav-link dropdown-toggle">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
                 ${this.user.first_name} ${this.user.last_name}
+                <span class="dropdown-arrow">▼</span>
             </a>
             <ul class="dropdown-menu">
-                <li><a href="/profile">Мій профіль</a></li>
-                <li><a href="/bookings">Мої бронювання</a></li>
-                ${this.isAdmin() ? '<li><a href="/admin">Адмін панель</a></li>' : ''}
-                <li><a href="#" onclick="authManager.logout()">Вийти</a></li>
+                <li><a href="/profile" class="dropdown-item">Мій профіль</a></li>
+                <li><a href="/bookings" class="dropdown-item">Мої бронювання</a></li>
+                ${this.isAdmin() ? '<li><a href="/admin" class="dropdown-item">Адмін панель</a></li>' : ''}
+                <li><a href="#" class="dropdown-item" onclick="event.preventDefault(); authManager.logout()">Вийти</a></li>
             </ul>
         `;
+        
+        // Додаємо обробник подій для кліку
+        const dropdownToggle = userMenu.querySelector('.dropdown-toggle');
+        const dropdownMenu = userMenu.querySelector('.dropdown-menu');
+        const dropdownArrow = userMenu.querySelector('.dropdown-arrow');
+        
+        // Відкриття/закриття меню при кліку
+        dropdownToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isOpen = dropdownMenu.classList.contains('show');
+            
+            // Закриваємо всі інші відкриті меню
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                if (menu !== dropdownMenu) {
+                    menu.classList.remove('show');
+                    menu.closest('.dropdown').querySelector('.dropdown-arrow').classList.remove('rotated');
+                }
+            });
+            
+            // Перемикаємо поточне меню
+            dropdownMenu.classList.toggle('show');
+            dropdownArrow.classList.toggle('rotated', !isOpen);
+        });
+        
+        // Закриття меню при кліку поза ним
+        document.addEventListener('click', (e) => {
+            if (!userMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+                dropdownArrow.classList.remove('rotated');
+            }
+        });
         
         navList.appendChild(userMenu);
     }
