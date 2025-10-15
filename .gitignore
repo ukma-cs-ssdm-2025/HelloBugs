@@ -11,3 +11,6 @@ __pycache__/
 
 .venv/
 .idea/
+.env
+venv311/
+venv64/

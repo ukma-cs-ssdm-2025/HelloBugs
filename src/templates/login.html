@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Вхід - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container auth-container">
+        <h2 class="auth-title">Вхід в акаунт</h2>
+        <form id="loginForm" class="auth-form">
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+            
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Введіть email" required>
+
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" placeholder="Введіть пароль" required>
+
+            <button type="submit" class="btn btn-primary">Увійти</button>
+        </form>
+        <p class="auth-text">
+            Немає акаунта?
+            <a href="/register" class="auth-link">Зареєструйтесь</a>
+        </p>
+    </div>
+</section>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('errorMessage');
+    const successDiv = document.getElementById('successMessage');
+    
+    // Clear previous messages
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    const result = await authManager.login(email, password);
+    
+    if (result.success) {
+        successDiv.textContent = 'Успішний вхід! Перенаправлення...';
+        successDiv.style.display = 'block';
+        
+        // Redirect to home page after 1 second
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
+    } else {
+        errorDiv.textContent = result.message || 'Помилка входу';
+        errorDiv.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

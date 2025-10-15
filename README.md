@@ -1,6 +1,6 @@
 # HelloBugs
 [![CI Test](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml/badge.svg?branch=main)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml)
-[![Flask API CI/CD](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml/badge.svg)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml)
+[![CI/CD Staging](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml/badge.svg)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml)
 
 ## Інформація про команду
 **Склад:**
@@ -55,12 +55,19 @@
 git clone https://github.com/ukma-cs-ssdm-2025/HelloBugs.git
 cd HelloBugs
 ```
-### 1. Завантажити образ з Docker Hub
+### 1. Запустити додаток
 ```bash
-docker pull wrthsuii/flask_api:latest
+docker-compose up
 ```
-### 2. Запустити контейнер
+🌘 Доступний за адресою: http://localhost:3000
+
+### 2. Запустити тести 
 ```bash
-docker run -p 3000:3000 wrthsuii/flask_api:latest
+docker-compose -f docker-compose.test.yml run --rm app
 ```
-Додаток буде доступний за адресою: http://localhost:3000.
+
+### Також автоматично розгорнутий за посиланнями: 
+
+🌓 **Staging версія:** https://hellobugs-hotel-staging.up.railway.app/
+
+🌕️ **Production версія:** https://hellobugs-hotel-production.up.railway.app/

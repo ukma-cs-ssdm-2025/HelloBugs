@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Головна - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="stars">
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+        </div>
+        <h2 class="hero-title">ПРО ГОТЕЛЬ ХРЕЩАТИК</h2>
+        <div class="title-underline"></div>
+        <p class="hero-text">
+            <strong>Київ</strong> - місто контрастів, де велична історія гармонійно поєднується з 
+            сучасною динамікою, а кожна вулиця приховує власні історії й сюрпризи. Щоб зробити 
+            перебування незабутнім, варто обрати готель, який пропонує розкіш, комфорт і зручне розташування.
+        </p>
+        <p class="hero-description">
+            П’ятизірковий Готель Хрещатик знаходиться у престижному центрі Києва, усього за 
+            кілька кроків від культурних та ділових осередків міста. Гості оцінять вишукані номери
+            з панорамними вікнами, сучасні спа та ресторан із авторською кухнею. Тут кожен день 
+            перетворюється на особливий досвід – від прогулянок історичними кварталами до вечірніх
+            заходів у серці столиці.
+        </p>
+    </div>
+</section>
+
+<section class="photo-section">
+    <div class="photo-grid">
+        <div class="photo-item photo-large">
+            <img src="{{ url_for('static', filename='images/kyiv-night.jpg') }}" alt="Київ вночі">
+        </div>
+        <div class="photo-sidebar">
+            <div class="sidebar-links">
+                <a href="/rooms" class="sidebar-link">НОМЕРИ</a>
+                <a href="/contacts" class="sidebar-link">КОНТАКТИ</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="info-section">
+    <div class="container">
+        <div class="info-content">
+            <p>
+                Зі світлих залів Готелю "Назва готелю" відкривається незрівнянний краєвид Києва: 
+                старовинні будівлі та сучасні хмарочоси сплітаються в одну гармонійну картину. 
+                Ще століття тому на цьому місці вирувало культурне життя міста, а сьогодні гості 
+                насолоджуються розкішними номерами, преміальним сервісом і атмосферою, яка поєднує 
+                велич історії з елегантністю сучасності.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="features-section">
+    <div class="container">
+        <h2 class="section-title">НАШІ ПЕРЕВАГИ</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>Розташування</h3>
+                <p>У самому серці Києва</p>
+            </div>
+            <div class="feature-card">
+                <h3>Комфорт</h3>
+                <p>Номери високого рівня з усіма зручностями</p>
+            </div>
+            <div class="feature-card">
+                <h3>Ресторан</h3>
+                <p>Вишукана українська та європейська кухня</p>
+            </div>
+            <div class="feature-card">
+                <h3>Сервіс</h3>
+                <p>Професійна команда та індивідуальний підхід</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <h2>ЗАБРОНЮЙТЕ ВАШ НОМЕР ЗАРАЗ</h2>
+        <p>Отримайте найкращі умови та спеціальні пропозиції</p>
+        <a href="/booking" class="btn btn-primary">ЗАБРОНЮВАТИ</a>
+    </div>
+</section>
+{% endblock %}

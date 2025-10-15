@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Реєстрація - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container auth-container">
+        <h2 class="auth-title">Реєстрація</h2>
+        <form id="registerForm" class="auth-form">
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+            
+            <label for="first_name">Ім'я</label>
+            <input type="text" id="first_name" name="first_name" placeholder="Введіть ім'я" required>
+
+            <label for="last_name">Прізвище</label>
+            <input type="text" id="last_name" name="last_name" placeholder="Введіть прізвище" required>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Введіть email" required>
+
+            <label for="phone">Телефон</label>
+            <input type="tel" id="phone" name="phone" placeholder="Введіть телефон" required>
+
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" placeholder="Введіть пароль" required>
+
+            <label for="confirm">Підтвердіть пароль</label>
+            <input type="password" id="confirm" name="confirm" placeholder="Повторіть пароль" required>
+
+            <button type="submit" class="btn btn-primary">Зареєструватися</button>
+        </form>
+        <p class="auth-text">
+            Вже маєте акаунт?
+            <a href="/login" class="auth-link">Увійдіть</a>
+        </p>
+    </div>
+</section>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const first_name = document.getElementById('first_name').value;
+    const last_name = document.getElementById('last_name').value;
+    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm').value;
+    const errorDiv = document.getElementById('errorMessage');
+    const successDiv = document.getElementById('successMessage');
+    
+    // Clear previous messages
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    // Validate passwords match
+    if (password !== confirm) {
+        errorDiv.textContent = 'Паролі не співпадають';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    const result = await authManager.register({
+        first_name,
+        last_name,
+        email,
+        phone,
+        password
+    });
+    
+    if (result.success) {
+        successDiv.textContent = 'Успішна реєстрація! Перенаправлення...';
+        successDiv.style.display = 'block';
+        
+        // Redirect to home page after 1 second
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
+    } else {
+        errorDiv.textContent = result.message || 'Помилка реєстрації';
+        errorDiv.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

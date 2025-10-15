@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Профіль - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+
+<section class="profile-section">
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <span>--</span>
+            </div>
+            <h2>Завантаження...</h2>
+            <div class="profile-role">
+                <span class="role-badge">...</span>
+            </div>
+        </div>
+
+        <div class="profile-content">
+            <div class="profile-card">
+                <h3><i class="fas fa-user"></i> Особиста інформація</h3>
+                <form id="profileForm" class="profile-form">
+                    <div class="form-group">
+                        <label>Ім'я</label>
+                        <input type="text" name="first_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Прізвище</label>
+                        <input type="text" name="last_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Електронна пошта</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Телефон</label>
+                        <input type="tel" name="phone" required>
+                    </div>
+                    <button type="submit" class="btn btn-save">Зберегти зміни</button>
+                </form>
+            </div>
+
+            <div class="profile-card">
+                <h3><i class="fas fa-lock"></i> Зміна пароля</h3>
+                <form id="passwordForm" class="profile-form">
+                    <div class="form-group">
+                        <label>Поточний пароль</label>
+                        <input type="password" name="current_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Новий пароль</label>
+                        <input type="password" name="new_password" required minlength="8">
+                    </div>
+                    <div class="form-group">
+                        <label>Підтвердіть новий пароль</label>
+                        <input type="password" name="confirm_password" required minlength="8">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Оновити пароль</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <a href="/bookings" class="btn btn-outline">
+                <i class="fas fa-calendar-alt"></i> Мої бронювання
+            </a>
+            <a href="/admin" class="btn btn-outline" id="adminLink" style="display: none;">
+                <i class="fas fa-cog"></i> Панель адміністратора
+            </a>
+            <button onclick="authManager.logout()" class="btn btn-secondary">
+                <i class="fas fa-sign-out-alt"></i> Вийти
+            </button>
+        </div>
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}
