@@ -1,4 +1,4 @@
-name: Flask API CI/CD
+name: CI/CD Staging
 
 on:
   push:
@@ -28,16 +28,30 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Build test image
-      run: docker build -t flask_api:latest .
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
-    - name: Run tests inside container
-      run: docker run --rm flask_api:latest python -m pytest tests/
+      - name: Build test containers
+        run: docker-compose -f docker-compose.test.yml build
 
-  deploy:
+      - name: Start test database
+        run: |
+            docker-compose -f docker-compose.test.yml up -d db_test
+
+      - name: Run tests
+        run: |
+          docker compose -f docker-compose.test.yml run --rm app
+
+      - name: Stop services
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  deploy-dockerhub:
     runs-on: ubuntu-latest
     needs: test
     steps:
@@ -57,3 +71,23 @@ jobs:
         file: ./Dockerfile
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/flask_api:latest
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    needs: deploy-dockerhub
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+        run: |
+          railway up --service ${{ secrets.RAILWAY_SERVICE_NAME }}
