@@ -20,7 +20,8 @@ COPY tests/ ./tests/
 ENV FLASK_APP=src/api/app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_RUN_PORT=3000
+ENV PYTHONPATH=/app:/app/src
 
 EXPOSE 3000
 
-CMD -m src.api.init_db && flask run --host=0.0.0.0 --port=3000
+CMD python src/api/init_db.py && flask run --host=0.0.0.0 --port=3000
