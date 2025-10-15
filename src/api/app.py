@@ -8,24 +8,30 @@ from src.api.routes.bookings import blp as bookings_blp
 from src.api.routes.auth_routes import blp as auth_blp
 from src.api.auth import login_required_web, admin_required
 import os
+import sys
 from dotenv import load_dotenv
 from src.api.db import create_tables
 
-# Load environment variables
 load_dotenv()
 
-# Set up logging
+required_env_vars = ['SECRET_KEY', 'DATABASE_URL']
+for var in required_env_vars:
+    if not os.getenv(var):
+        print(f"Відсутня обов'язкова змінна середовища: {var}")
+        sys.exit(1)
+
 import logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PARENT_DIR = os.path.dirname(BASE_DIR) 
+PARENT_DIR = os.path.dirname(BASE_DIR)
 
 template_dir = os.path.join(PARENT_DIR, 'templates')
 static_dir = os.path.join(PARENT_DIR, 'static')
 
-app = Flask(__name__, 
+app = Flask(__name__,
             template_folder=template_dir,
             static_folder=static_dir)
 
@@ -38,24 +44,49 @@ app.config["OPENAPI_URL_PREFIX"] = "/"
 app.config["OPENAPI_JSON_PATH"] = "openapi.json"
 app.config["OPENAPI_SWAGGER_UI_PATH"] = "/api-docs"
 app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY', 'your-secret-key-here')
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+app.config["JWT_SECRET_KEY"] = SECRET_KEY
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 
-# Enable CORS
-CORS(app)
+
+# Security headers
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers[
+        'Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'"
+
+    if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
+
+env = os.getenv('RAILWAY_ENVIRONMENT', 'development')
+if env == 'development':
+    CORS(app, origins=['http://localhost:3000'])
+    logger.info("CORS configured for development")
+else:
+    CORS(app, origins=[
+        'https://hellobugs-hotel-staging.up.railway.app',
+        'https://hellobugs-hotel-production.up.railway.app'
+    ])
+    logger.info(f"CORS configured for {env}")
 
 try:
     # Initialize API
     api = Api(app)
-    
+
     # Register blueprints
     api.register_blueprint(users_blp)
     api.register_blueprint(rooms_blp)
     api.register_blueprint(bookings_blp)
     api.register_blueprint(auth_blp)
-    
+
     logger.info("API routes registered successfully")
-    
+
 except Exception as e:
     logger.error(f"Error initializing API: {str(e)}")
     raise
@@ -67,7 +98,7 @@ def not_found(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    logger.error(f"Server Error: {str(error)}")
+    logger.error("Internal server error")
     return jsonify({'message': 'Internal server error'}), 500
 
 
@@ -94,7 +125,6 @@ def register_page():
 @app.route('/logout')
 def logout():
     """Вихід з системи"""
-    # Clear any server-side session data if needed
     return render_template('index.html')
 
 @app.route('/profile')
@@ -121,6 +151,5 @@ def booking_create():
     return render_template('booking_create.html')
 
 if __name__ == "__main__":
-    # Create tables if they don't exist
     create_tables()
-    app.run(port=3000, debug=True)
+    app.run(port=3000, debug=os.getenv('RAILWAY_ENVIRONMENT') == 'development')
