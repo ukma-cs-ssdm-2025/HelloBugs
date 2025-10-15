@@ -14,12 +14,6 @@ from src.api.db import create_tables
 
 load_dotenv()
 
-required_env_vars = ['SECRET_KEY', 'DATABASE_URL']
-for var in required_env_vars:
-    if not os.getenv(var):
-        print(f"Відсутня обов'язкова змінна середовища: {var}")
-        sys.exit(1)
-
 import logging
 
 logging.basicConfig(level=logging.INFO)

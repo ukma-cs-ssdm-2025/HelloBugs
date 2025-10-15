@@ -8,7 +8,6 @@ services:
       - RAILWAY_ENVIRONMENT=testing
       - DATABASE_URL=postgresql://postgres:password123@db_test:5432/hotel_db_test
       - FLASK_APP=src/api/app.py
-      - FLASK_ENV=testing
       - PYTHONPATH=/app
     depends_on:
       - db_test
