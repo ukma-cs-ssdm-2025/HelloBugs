@@ -613,41 +613,108 @@ h1, h2, h3, h4 {
 
 .filters-section {
     padding: 40px 0;
-    background-color: var(--gray-light);
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .filters {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     align-items: flex-end;
     flex-wrap: wrap;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
 .filter-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    flex: 1;
+    min-width: 150px;
 }
 
 .filter-group label {
-    font-size: 14px;
-    color: var(--gray);
-    font-weight: 500;
+    font-size: 13px;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.filter-select {
-    padding: 12px 20px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    min-width: 200px;
+.filter-select, .filter-input {
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 15px;
+    color: #2c3e50;
+    background-color: #fff;
     cursor: pointer;
-    transition: border-color 0.3s;
+    transition: all 0.3s ease;
+    font-family: 'Montserrat', sans-serif;
 }
 
-.filter-select:focus {
+.filter-select:hover, .filter-input:hover {
+    border-color: #B8963E;
+}
+
+.filter-select:focus, .filter-input:focus {
     outline: none;
-    border-color: var(--gold);
+border-color: #B8963E;
+    box-shadow: 0 0 0 3px rgba(184, 150, 62, 0.1);
+}
+
+.filters button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Montserrat', sans-serif;
+    white-space: nowrap;
+}
+
+.filters .btn-primary {
+    background-color: #B8963E;
+    color: white;
+    box-shadow: 0 4px 12px rgba(184, 150, 62, 0.3);
+}
+
+.filters .btn-primary:hover {
+    background-color: #9c7e33;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(184, 150, 62, 0.4);
+}
+
+.filters .btn-secondary {
+    background-color: #fff;
+    color: #6c757d;
+    border: 2px solid #e9ecef;
+}
+
+.filters .btn-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #B8963E;
+    color: #B8963E;
+}
+
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filters button {
+        width: 100%;
+    }
 }
 
 .rooms-section {
@@ -1574,4 +1641,132 @@ h1, h2, h3, h4 {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Додаткові стилі для сторінки номерів */
+.room-image {
+    position: relative;
+}
+
+.status-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.available {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-badge.occupied {
+    background-color: #dc3545;
+    color: white;
+}
+
+.room-type {
+    color: #B8963E;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.room-details {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.room-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.price-info {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.price-label {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.price {
+    font-size: 24px;
+    font-weight: 700;
+    color: #B8963E;
+}
+
+.price-period {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.no-results, .error-message {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+    font-size: 18px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #B8963E;
+    font-size: 18px;
+}
+
+.filter-results-message {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.room-card .btn-primary {
+    padding: 10px 20px;
+    font-size: 14px;
+    width: auto;
+}
+
+.room-card .btn-primary:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.room-card .btn-primary:disabled:hover {
+    transform: none;
+    box-shadow: none;
 }

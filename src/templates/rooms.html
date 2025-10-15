@@ -14,6 +14,26 @@
     <div class="container">
         <div class="filters">
             <div class="filter-group">
+                <label for="filter-checkin">Дата заїзду:</label>
+                <input type="date" id="filter-checkin" class="filter-input">
+            </div>
+            
+            <div class="filter-group">
+                <label for="filter-checkout">Дата виїзду:</label>
+                <input type="date" id="filter-checkout" class="filter-input">
+            </div>
+            
+            <div class="filter-group">
+                <label for="filter-type">Тип номера:</label>
+                <select id="filter-type" class="filter-select">
+                    <option value="">Всі типи</option>
+                    <option value="ECONOMY">Економ</option>
+                    <option value="STANDARD">Стандарт</option>
+                    <option value="DELUXE">Делюкс</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
                 <label for="filter-capacity">Кількість гостей:</label>
                 <select id="filter-capacity" class="filter-select">
                     <option value="">Всі</option>
@@ -25,6 +45,14 @@
             </div>
             
             <div class="filter-group">
+                <label for="filter-sort">Сортування:</label>
+                <select id="filter-sort" class="filter-select">
+                    <option value="">За замовчуванням</option>
+                    <option value="price-asc">Ціна: за зростанням</option>
+                    <option value="price-desc">Ціна: за спаданням</option>
+                    <option value="capacity-asc">Гості: за зростанням</option>
+                    <option value="capacity-desc">Гості: за спаданням</option>
+
                 <label for="filter-price">Ціна за ніч:</label>
                 <select id="filter-price" class="filter-select">
                     <option value="">Всі</option>
@@ -35,8 +63,9 @@
                 </select>
             </div>
             
-            <button class="btn btn-primary" onclick="applyFilters()">Застосувати</button>
-        </div>
+            <button class="btn btn-primary" onclick="applyFilters()">Застосувати фільтри</button>
+            <button class="btn btn-secondary" onclick="resetFilters()">Скинути</button>       
+         </div>
     </div>
 </section>
 
