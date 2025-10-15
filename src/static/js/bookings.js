@@ -122,7 +122,7 @@ async function cancelBooking(bookingCode) {
 }
 
 function viewBookingDetails(bookingCode) {
-    alert(`Перегляд деталей бронювання ${bookingCode}\n(Функція в розробці)`);
+    window.location.href = `/booking/details?code=${bookingCode}`;
 }
 
 function attachEventListeners() {
