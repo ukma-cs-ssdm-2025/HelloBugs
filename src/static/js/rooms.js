@@ -1,45 +1,98 @@
+
+let allRooms = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     const roomsContainer = document.getElementById('rooms-container');
+    
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('filter-checkin').min = today;
+    document.getElementById('filter-checkout').min = today;
+    
+    
+    document.getElementById('filter-checkin').addEventListener('change', (e) => {
+        const checkinDate = e.target.value;
+        document.getElementById('filter-checkout').min = checkinDate;
+    });
+
 
     fetch('/api/v1/rooms/')
         .then(res => res.json())
         .then(data => {
-            roomsContainer.innerHTML = ''; 
-            data.forEach(room => {
-                const card = document.createElement('div');
-                card.classList.add('room-card');
-
-                card.innerHTML = `
-                    <div class="room-image">
-                        <img src="${room.main_photo_url}" alt="Room ${room.room_number}">
-                    </div>
-                    <div class="room-info">
-                        <h3>Номер ${room.room_number} - ${room.room_type}</h3>
-                        <p class="room-description">${room.description}</p>
-                        <div class="room-details">
-                            <span class="max-guest">Макс. гостей: ${room.max_guest}</span>
-                            <span class="price">Ціна: ${room.base_price} грн/ніч</span>
-                        </div>
-                        <div class="room-details">
-                            <span>Поверх: ${room.floor}</span>
-                            <span>Площа: ${room.size_sqm} м²</span>
-                        </div>
-                        <button class="btn btn-primary" onclick="bookRoom(${room.id})">Забронювати</button>
-                    </div>
-                `;
-                roomsContainer.appendChild(card);
-            });
+            allRooms = data;
+            displayRooms(allRooms);
         })
         .catch(err => {
-            roomsContainer.innerHTML = '<p>Помилка завантаження кімнат.</p>';
+            roomsContainer.innerHTML = '<p class="error-message">Помилка завантаження номерів. Спробуйте пізніше.</p>';
             console.error(err);
         });
-
-    const applyBtn = document.getElementById('apply-filters');
-    if (applyBtn) {
-        applyBtn.addEventListener('click', applyFilters);
-    }
 });
+
+function displayRooms(rooms) {
+    const roomsContainer = document.getElementById('rooms-container');
+    roomsContainer.innerHTML = '';
+    
+    if (rooms.length === 0) {
+        roomsContainer.innerHTML = '<p class="no-results">Немає номерів за обраними параметрами.</p>';
+        return;
+    }
+    
+    rooms.forEach(room => {
+        const card = document.createElement('div');
+        card.classList.add('room-card');
+        card.dataset.roomType = room.room_type;
+        card.dataset.maxGuest = room.max_guest;
+        card.dataset.price = room.base_price;
+        card.dataset.status = room.status;
+
+        const roomTypeNames = {
+            'ECONOMY': 'Економ',
+            'STANDARD': 'Стандарт',
+            'DELUXE': 'Делюкс'
+        };
+        
+        const statusBadge = room.status === 'AVAILABLE' 
+            ? '<span class="status-badge available">Доступний</span>'
+            : '<span class="status-badge occupied">Зайнятий</span>';
+
+        card.innerHTML = `
+            <div class="room-image">
+                <img src="${room.main_photo_url}" alt="Номер ${room.room_number}" onerror="this.src='https://via.placeholder.com/400x300?text=Номер+${room.room_number}'">
+                ${statusBadge}
+            </div>
+            <div class="room-info">
+                <h3>Номер ${room.room_number}</h3>
+                <p class="room-type">${roomTypeNames[room.room_type] || room.room_type}</p>
+                <p class="room-description">${room.description}</p>
+                <div class="room-details">
+                    <div class="detail-item">
+                        <i class="icon-users"></i>
+                        <span>До ${room.max_guest} гостей</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="icon-size"></i>
+                        <span>${room.size_sqm} м²</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="icon-floor"></i>
+                        <span>${room.floor} поверх</span>
+                    </div>
+                </div>
+                <div class="room-footer">
+                    <div class="price-info">
+                        <span class="price-label">Від</span>
+                        <span class="price">${room.base_price} грн</span>
+                        <span class="price-period">/ніч</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="bookRoom(${room.id})" ${room.status !== 'AVAILABLE' ? 'disabled' : ''}>
+                        ${room.status === 'AVAILABLE' ? 'Забронювати' : 'Недоступний'}
+                    </button>
+                </div>
+            </div>
+        `;
+        roomsContainer.appendChild(card);
+    });
+}
 
 function bookRoom(roomId) {
     localStorage.setItem('selected_room_id', roomId);
@@ -48,50 +101,115 @@ function bookRoom(roomId) {
 }
 
 function applyFilters() {
+    const checkin = document.getElementById('filter-checkin').value;
+    const checkout = document.getElementById('filter-checkout').value;
+    const roomType = document.getElementById('filter-type').value;
     const capacity = document.getElementById('filter-capacity').value;
-    const price = document.getElementById('filter-price').value;
-    const roomsContainer = document.getElementById('rooms-container');
-
-    const cards = document.querySelectorAll('.room-card');
-    let visibleCount = 0;
-
-    cards.forEach(card => {
-        let show = true;
-
-        if (capacity) {
-            const maxGuests = parseInt(card.querySelector('.max-guest').textContent.match(/\d+/)[0]);
-            if (maxGuests < parseInt(capacity)) show = false;
+    const priceRange = document.getElementById('filter-price').value;
+    const sortBy = document.getElementById('filter-sort').value;
+    
+    if (checkin && checkout && new Date(checkin) >= new Date(checkout)) {
+        alert('Дата виїзду має бути пізніше дати заїзду!');
+        return;
+    }
+    
+    let filteredRooms = allRooms.filter(room => {
+        if (roomType && room.room_type !== roomType) {
+            return false;
         }
-
-        if (price && show) {
-            const roomPrice = parseFloat(card.querySelector('.price').textContent.match(/\d+/)[0]);
-            if (price.includes('+')) {
-                const minPrice = parseInt(price);
-                if (roomPrice < minPrice) show = false;
+        
+        if (capacity && room.max_guest < parseInt(capacity)) {
+            return false;
+        }
+        
+        if (priceRange) {
+            const price = parseFloat(room.base_price);
+            if (priceRange.includes('+')) {
+                const minPrice = parseInt(priceRange);
+                if (price < minPrice) return false;
             } else {
-                const [minPrice, maxPrice] = price.split('-').map(Number);
-                if (roomPrice < minPrice || roomPrice > maxPrice) show = false;
+                const [minPrice, maxPrice] = priceRange.split('-').map(Number);
+                if (price < minPrice || price > maxPrice) return false;
             }
         }
-
-        card.style.display = show ? 'block' : 'none';
-        if (show) visibleCount++;
-    });
-
-    const existingMessage = document.getElementById('no-results-message');
-    if (visibleCount === 0) {
-        if (!existingMessage) {
-            const message = document.createElement('p');
-            message.id = 'no-results-message';
-            message.textContent = 'Немає кімнат за обраними параметрами.';
-            message.style.textAlign = 'center';
-            message.style.marginTop = '20px';
-            message.style.color = '#B8963E';
-            roomsContainer.appendChild(message);
+        
+        if (checkin && checkout && room.status !== 'AVAILABLE') {
+            return false;
         }
-    } else if (existingMessage) {
-        existingMessage.remove();
+        
+        return true;
+    });
+    
+    
+    if (sortBy) {
+        filteredRooms = sortRooms(filteredRooms, sortBy);
+    }
+        
+    displayRooms(filteredRooms);
+    
+    showFilterResults(filteredRooms.length, allRooms.length);
+}
+
+function sortRooms(rooms, sortBy) {
+    const sorted = [...rooms];
+    
+    switch(sortBy) {
+        case 'price-asc':
+            return sorted.sort((a, b) => parseFloat(a.base_price) - parseFloat(b.base_price));
+        case 'price-desc':
+            return sorted.sort((a, b) => parseFloat(b.base_price) - parseFloat(a.base_price));
+        case 'capacity-asc':
+            return sorted.sort((a, b) => a.max_guest - b.max_guest);
+        case 'capacity-desc':
+            return sorted.sort((a, b) => b.max_guest - a.max_guest);
+        default:
+            return sorted;
     }
 }
 
+function showFilterResults(filtered, total) {
+    const existingMessage = document.querySelector('.filter-results-message');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    if (filtered < total) {
+        const message = document.createElement('div');
+        message.className = 'filter-results-message';
+        message.innerHTML = `
+            <p>Знайдено <strong>${filtered}</strong> з <strong>${total}</strong> номерів</p>
+        `;
+        message.style.textAlign = 'center';
+        message.style.padding = '15px';
+        message.style.marginBottom = '20px';
+        message.style.backgroundColor = '#f5f5f5';
+        message.style.borderRadius = '8px';
+        message.style.color = '#2c3e50';
+        
+        const container = document.getElementById('rooms-container');
+        container.parentElement.insertBefore(message, container);
+    }
+}
+
+function resetFilters() {
+    document.getElementById('filter-checkin').value = '';
+    document.getElementById('filter-checkout').value = '';
+    document.getElementById('filter-type').value = '';
+    document.getElementById('filter-capacity').value = '';
+    document.getElementById('filter-price').value = '';
+    document.getElementById('filter-sort').value = '';
+    
+  
+    const message = document.querySelector('.filter-results-message');
+    if (message) {
+        message.remove();
+    }
+    
+   
+    displayRooms(allRooms);
+}
+
+
 window.bookRoom = bookRoom;
+window.applyFilters = applyFilters;
+window.resetFilters = resetFilters;
