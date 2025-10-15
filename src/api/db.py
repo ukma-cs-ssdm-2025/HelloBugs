@@ -1,14 +1,17 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
-from src.api.config import get_config
+from dotenv import load_dotenv
+import os
 
-ConfigClass = get_config()
+load_dotenv()  # підхоплює змінні з .env
 
-engine = create_engine(ConfigClass.DATABASE_URL)
+DATABASE_URL = os.getenv("DATABASE_URL")  # бере актуальний URL
+print("Using DATABASE_URL:", DATABASE_URL)
+
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
 db = scoped_session(SessionLocal)
 
 def get_db():
@@ -19,7 +22,4 @@ def get_db():
         db.close()
 
 def create_tables():
-    if ConfigClass.ENV == 'development':
-        Base.metadata.create_all(bind=engine)
-    else:
-        print("Skipping table creation — not in development mode")
+    Base.metadata.create_all(bind=engine)
