@@ -1,4 +1,4 @@
-name: Flask API CI/CD
+name: CI/CD Staging
 
 on:
   push:

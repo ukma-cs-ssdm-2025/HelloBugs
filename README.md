@@ -1,6 +1,5 @@
 # HelloBugs
 [![CI Test](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml/badge.svg?branch=main)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml)
-[![Flask API CI/CD](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml/badge.svg)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml)
 
 ## Інформація про команду
 **Склад:**
