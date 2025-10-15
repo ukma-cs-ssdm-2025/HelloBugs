@@ -6,8 +6,7 @@ import os
 from .models.user_model import User
 from .db import db
 
-# Secret key for JWT - in production, use a strong secret key from environment variables
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 def create_token(user_id, role=None, is_admin=False):
     """Generate JWT token for a user"""
@@ -91,7 +90,7 @@ def role_required(*allowed_roles):
             user_role = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
 
             if user_role not in allowed_roles:
-                return jsonify({'message': f'Access denied. Required roles: {", ".join(allowed_roles)}'}), 403
+                return jsonify({'message': f'Access denied'}), 403
             return f(*args, **kwargs)
         return decorated
     return decorator
