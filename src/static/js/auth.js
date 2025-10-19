@@ -7,7 +7,7 @@ class AuthManager {
 
     init() {
         this.updateNavigation();
-        this.showAdminElements(); // ✅ Додано: показуємо адмін-елементи
+        this.showAdminElements(); 
         if (this.token) this.validateToken();
     }
 
@@ -16,11 +16,9 @@ class AuthManager {
     }
 
     isAdmin() {
-        // ✅ Виправлено: перевіряємо role === 'ADMIN' замість is_admin
         return this.user && this.user.role === 'ADMIN';
     }
 
-    // ✅ Новий метод: показує елементи з класом admin-only
     showAdminElements() {
         const adminElements = document.querySelectorAll('.admin-only');
         if (this.isAdmin()) {
@@ -41,11 +39,11 @@ class AuthManager {
         if (this.isAuthenticated()) {
             if (loginBtn) loginBtn.style.display = 'none';
             this.addUserMenu(navList);
-            this.showAdminElements(); // ✅ Показуємо адмін-елементи після оновлення навігації
+            this.showAdminElements();
         } else {
             if (loginBtn) loginBtn.style.display = 'flex';
             this.removeUserMenu(navList);
-            this.showAdminElements(); // ✅ Ховаємо адмін-елементи
+            this.showAdminElements(); 
         }
     }
 

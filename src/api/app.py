@@ -134,7 +134,7 @@ def admin_panel():
     from flask import g
     return render_template('admin.html', user=g.current_user)
 
-@app.route('/booking')
+@app.route('/bookings')
 def bookings_page():
     """Бронювання"""
     return render_template('bookings.html')
