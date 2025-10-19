@@ -149,6 +149,14 @@ def booking_details():
     """Деталі бронювання"""
     return render_template('booking_details.html')
 
+@app.route('/users')
+@login_required_web
+@admin_required
+def users_page():
+    """Сторінка з користувачами для Admin"""
+    return render_template('users.html')
+
+
 if __name__ == "__main__":
     create_tables()
     app.run(port=3000, debug=os.getenv('RAILWAY_ENVIRONMENT') == 'development')

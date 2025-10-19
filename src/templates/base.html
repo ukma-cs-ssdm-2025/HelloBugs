@@ -46,6 +46,9 @@
                     <li class="nav-item"><a href="/rooms" class="nav-link">♦ НОМЕРИ</a></li>
                     <li class="nav-item"><a href="/booking" class="nav-link">♦ БРОНЮВАННЯ</a></li>
                     <li class="nav-item"><a href="/contacts" class="nav-link">♦ КОНТАКТИ</a></li>
+                    <li class="nav-item admin-only" style="display: none;">
+                        <a href="/users" class="nav-link">♦ КОРИСТУВАЧІ</a>
+                    </li>
                 </ul>
                 <div class="header-auth">
                     <a href="/login" class="login-btn">Увійти</a>
@@ -83,5 +86,36 @@
     
     <!-- Include authentication JavaScript -->
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Перевіряємо, чи є токен
+                const token = localStorage.getItem('access_token');
+                if (!token) return;
+
+                // Отримуємо інформацію про поточного користувача
+                const response = await fetch('/api/v1/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    
+                    // Показуємо кнопку "Користувачі" тільки для адміністраторів
+                    if (user.role === 'ADMIN') {
+                        const adminLinks = document.querySelectorAll('.admin-only');
+                        adminLinks.forEach(link => {
+                            link.style.display = 'block';
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Помилка перевірки ролі:', error);
+            }
+        });
+    </script>
 </body>
 </html>

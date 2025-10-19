@@ -60,7 +60,7 @@ def admin_required(f):
     """Decorator to require admin privileges"""
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not hasattr(g, 'is_admin') or not g.is_admin:
+        if not getattr(g, 'is_admin', False):
             return jsonify({'message': 'Admin access required'}), 403
         return f(*args, **kwargs)
     return decorated
@@ -96,13 +96,10 @@ def role_required(*allowed_roles):
     return decorator
 
 def login_required_web(f):
-    """Decorator for web routes that require authentication"""
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Check for token in cookies or session
         token = request.cookies.get('auth_token')
         if not token:
-            # Check Authorization header
             auth_header = request.headers.get('Authorization')
             if auth_header and auth_header.startswith('Bearer '):
                 token = auth_header.split(' ')[1]
@@ -111,24 +108,16 @@ def login_required_web(f):
             return jsonify({'message': 'Authentication required'}), 401
 
         try:
-            # Decode the token
             data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-
-            # Get the user from the database
-            current_user = db.query(User).get(data['user_id'])
-
-            if not current_user:
+            user = db.query(User).get(data['user_id'])
+            if not user:
                 return jsonify({'message': 'User not found'}), 401
-
-            # Add user to Flask's g object
-            g.current_user = current_user
+            g.current_user = user
             g.is_admin = data.get('is_admin', False)
-
         except jwt.ExpiredSignatureError:
             return jsonify({'message': 'Token has expired'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'message': 'Invalid token'}), 401
 
         return f(*args, **kwargs)
-
     return decorated

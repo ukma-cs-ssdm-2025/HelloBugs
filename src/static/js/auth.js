@@ -1,71 +1,62 @@
-// Authentication management JavaScript
-
 class AuthManager {
     constructor() {
-        this.token = localStorage.getItem('authToken');
+        this.token = this.getCookie('auth_token');
         this.user = JSON.parse(localStorage.getItem('user') || 'null');
         this.init();
     }
 
     init() {
-        // Update navigation based on auth status
         this.updateNavigation();
-        
-        // Check token validity on page load
-        if (this.token) {
-            this.validateToken();
-        }
+        this.showAdminElements(); // ✅ Додано: показуємо адмін-елементи
+        if (this.token) this.validateToken();
     }
 
-    // Check if user is authenticated
     isAuthenticated() {
         return !!this.token && !!this.user;
     }
 
-    // Check if user is admin
     isAdmin() {
-        return this.user && this.user.is_admin;
+        // ✅ Виправлено: перевіряємо role === 'ADMIN' замість is_admin
+        return this.user && this.user.role === 'ADMIN';
     }
 
-    // Update navigation based on auth status
-    updateNavigation() {
-        const loginBtn = document.querySelector('.login-btn');
-        const navList = document.querySelector('.nav-list');
-        
-        if (this.isAuthenticated()) {
-            // Hide login button and show user menu
-            if (loginBtn) {
-                loginBtn.style.display = 'none';
-            }
-            
-            // Add user menu to navigation
-            this.addUserMenu(navList);
+    // ✅ Новий метод: показує елементи з класом admin-only
+    showAdminElements() {
+        const adminElements = document.querySelectorAll('.admin-only');
+        if (this.isAdmin()) {
+            adminElements.forEach(element => {
+                element.style.display = 'block';
+            });
         } else {
-            // Show login button
-            if (loginBtn) {
-                loginBtn.style.display = 'flex';
-            }
-            
-            // Remove user menu if exists
-            this.removeUserMenu(navList);
+            adminElements.forEach(element => {
+                element.style.display = 'none';
+            });
         }
     }
 
-    // Add user menu to navigation
+    updateNavigation() {
+        const loginBtn = document.querySelector('.login-btn');
+        const navList = document.querySelector('.nav-list');
+
+        if (this.isAuthenticated()) {
+            if (loginBtn) loginBtn.style.display = 'none';
+            this.addUserMenu(navList);
+            this.showAdminElements(); // ✅ Показуємо адмін-елементи після оновлення навігації
+        } else {
+            if (loginBtn) loginBtn.style.display = 'flex';
+            this.removeUserMenu(navList);
+            this.showAdminElements(); // ✅ Ховаємо адмін-елементи
+        }
+    }
+
     addUserMenu(navList) {
-        // Remove existing user menu
         this.removeUserMenu(navList);
-        
         if (!navList) return;
-        
+
         const userMenu = document.createElement('li');
         userMenu.className = 'dropdown';
-        
         userMenu.innerHTML = `
             <a href="#" class="nav-link dropdown-toggle">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
                 ${this.user.first_name} ${this.user.last_name}
                 <span class="dropdown-arrow">▼</span>
             </a>
@@ -73,183 +64,118 @@ class AuthManager {
                 <li><a href="/profile" class="dropdown-item">Мій профіль</a></li>
                 <li><a href="/bookings" class="dropdown-item">Мої бронювання</a></li>
                 ${this.isAdmin() ? '<li><a href="/admin" class="dropdown-item">Адмін панель</a></li>' : ''}
+                ${this.isAdmin() ? '<li><a href="/users" class="dropdown-item">Користувачі</a></li>' : ''}
                 <li><a href="#" class="dropdown-item" onclick="event.preventDefault(); authManager.logout()">Вийти</a></li>
             </ul>
         `;
-        
-        // Додаємо обробник подій для кліку
-        const dropdownToggle = userMenu.querySelector('.dropdown-toggle');
-        const dropdownMenu = userMenu.querySelector('.dropdown-menu');
-        const dropdownArrow = userMenu.querySelector('.dropdown-arrow');
-        
-        // Відкриття/закриття меню при кліку
-        dropdownToggle.addEventListener('click', (e) => {
+        navList.appendChild(userMenu);
+
+        const toggle = userMenu.querySelector('.dropdown-toggle');
+        const menu = userMenu.querySelector('.dropdown-menu');
+        const arrow = userMenu.querySelector('.dropdown-arrow');
+
+        toggle.addEventListener('click', e => {
             e.preventDefault();
-            const isOpen = dropdownMenu.classList.contains('show');
-            
-            // Закриваємо всі інші відкриті меню
-            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                if (menu !== dropdownMenu) {
-                    menu.classList.remove('show');
-                    menu.closest('.dropdown').querySelector('.dropdown-arrow').classList.remove('rotated');
+            const isOpen = menu.classList.contains('show');
+            document.querySelectorAll('.dropdown-menu.show').forEach(m => {
+                if (m !== menu) {
+                    m.classList.remove('show');
+                    m.closest('.dropdown').querySelector('.dropdown-arrow').classList.remove('rotated');
                 }
             });
-            
-            // Перемикаємо поточне меню
-            dropdownMenu.classList.toggle('show');
-            dropdownArrow.classList.toggle('rotated', !isOpen);
+            menu.classList.toggle('show');
+            arrow.classList.toggle('rotated', !isOpen);
         });
-        
-        // Закриття меню при кліку поза ним
-        document.addEventListener('click', (e) => {
+
+        document.addEventListener('click', e => {
             if (!userMenu.contains(e.target)) {
-                dropdownMenu.classList.remove('show');
-                dropdownArrow.classList.remove('rotated');
+                menu.classList.remove('show');
+                arrow.classList.remove('rotated');
             }
         });
-        
-        navList.appendChild(userMenu);
     }
 
-    // Remove user menu from navigation
     removeUserMenu(navList) {
         if (!navList) return;
-        
         const userMenu = navList.querySelector('.dropdown');
-        if (userMenu) {
-            userMenu.remove();
-        }
+        if (userMenu) userMenu.remove();
     }
 
-    // Validate token with server
     async validateToken() {
+        if (!this.token) return this.logout();
         try {
-            const response = await fetch('/api/v1/auth/me', {
-                headers: {
-                    'Authorization': `Bearer ${this.token}`
-                }
+            const res = await fetch('/api/v1/auth/me', {
+                headers: { 'Authorization': `Bearer ${this.token}` }
             });
-            
-            if (response.ok) {
-                const userData = await response.json();
-                this.user = userData;
-                localStorage.setItem('user', JSON.stringify(userData));
-                this.updateNavigation();
-            } else {
-                this.logout();
-            }
-        } catch (error) {
-            console.error('Token validation failed:', error);
+            if (!res.ok) return this.logout();
+            const data = await res.json();
+            this.user = data;
+            localStorage.setItem('user', JSON.stringify(data));
+            this.updateNavigation();
+        } catch {
             this.logout();
         }
     }
 
-    // Login user
     async login(email, password) {
         try {
-            const response = await fetch('/api/v1/auth/login', {
+            const res = await fetch('/api/v1/auth/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
             });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
+            const data = await res.json();
+            if (res.ok) {
                 this.token = data.token;
                 this.user = data.user;
-                localStorage.setItem('authToken', this.token);
-                localStorage.setItem('user', JSON.stringify(this.user));
+                localStorage.setItem('user', JSON.stringify(data.user));
+                this.setCookie('auth_token', this.token, 1);
                 this.updateNavigation();
-                return { success: true, data };
-            } else {
-                return { success: false, message: data.message };
-            }
-        } catch (error) {
-            return { success: false, message: 'Помилка з\'єднання з сервером' };
+                return { success: true };
+            } else return { success: false, message: data.message };
+        } catch {
+            return { success: false, message: 'Server error' };
         }
     }
 
-    // Register user
-    async register(userData) {
-        try {
-            const response = await fetch('/api/v1/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(userData)
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                this.token = data.token;
-                this.user = data.user;
-                localStorage.setItem('authToken', this.token);
-                localStorage.setItem('user', JSON.stringify(this.user));
-                this.updateNavigation();
-                return { success: true, data };
-            } else {
-                return { success: false, message: data.message };
-            }
-        } catch (error) {
-            return { success: false, message: 'Помилка з\'єднання з сервером' };
-        }
-    }
-
-    // Logout user
     logout() {
         this.token = null;
         this.user = null;
-        localStorage.removeItem('authToken');
         localStorage.removeItem('user');
+        this.setCookie('auth_token', '', -1);
         this.updateNavigation();
-        
-        // Redirect to home page if not already there
-        if (window.location.pathname !== '/') {
-            window.location.href = '/';
-        }
+        if (window.location.pathname !== '/') window.location.href = '/';
     }
 
-    // Get auth headers for API requests
-    getAuthHeaders() {
-        if (this.token) {
-            return {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            };
+    setCookie(name, value, days) {
+        let expires = '';
+        if (days) {
+            const d = new Date();
+            d.setTime(d.getTime() + days*24*60*60*1000);
+            expires = "; expires=" + d.toUTCString();
         }
-        return {
-            'Content-Type': 'application/json'
-        };
+        document.cookie = `${name}=${value || ""}${expires}; path=/`;
     }
 
-    // Make authenticated API request
+    getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for(let c of ca) {
+            while (c.charAt(0)==' ') c = c.substring(1);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length);
+        }
+        return null;
+    }
+
+    // Метод для всіх запитів з токеном
     async makeAuthenticatedRequest(url, options = {}) {
-        const headers = {
-            ...this.getAuthHeaders(),
-            ...options.headers
-        };
-        
-        const response = await fetch(url, {
-            ...options,
-            headers
-        });
-        
-        // If unauthorized, logout user
-        if (response.status === 401) {
-            this.logout();
-        }
-        
-        return response;
+        if (!options.headers) options.headers = {};
+        if (this.token) options.headers['Authorization'] = `Bearer ${this.token}`;
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        return res;
     }
 }
 
-// Initialize auth manager
 const authManager = new AuthManager();
-
-// Export for use in other scripts
 window.authManager = authManager;
