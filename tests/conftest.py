@@ -4,17 +4,31 @@ from sqlalchemy.orm import sessionmaker
 from src.api.app import app as flask_app
 from src.api.db import Base
 from src.api.config import TestingConfig
+import os
 
-TEST_DATABASE_URL = TestingConfig.DATABASE_URL
+TEST_DATABASE_URL = os.getenv("DATABASE_URL", TestingConfig.DATABASE_URL)
 
-engine = create_engine(TEST_DATABASE_URL)
+engine = create_engine(
+    TEST_DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={"connect_timeout": 2} 
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def prepare_database():
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception:
+        pass
+    
     yield
-    Base.metadata.drop_all(bind=engine)
+    
+    try:
+        Base.metadata.drop_all(bind=engine)
+        engine.dispose()
+    except Exception:
+        pass
 
 @pytest.fixture
 def app():

@@ -14,3 +14,6 @@ __pycache__/
 .env
 venv311/
 venv64/
+
+.coverage
+coverage.xml
