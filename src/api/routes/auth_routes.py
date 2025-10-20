@@ -10,11 +10,9 @@ blp = SmorestBlueprint('auth', __name__, url_prefix='/api/v1/auth')
 @blp.route('/register', methods=['POST'])
 def register():
     """Register a new user"""
-    data = request.get_json()
-    
-    # Validate required fields
+    data = request.get_json(silent=True)
     required_fields = ['email', 'password', 'first_name', 'last_name', 'phone']
-    if not all(field in data for field in required_fields):
+    if not data or not all(field in data for field in required_fields):
         return jsonify({'message': 'Missing required fields'}), 400
     
     # Check if user already exists
@@ -193,13 +191,15 @@ def login():
 def get_current_user():
     """Get current user info"""
     from flask import g
+    role_value = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
+    is_admin = (role_value == 'ADMIN')
     return jsonify({
         'id': g.current_user.user_id,
         'email': g.current_user.email,
         'first_name': g.current_user.first_name,
         'last_name': g.current_user.last_name,
-        'role': g.current_user.role.value,
-        'is_admin': g.current_user.role == UserRole.ADMIN
+        'role': role_value,
+        'is_admin': is_admin
     })
 
 # Admin-only route example

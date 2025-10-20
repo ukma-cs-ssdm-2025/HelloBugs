@@ -56,6 +56,11 @@ def test_register_missing_fields(client):
     assert resp.status_code == 400
 
 
+def test_register_no_payload(client):
+    resp = client.post("/api/v1/auth/register")
+    assert resp.status_code == 400
+
+
 def test_login_success(client, monkeypatch):
     email = _unique_email()
     mock_user = MagicMock()
@@ -115,6 +120,29 @@ def test_me_authorized(client, monkeypatch):
     resp = client.get("/api/v1/auth/me", headers={"Authorization": "Bearer valid_token"})
     assert resp.status_code == 200
     data = resp.get_json()
+    assert data["email"] == email
+
+
+def test_me_authorized_role_as_string(client, monkeypatch):
+    email = _unique_email()
+    user_id = 43
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": user_id, "role": "GUEST", "is_admin": False}
+    mock_user = MagicMock()
+    mock_user.user_id = user_id
+    mock_user.email = email
+    mock_user.first_name = "Role"
+    mock_user.last_name = "String"
+    mock_user.role = "GUEST"  
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_user
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    resp = client.get("/api/v1/auth/me", headers={"Authorization": "Bearer valid_token"})
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["role"] == "GUEST"
     assert data["email"] == email
 
 
