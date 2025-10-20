@@ -209,3 +209,12 @@ def get_current_user():
 def admin_only():
     """Example admin-only endpoint"""
     return jsonify({'message': 'Welcome admin!'})
+
+@blp.route('/refresh')
+@token_required
+def refresh_token():
+    from flask import g
+    role_value = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
+    is_admin = (role_value == 'ADMIN')
+    token = create_token(user_id=g.current_user.user_id, role=role_value, is_admin=is_admin)
+    return jsonify({'token': token})
