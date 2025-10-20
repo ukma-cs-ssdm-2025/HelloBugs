@@ -4,11 +4,13 @@ from flask_cors import CORS
 from datetime import timedelta
 from src.api.routes.users import blp as users_blp
 from src.api.routes.rooms import blp as rooms_blp
+from src.api.routes.rooms import amenities_blp
 from src.api.routes.bookings import blp as bookings_blp
 from src.api.routes.auth_routes import blp as auth_blp
 from src.api.auth import login_required_web, admin_required
 import os
 import sys
+import traceback
 from dotenv import load_dotenv
 from src.api.db import create_tables
 
@@ -76,6 +78,7 @@ try:
     # Register blueprints
     api.register_blueprint(users_blp)
     api.register_blueprint(rooms_blp)
+    api.register_blueprint(amenities_blp)
     api.register_blueprint(bookings_blp)
     api.register_blueprint(auth_blp)
 
@@ -93,6 +96,8 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     logger.error("Internal server error")
+    logger.error(traceback.format_exc())
+    print(f"💥 FULL TRACEBACK:\n{traceback.format_exc()}")
     return jsonify({'message': 'Internal server error'}), 500
 
 
