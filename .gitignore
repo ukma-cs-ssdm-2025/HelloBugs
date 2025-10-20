@@ -17,3 +17,5 @@ venv64/
 
 create_admin.py
 create_staff.py
+.coverage
+coverage.xml

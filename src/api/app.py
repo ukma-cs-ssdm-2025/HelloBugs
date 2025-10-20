@@ -139,7 +139,7 @@ def admin_panel():
     from flask import g
     return render_template('admin.html', user=g.current_user)
 
-@app.route('/booking')
+@app.route('/bookings')
 def bookings_page():
     """Бронювання"""
     return render_template('bookings.html')
@@ -153,6 +153,14 @@ def booking_create():
 def booking_details():
     """Деталі бронювання"""
     return render_template('booking_details.html')
+
+@app.route('/users')
+@login_required_web
+@admin_required
+def users_page():
+    """Сторінка з користувачами для Admin"""
+    return render_template('users.html')
+
 
 if __name__ == "__main__":
     create_tables()

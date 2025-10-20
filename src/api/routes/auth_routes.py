@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, g
 from flask_smorest import Blueprint as SmorestBlueprint
 from werkzeug.security import check_password_hash
 from ..models.user_model import User, UserRole
@@ -10,11 +10,9 @@ blp = SmorestBlueprint('auth', __name__, url_prefix='/api/v1/auth')
 @blp.route('/register', methods=['POST'])
 def register():
     """Register a new user"""
-    data = request.get_json()
-    
-    # Validate required fields
+    data = request.get_json(silent=True)
     required_fields = ['email', 'password', 'first_name', 'last_name', 'phone']
-    if not all(field in data for field in required_fields):
+    if not data or not all(field in data for field in required_fields):
         return jsonify({'message': 'Missing required fields'}), 400
     
     # Check if user already exists
@@ -61,7 +59,6 @@ def register():
 @token_required
 def create_admin():
     """Create admin user (only existing admins can create new admins)"""
-    from flask import g
     if not g.current_user.is_admin:
         return jsonify({'message': 'Admin access required'}), 403
     
@@ -112,7 +109,6 @@ def create_admin():
 @token_required
 def create_staff():
     """Create staff user (only admins can create staff)"""
-    from flask import g
     if not g.current_user.is_admin:
         return jsonify({'message': 'Admin access required'}), 403
     
@@ -192,14 +188,15 @@ def login():
 @token_required
 def get_current_user():
     """Get current user info"""
-    from flask import g
+    role_value = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
+    is_admin = (role_value == 'ADMIN')
     return jsonify({
         'id': g.current_user.user_id,
         'email': g.current_user.email,
         'first_name': g.current_user.first_name,
         'last_name': g.current_user.last_name,
-        'role': g.current_user.role.value,
-        'is_admin': g.current_user.role == UserRole.ADMIN
+        'role': role_value,
+        'is_admin': is_admin
     })
 
 # Admin-only route example
@@ -209,3 +206,11 @@ def get_current_user():
 def admin_only():
     """Example admin-only endpoint"""
     return jsonify({'message': 'Welcome admin!'})
+
+@blp.route('/refresh')
+@token_required
+def refresh_token():
+    role_value = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
+    is_admin = (role_value == 'ADMIN')
+    token = create_token(user_id=g.current_user.user_id, role=role_value, is_admin=is_admin)
+    return jsonify({'token': token})

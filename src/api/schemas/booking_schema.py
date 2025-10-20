@@ -50,7 +50,7 @@ class BookingInSchema(Schema):
                        metadata={"description": "Guest phone", "example": "+380501234567"})
 
     @validates_schema
-    def validate_booking_data(self, data):
+    def validate_booking_data(self, data, **kwargs):
         if data.get("check_out_date") and data.get("check_in_date"):
             if data["check_out_date"] <= data["check_in_date"]:
                 raise ValidationError("Check-out date must be after check-in date")
