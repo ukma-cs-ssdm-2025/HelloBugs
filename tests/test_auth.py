@@ -331,3 +331,33 @@ def test_role_required_staff_or_admin_allowed(app, client):
 
    resp = client.get(endpoint, headers={"Authorization": f"Bearer any"})
    assert resp.status_code == 200
+
+# TDD [RED]: is_token_expired helper
+def test_is_token_expired_with_expired_token(monkeypatch):
+   import jwt as pyjwt
+   import src.api.auth as auth
+   
+   def _raise_expired(*args, **kwargs):
+       raise pyjwt.ExpiredSignatureError("expired")
+   
+   monkeypatch.setattr("src.api.auth.jwt.decode", _raise_expired)
+   assert auth.is_token_expired("any_token") is True
+
+def test_is_token_expired_with_valid_token(monkeypatch):
+   import src.api.auth as auth
+   
+   def _valid_decode(token, secret, algorithms=None):
+       return {"user_id": 1, "exp": 9999999999}
+   
+   monkeypatch.setattr("src.api.auth.jwt.decode", _valid_decode)
+   assert auth.is_token_expired("valid_token") is False
+
+def test_is_token_expired_with_invalid_token(monkeypatch):
+   import jwt as pyjwt
+   import src.api.auth as auth
+   
+   def _raise_invalid(*args, **kwargs):
+       raise pyjwt.InvalidTokenError("bad token")
+   
+   monkeypatch.setattr("src.api.auth.jwt.decode", _raise_invalid)
+   assert auth.is_token_expired("bad_token") is True
