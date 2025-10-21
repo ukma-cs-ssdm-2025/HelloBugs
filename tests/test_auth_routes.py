@@ -206,7 +206,7 @@ def test_refresh_success(client, monkeypatch):
     assert data.get("token") == "new_token"
 
 
-# TDD [RED]: token_type in /api/v1/auth/refresh response
+# TDD cycle2 [RED]: token_type in /api/v1/auth/refresh response
 def test_refresh_has_token_type(client, monkeypatch):
     user_id = 888
     def _fake_decode(token, secret, algorithms=None):
