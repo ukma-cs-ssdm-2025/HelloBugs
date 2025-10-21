@@ -23,6 +23,7 @@ def test_half_refund_when_cancelled_3_to_6_days_before():
 def test_no_refund_when_cancelled_less_than_3_days():
     result = calculate_refund_amount(
         booking_date='2025-11-01',
+        cancel_date='2025-10-30',
         total_price=1000
     )
     assert result == 0
