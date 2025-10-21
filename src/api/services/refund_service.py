@@ -1,4 +1,10 @@
-"""Service for calculating booking refunds"""
+"""Service for calculating booking refunds based on cancellation policy.
+
+   Policy:
+    - ≥7 days before: 100% refund
+    - 3-6 days before: 50% refund
+    - <3 days before: 0% refund
+"""
 
 from datetime import datetime
 
