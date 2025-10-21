@@ -7,6 +7,8 @@ from ..db import db
 
 blp = SmorestBlueprint('auth', __name__, url_prefix='/api/v1/auth')
 
+DEFAULT_TOKEN_TYPE = "Bearer"
+
 @blp.route('/register', methods=['POST'])
 def register():
     """Register a new user"""
@@ -213,4 +215,4 @@ def refresh_token():
     role_value = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
     is_admin = (role_value == 'ADMIN')
     token = create_token(user_id=g.current_user.user_id, role=role_value, is_admin=is_admin)
-    return jsonify({'token': token, 'token_type': 'Bearer'})
+    return jsonify({'token': token, 'token_type': DEFAULT_TOKEN_TYPE})
