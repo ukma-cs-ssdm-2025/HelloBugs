@@ -10,6 +10,11 @@ blp = SmorestBlueprint('auth', __name__, url_prefix='/api/v1/auth')
 DEFAULT_TOKEN_TYPE = "Bearer"
 DEFAULT_TOKEN_TTL = 3600
 
+def _get_role_value(user) -> str:
+    """Extract role value from user object, handling both enum and string."""
+    return user.role.value if hasattr(user.role, 'value') else user.role
+
+
 def _auth_token_response(token: str, token_type: str = DEFAULT_TOKEN_TYPE, expires_in: int = DEFAULT_TOKEN_TTL, role: str | None = None):
     payload = {'token': token, 'token_type': token_type, 'expires_in': expires_in}
     if role is not None:
@@ -197,7 +202,7 @@ def login():
 @token_required
 def get_current_user():
     """Get current user info"""
-    role_value = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
+    role_value = _get_role_value(g.current_user)
     is_admin = (role_value == 'ADMIN')
     return jsonify({
         'id': g.current_user.user_id,
@@ -219,7 +224,7 @@ def admin_only():
 @blp.route('/refresh')
 @token_required
 def refresh_token():
-    role_value = g.current_user.role.value if hasattr(g.current_user.role, 'value') else g.current_user.role
+    role_value = _get_role_value(g.current_user)
     is_admin = (role_value == 'ADMIN')
     token = create_token(user_id=g.current_user.user_id, role=role_value, is_admin=is_admin)
     return _auth_token_response(token, role=role_value)
