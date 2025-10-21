@@ -12,4 +12,4 @@ def calculate_refund_amount(booking_date, cancel_date, total_price):
     elif days_before_booking >= 3:
         return total_price * 0.5 
     else:
-        return float('nan')
+        return 0.0
