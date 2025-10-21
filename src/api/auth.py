@@ -176,7 +176,5 @@ def is_token_expired(token: str) -> bool:
     try:
         jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         return False
-    except jwt.ExpiredSignatureError:
-        return True
-    except jwt.InvalidTokenError:
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         return True
