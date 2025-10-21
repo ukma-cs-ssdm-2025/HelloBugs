@@ -166,3 +166,17 @@ def token_optional(f):
         return f(*args, **kwargs)
 
     return decorated
+
+
+def is_token_expired(token: str) -> bool:
+    """Check if a JWT token is expired without raising exceptions
+    
+    Returns True if token is expired or invalid, False if valid
+    """
+    try:
+        jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return False
+    except jwt.ExpiredSignatureError:
+        return True
+    except jwt.InvalidTokenError:
+        return True
