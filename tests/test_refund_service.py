@@ -9,3 +9,12 @@ def test_full_refund_when_cancelled_7_or_more_days_before():
         total_price=1000
     )
     assert result == 1000
+
+
+def test_half_refund_when_cancelled_3_to_6_days_before():
+    result = calculate_refund_amount(
+        booking_date='2025-11-01',
+        cancel_date='2025-10-27',  
+        total_price=1000
+    )
+    assert result == 500
