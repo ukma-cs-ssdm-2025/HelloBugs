@@ -250,3 +250,26 @@ def test_refresh_has_expires_in(client, monkeypatch):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data.get("expires_in") == 3600
+
+
+# TDD [RED]: role echoed back for client convenience
+def test_refresh_echoes_role(client, monkeypatch):
+    user_id = 1001
+    def _fake_decode(token, secret, algorithms=None):
+        return {"user_id": user_id, "role": "STAFF", "is_admin": False}
+
+    mock_user = MagicMock()
+    mock_user.user_id = user_id
+    mock_user.role = UserRole.STAFF
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_user
+
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", _fake_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    import src.api.routes.auth_routes as auth_routes_module
+    monkeypatch.setattr(auth_routes_module, "create_token", lambda user_id, role=None, is_admin=False: "new_token")
+    resp = client.get("/api/v1/auth/refresh", headers={"Authorization": "Bearer valid_token"})
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data.get("role") == "STAFF"
