@@ -180,19 +180,46 @@ def is_token_expired(token: str) -> bool:
         return True
 
 
-def validate_password(password):
+def _has_uppercase(password):
+    return any(char.isupper() for char in password)
+
+def _has_lowercase(password):
+    return any(char.islower() for char in password)
+
+def _has_digits(password):
+    return any(char.isdigit() for char in password)
+
+def _has_special_chars(password):
+    return any(not char.isalnum() for char in password)
+
+def _has_no_spaces(password):
+    return ' ' not in password
+
+def _meets_length_requirements(password, min_length=8):
+    return len(password) >= min_length if password else False
+
+def validate_password(password, min_length=8):
     if not password:
-        return False
+        return False, "Password cannot be empty"
 
-    if len(password) < 8:
-        return False
+    validation_checks = [
+        (_has_uppercase(password),
+         "Password must contain at least one uppercase letter!"),
+        (_has_lowercase(password),
+         "Password must contain at least one lowercase letter!"),
+        (_has_digits(password),
+         "Password must contain at least one digit!"),
+        (_has_special_chars(password),
+         "Password must contain at least one special character!"),
+        (_has_no_spaces(password),
+         "Password cannot contain spaces!"),
+        (_meets_length_requirements(password, min_length),
+         f"Password must be at least {min_length} characters long!")
+    ]
 
-    if " " in password:
-        return False
+    failed_checks = [message for (is_valid, message) in validation_checks if not is_valid]
 
-    has_upper = any(char.isupper() for char in password)
-    has_lower = any(char.islower() for char in password)
-    has_digit = any(char.isdigit() for char in password)
-    has_special = any(not char.isalnum() for char in password)
+    if failed_checks:
+        return False, "; ".join(failed_checks)
 
-    return has_upper and has_lower and has_digit and has_special
+    return True, "Password is valid"

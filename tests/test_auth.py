@@ -364,9 +364,23 @@ def test_is_token_expired_with_invalid_token(monkeypatch):
 
 
 def test_validate_password():
+    is_valid, message = validate_password("PassWord&123!")
+    assert is_valid == True
+    assert message == "Password is valid"
 
-    assert validate_password("PassWord&123!") == True
-    assert validate_password("short") == False
-    assert validate_password("") == False
-    assert validate_password(" ") == False
-    assert validate_password("12092006k") == False
+    is_valid, message = validate_password("short")
+    assert is_valid == False
+    assert "at least 8 characters" in message
+
+    is_valid, message = validate_password("12092006k")
+    assert is_valid == False
+    assert "uppercase" in message
+
+    is_valid, message = validate_password(" ")
+    assert is_valid == False
+    assert "spaces" in message
+
+    is_valid, message = validate_password("")
+    assert is_valid == False
+    assert "empty" in message
+
