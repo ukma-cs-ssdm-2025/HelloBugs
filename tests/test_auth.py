@@ -361,3 +361,12 @@ def test_is_token_expired_with_invalid_token(monkeypatch):
    
    monkeypatch.setattr("src.api.auth.jwt.decode", _raise_invalid)
    assert auth.is_token_expired("bad_token") is True
+
+
+def test_validate_password():
+
+    assert validate_password("PassWord&123!") == True
+    assert validate_password("short") == False
+    assert validate_password("") == False
+    assert validate_password(" ") == False
+    assert validate_password("12092006k") == False
