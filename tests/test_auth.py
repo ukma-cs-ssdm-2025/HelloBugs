@@ -3,7 +3,7 @@ import uuid
 import pytest
 from flask import Flask
 from src.api.models.user_model import UserRole
-from src.api.auth import token_required, admin_required, staff_required, role_required
+from src.api.auth import token_required, admin_required, staff_required, role_required, validate_password
 
 
 @pytest.fixture(autouse=True)

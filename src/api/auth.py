@@ -178,3 +178,21 @@ def is_token_expired(token: str) -> bool:
         return False
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         return True
+
+
+def validate_password(password):
+    if not password:
+        return False
+
+    if len(password) < 8:
+        return False
+
+    if " " in password:
+        return False
+
+    has_upper = any(char.isupper() for char in password)
+    has_lower = any(char.islower() for char in password)
+    has_digit = any(char.isdigit() for char in password)
+    has_special = any(not char.isalnum() for char in password)
+
+    return has_upper and has_lower and has_digit and has_special
