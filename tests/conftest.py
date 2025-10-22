@@ -1,6 +1,5 @@
-# conftest.py
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from src.api.app import app as flask_app
 from src.api.db import Base
@@ -12,17 +11,21 @@ TEST_DATABASE_URL = os.getenv("DATABASE_URL", TestingConfig.DATABASE_URL)
 engine = create_engine(
     TEST_DATABASE_URL,
     pool_pre_ping=True,
-    connect_args={"connect_timeout": 2}
+    pool_size=5,
+    max_overflow=10,
+    connect_args={
+        "connect_timeout": 5,
+        "options": "-c statement_timeout=10000"
+    }
 )
+
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def prepare_database():
-    """Створює таблиці перед всіма тестами"""
-    Base.metadata.drop_all(bind=engine)  # Очищаємо старі дані
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    print("\n✅ База даних ініціалізована")
 
     yield
 
@@ -32,30 +35,38 @@ def prepare_database():
 
 @pytest.fixture
 def app():
-    """Create and configure a new app instance for testing."""
     flask_app.config.from_object(TestingConfig)
+    flask_app.config['TESTING'] = True
     return flask_app
 
 
 @pytest.fixture
 def client(app):
-    """A test client for the app."""
     return app.test_client()
 
 
 @pytest.fixture(autouse=True)
-def cleanup_between_tests():
-    """Очищає всі дані між тестами для ізоляції"""
+def cleanup_data():
+
     yield
 
-    # Після кожного тесту очищаємо таблиці
     session = TestingSessionLocal()
     try:
-        from src.api.models.room_model import Room, RoomAmenity
-        session.query(RoomAmenity).delete()
-        session.query(Room).delete()
+        # 1. Спочатку bookings (залежить від rooms, users)
+        session.execute(text("DELETE FROM bookings"))
+
+        # 2. Потім проміжні таблиці
+        session.execute(text("DELETE FROM room_amenities"))
+
+        # 3. Потім основні таблиці
+        session.execute(text("DELETE FROM rooms"))
+        session.execute(text("DELETE FROM users"))
+        session.execute(text("DELETE FROM amenities"))
+
         session.commit()
-    except:
+
+    except Exception as e:
+        print(f"Cleanup error: {e}")
         session.rollback()
     finally:
         session.close()

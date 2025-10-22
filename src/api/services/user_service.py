@@ -47,6 +47,7 @@ def create_user(data, via_booking=False):
 
         db.add(new_user)
         db.commit()
+        db.refresh(new_user)
         return new_user
 
     except IntegrityError as e:
