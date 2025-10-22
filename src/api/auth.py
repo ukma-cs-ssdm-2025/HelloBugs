@@ -132,3 +132,49 @@ def login_required_web(f):
         return f(*args, **kwargs)
 
     return decorated
+
+
+def token_optional(f):
+    """Decorator for optional authentication (allows both authenticated and guest users)"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        # Check for token in Authorization header
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+
+        if token:
+            try:
+                # Decode the token
+                data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+
+                # Get the user from the database
+                current_user = db.query(User).get(data['user_id'])
+
+                if current_user:
+                    # Add user to Flask's g object
+                    g.current_user = current_user
+                    g.is_admin = data.get('is_admin', False)
+
+            except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+                # Ignore token errors for optional auth
+                pass
+
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def is_token_expired(token: str) -> bool:
+    """Check if a JWT token is expired without raising exceptions
+    
+    Returns True if token is expired or invalid, False if valid
+    """
+    try:
+        jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return False
+    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+        return True

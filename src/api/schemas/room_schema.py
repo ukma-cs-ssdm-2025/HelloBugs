@@ -19,17 +19,23 @@ class RoomOutSchema(Schema):
     class Meta:
         ordered = True
 
-    id = fields.Int(dump_only=True, metadata={"description": "Unique room ID", "example": 1})
-    room_number = fields.Str(required=True, metadata={"description": "Room number", "example": "101"})
-    room_type = fields.Str(required=True, validate=validate.OneOf([t.value for t in RoomType]), metadata={"description": "Room type", "example": "STANDARD"})
-    max_guest = fields.Int(required=True, metadata={"description": "Max guests", "example": 2})
-    base_price = fields.Decimal(required=True, as_string=True, metadata={"description": "Price per night", "example": "120.00"})
-    status = fields.Str(required=True, validate=validate.OneOf([s.value for s in RoomStatus]), metadata={"description": "Room status", "example": "AVAILABLE"})
-    description = fields.Str(required=False, metadata={"description": "Room description", "example": "Spacious room with city view"})
-    floor = fields.Int(required=True, metadata={"description": "Floor number", "example": 2})
-    size_sqm = fields.Decimal(required=False, as_string=True, metadata={"description": "Room size (m²)", "example": "25.0"})
-    main_photo_url = fields.Str(required=False, metadata={"description": "Main photo URL", "example": "https://example.com/rooms/101-main.jpg"})
-    photo_urls = fields.List(fields.Str(), required=False, metadata={"description": "Additional photo URLs", "example": ["https://example.com/rooms/101-1.jpg"]})
+    id = fields.Int(dump_only=True, attribute="room_id")
+    room_number = fields.Str(required=True)
+    room_type = fields.Method("get_room_type")
+    max_guest = fields.Int(required=True)
+    base_price = fields.Decimal(required=True, as_string=True)
+    status = fields.Method("get_status")
+    description = fields.Str(required=False)
+    floor = fields.Int(required=True)
+    size_sqm = fields.Decimal(required=False, as_string=True)
+    main_photo_url = fields.Str(required=False)
+    photo_urls = fields.List(fields.Str(), required=False)
+
+    def get_room_type(self, obj):
+        return obj.room_type.value if hasattr(obj.room_type, 'value') else str(obj.room_type)
+
+    def get_status(self, obj):
+        return obj.status.value if hasattr(obj.status, 'value') else str(obj.status)
 
 
 # for create/update input
