@@ -18,7 +18,7 @@ class RoomStatus(enum.Enum):
 class Room(Base):
     __tablename__ = "rooms"
 
-    room_id = Column(Integer, primary_key=True, index=True)
+    room_id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     room_number = Column(String, nullable=False, unique=True)
     room_type = Column(Enum(RoomType), nullable=False)
     max_guest = Column(Integer, nullable=False)
@@ -37,7 +37,7 @@ class Room(Base):
 class Amenity(Base):
     __tablename__ = "amenities"
 
-    amenity_id = Column(Integer, primary_key=True, index=True)
+    amenity_id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     amenity_name = Column(String, nullable=False)
     icon_url = Column(String, nullable=True)
 

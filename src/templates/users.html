@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Користувачі - готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">ВСІ КОРИСТУВАЧІ</h1>
+        <p class="page-subtitle">Керування користувачами системи</p>
+    </div>
+</section>
+
+<section class="admin-section">
+    <div class="container">
+        <div class="admin-controls">
+            <h2>Користувачі</h2>
+            <button class="btn btn-primary" onclick="openCreateUserModal()">
+                Додати користувача
+            </button>
+        </div>
+
+        <div class="admin-filters">
+            <div class="filter-group">
+                <label for="filter-role">Роль:</label>
+                <select id="filter-role" class="filter-select" onchange="filterUsers()">
+                    <option value="">Всі ролі</option>
+                    <option value="GUEST">Клієнт</option>
+                    <option value="STAFF">Персонал</option>
+                    <option value="ADMIN">Адміністратор</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <input type="text" id="search-user" class="filter-input" placeholder="Пошук за ім'ям або email..." onkeyup="searchUsers()">
+            </div>
+        </div>
+
+        <div class="users-table-container">
+            <table class="users-table" id="users-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ім'я</th>
+                        <th>Прізвище</th>
+                        <th>Email</th>
+                        <th>Телефон</th>
+                        <th>Роль</th>
+                        <th>Дата реєстрації</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody">
+                    <tr>
+                        <td colspan="8" class="loading">Завантаження...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="empty-state" style="display: none;" class="empty-state">
+            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <h3>Користувачів не знайдено</h3>
+            <p>Додайте першого користувача системи</p>
+        </div>
+    </div>
+</section>
+
+<div id="user-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modal-title">Додати користувача</h2>
+            <span class="close-btn" onclick="closeUserModal()">&times;</span>
+        </div>
+        <form id="user-form" class="user-form">
+            <input type="hidden" id="user-id" name="id">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">Ім'я *</label>
+                    <input type="text" id="first_name" name="first_name" required class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name">Прізвище *</label>
+                    <input type="text" id="last_name" name="last_name" required class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Телефон *</label>
+                <input type="tel" id="phone" name="phone" required class="form-input" placeholder="+380XXXXXXXXX">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password" id="password" name="password" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="role">Роль *</label>
+                <select id="role" name="role" required class="form-input">
+                    <option value="GUEST">Клієнт</option>
+                    <option value="STAFF">Персонал</option>
+                    <option value="ADMIN">Адміністратор</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Скасувати</button>
+                <button type="submit" class="btn btn-primary">Зберегти</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+{% endblock %}
