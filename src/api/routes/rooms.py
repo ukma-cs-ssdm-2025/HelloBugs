@@ -83,8 +83,6 @@ class RoomResource(MethodView):
             return room
         except ValueError as e:
             abort(409, message=str(e))
-        except Exception as e:
-            abort(500, message=str(e))
 
     @blp.arguments(RoomInSchema)
     @blp.response(200, RoomOutSchema, description="Room replaced successfully.")
@@ -100,20 +98,16 @@ class RoomResource(MethodView):
             return room
         except ValueError as e:
             abort(409, message=str(e))
-        except Exception as e:
-            abort(500, message=str(e))
 
     @blp.response(204, description="Room deleted successfully")
     @blp.alt_response(404, description="Room not found")
+    @blp.alt_response(400, description="Invalid request")
     def delete(self, room_id):
         """Delete a room"""
-        try:
-            success = delete_room(room_id)
-            if not success:
-                abort(404, message=f"Room with ID {room_id} not found")
-            return "", 204
-        except Exception as e:
-            abort(500, message=str(e))
+        success = delete_room(room_id)
+        if not success:
+            abort(404, message=f"Room with ID {room_id} not found")
+        return "", 204
 
 
 amenities_blp = Blueprint(

@@ -2,14 +2,14 @@ import uuid
 
 def create_test_user(client, email=None):
     if email is None:
-        email = f"{uuid.uuid4().hex[:8]}@example.com"
+        email = f"{uuid.uuid4().hex[:8]}@gmail.com"
     new_user = {
         "first_name": "Danylo",
         "last_name": "Ivanenko",
         "email": email,
         "password": "hisPassword456",
-        "phone": f"+3806612345{uuid.uuid4().int % 1000:03d}",
-        "role": "CUSTOMER"
+        "phone": f"+3806613345{uuid.uuid4().int % 1000:03d}",
+        "role": "GUEST"
     }
     response = client.post("/api/v1/users/", json=new_user)
     print(response.status_code, response.get_data(as_text=True))
@@ -42,7 +42,7 @@ def test_get_single_user(client):
 def test_create_user(client):
     user = create_test_user(client)
     assert user["first_name"] == "Danylo"
-    assert user["role"] == "CUSTOMER"
+    assert user["role"] == "GUEST"
 
 
 def test_update_user(client):

@@ -1,3 +1,4 @@
+# conftest.py
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,24 +12,23 @@ TEST_DATABASE_URL = os.getenv("DATABASE_URL", TestingConfig.DATABASE_URL)
 engine = create_engine(
     TEST_DATABASE_URL,
     pool_pre_ping=True,
-    connect_args={"connect_timeout": 2} 
+    connect_args={"connect_timeout": 2}
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-@pytest.fixture(scope="session")
+
+@pytest.fixture(scope="session", autouse=True)
 def prepare_database():
-    try:
-        Base.metadata.create_all(bind=engine)
-    except Exception:
-        pass
-    
+    """Створює таблиці перед всіма тестами"""
+    Base.metadata.drop_all(bind=engine)  # Очищаємо старі дані
+    Base.metadata.create_all(bind=engine)
+    print("\n✅ База даних ініціалізована")
+
     yield
-    
-    try:
-        Base.metadata.drop_all(bind=engine)
-        engine.dispose()
-    except Exception:
-        pass
+
+    Base.metadata.drop_all(bind=engine)
+    engine.dispose()
+
 
 @pytest.fixture
 def app():
@@ -36,24 +36,26 @@ def app():
     flask_app.config.from_object(TestingConfig)
     return flask_app
 
+
 @pytest.fixture
 def client(app):
     """A test client for the app."""
     return app.test_client()
 
-@pytest.fixture
-def runner(app):
-    """A test runner for the app's Click commands."""
-    return app.test_cli_runner()
 
-@pytest.fixture
-def db_session():
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = TestingSessionLocal(bind=connection)
+@pytest.fixture(autouse=True)
+def cleanup_between_tests():
+    """Очищає всі дані між тестами для ізоляції"""
+    yield
 
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
+    # Після кожного тесту очищаємо таблиці
+    session = TestingSessionLocal()
+    try:
+        from src.api.models.room_model import Room, RoomAmenity
+        session.query(RoomAmenity).delete()
+        session.query(Room).delete()
+        session.commit()
+    except:
+        session.rollback()
+    finally:
+        session.close()
