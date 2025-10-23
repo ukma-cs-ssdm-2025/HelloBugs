@@ -1001,6 +1001,24 @@ border-color: #B8963E;
     gap: 15px;
     justify-content: center;
 }
+.btn-small {
+    padding: 10px 20px;  
+    font-size: 13px;    
+    border-radius: 8px;  
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #B8963E;
+    border: none;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #a18435;
+}
 
 .btn-secondary {
     background-color: var(--white);
