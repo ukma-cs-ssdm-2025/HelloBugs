@@ -138,6 +138,43 @@ class AuthManager {
         }
     }
 
+       async register(userData) {
+        try {
+            console.log('Sending registration request:', userData);
+
+            const res = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+
+            const data = await res.json();
+            console.log('Registration response:', data);
+
+            if (res.ok) {
+                this.token = data.token;
+                this.user = data.user;
+                localStorage.setItem('user', JSON.stringify(data.user));
+                this.setCookie('auth_token', this.token, 1);
+                this.updateNavigation();
+                return { success: true, message: data.message };
+            } else {
+                return {
+                    success: false,
+                    message: data.message || 'Registration failed'
+                };
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            return {
+                success: false,
+                message: 'Server connection error'
+            };
+        }
+    }
+
     logout() {
         this.token = null;
         this.user = null;
