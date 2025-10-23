@@ -9,7 +9,6 @@ from src.api.routes.bookings import blp as bookings_blp
 from src.api.routes.auth_routes import blp as auth_blp
 from src.api.auth import login_required_web, admin_required
 import os
-import sys
 import traceback
 from dotenv import load_dotenv
 from src.api.db import create_tables

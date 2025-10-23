@@ -25,6 +25,10 @@ def prepare_database():
 @pytest.fixture
 def app():
     """Фікстура додатку"""
+    # Ініціалізуємо dependency_overrides, якщо його немає
+    if not hasattr(flask_app, 'dependency_overrides'):
+        flask_app.dependency_overrides = {}
+
     flask_app.config.from_object(TestingConfig)
     flask_app.config['TESTING'] = True
 
@@ -61,6 +65,10 @@ def cleanup_data(db_session):
     """Очищення даних після кожного тесту"""
     yield
     try:
+        # Перевіряємо чи сесія активна
+        if not db_session.is_active:
+            db_session.rollback()
+
         db_session.execute(text("DELETE FROM bookings"))
         db_session.execute(text("DELETE FROM room_amenities"))
         db_session.execute(text("DELETE FROM rooms"))
