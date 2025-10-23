@@ -33,19 +33,21 @@ class AuthManager {
     }
 
     updateNavigation() {
-        const loginBtn = document.querySelector('.login-btn');
-        const navList = document.querySelector('.nav-list');
+    const loginBtn = document.querySelector('.login-btn');
+    const navList = document.querySelector('.nav-list');
 
-        if (this.isAuthenticated()) {
-            if (loginBtn) loginBtn.style.display = 'none';
-            this.addUserMenu(navList);
-            this.showAdminElements();
-        } else {
-            if (loginBtn) loginBtn.style.display = 'flex';
-            this.removeUserMenu(navList);
-            this.showAdminElements(); 
-        }
+    if (this.isAuthenticated()) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        this.addUserMenu(navList);
+        this.showAdminElements();
+        this.showStaffElements(); 
+    } else {
+        if (loginBtn) loginBtn.style.display = 'flex';
+        this.removeUserMenu(navList);
+        this.showAdminElements(); 
+        this.showStaffElements(); 
     }
+}
 
     addUserMenu(navList) {
         this.removeUserMenu(navList);
@@ -173,6 +175,39 @@ class AuthManager {
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
         return res;
     }
+
+    isStaff() {
+    return this.user && this.user.role === 'STAFF';
+}
+
+isStaffOrAdmin() {
+    return this.user && (this.user.role === 'STAFF' || this.user.role === 'ADMIN');
+}
+
+showStaffElements() {
+    const staffElements = document.querySelectorAll('.staff-only');
+    const adminOnlyElements = document.querySelectorAll('.admin-only');
+    
+    if (this.isStaffOrAdmin()) {
+        adminOnlyElements.forEach(element => {
+            element.style.display = 'block';
+        });
+    } else {
+        adminOnlyElements.forEach(element => {
+            element.style.display = 'none';
+        });
+    }
+    
+    if (this.isStaff()) {
+        staffElements.forEach(element => {
+            element.style.display = 'block';
+        });
+    } else {
+        staffElements.forEach(element => {
+            element.style.display = 'none';
+        });
+    }
+}
 }
 
 const authManager = new AuthManager();
