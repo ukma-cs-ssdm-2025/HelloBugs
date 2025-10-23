@@ -7,18 +7,18 @@
     <div class="container">
         <h1 class="page-title">ВСІ КОРИСТУВАЧІ</h1>
         <p class="page-subtitle">Керування користувачами системи</p>
+
+        <div class="admin-only" style="display: none; margin-top: 20px;">
+            <button class="btn btn-success" onclick="openCreateUserModal()">
+                + Додати нового користувача
+            </button>
+        </div>
     </div>
 </section>
 
 <section class="admin-section">
     <div class="container">
-        <div class="admin-controls">
-            <h2>Користувачі</h2>
-            <button class="btn btn-primary" onclick="openCreateUserModal()">
-                Додати користувача
-            </button>
-        </div>
-
+        
         <div class="admin-filters">
             <div class="filter-group">
                 <label for="filter-role">Роль:</label>
