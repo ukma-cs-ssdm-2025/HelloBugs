@@ -11,12 +11,12 @@ class UserOutSchema(Schema):
     class Meta:
         ordered = True
 
-    id = fields.Int(dump_only=True, metadata={"description": "Unique user ID", "example": 1})
+    id = fields.Int(dump_only=True, attribute="user_id", metadata={"description": "Unique user ID", "example": 1})
     first_name = fields.Str(required=True, metadata={"description": "User's first name", "example": "John"})
     last_name = fields.Str(required=True, metadata={"description": "User's last name", "example": "Doe"})
     email = fields.Email(required=True, metadata={"description": "User email", "example": "guest@example.com"})
     phone = fields.Str(required=True, metadata={"description": "Phone in international format", "example": "+380501234567"})
-    role = fields.Str(required=True, validate=validate.OneOf([r.value for r in UserRole]), metadata={"description": "GUEST"})
+    role = fields.Str(required=True, attribute="role.value", metadata={"description": "GUEST"})
     created_at = fields.DateTime(dump_only=True, metadata={"description": "Creation timestamp", "example": "2025-10-06T19:27:00Z"})
 
 # for create/update input (password required)
