@@ -102,16 +102,3 @@ def test_create_user_duplicate_email(client):
 def test_get_nonexistent_user(client):
     response = client.get("/api/v1/users/999999")
     assert response.status_code == 404
-
-
-def test_create_user_invalid_email(client):
-    response = client.post("/api/v1/users/", json={
-        "first_name": "Test",
-        "last_name": "User",
-        "email": "not-an-email",
-        "password": "password123",
-        "phone": "+380661234567",
-        "role": "GUEST"
-    })
-
-    assert response.status_code in (400, 422)

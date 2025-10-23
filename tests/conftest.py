@@ -9,14 +9,7 @@ import os
 TEST_DATABASE_URL = os.getenv("DATABASE_URL", TestingConfig.DATABASE_URL)
 
 engine = create_engine(
-    TEST_DATABASE_URL,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
-    connect_args={
-        "connect_timeout": 5,
-        "options": "-c statement_timeout=10000"
-    }
+    TEST_DATABASE_URL
 )
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
