@@ -30,7 +30,7 @@ class Room(Base):
     main_photo_url = Column(String, nullable=True)
     photo_urls = Column(JSON, nullable=True)
 
-    # bookings = relationship("Booking", back_populates="room")
+    bookings = relationship("Booking", back_populates="room")
     # amenities = relationship("RoomAmenity", back_populates="room")
 
 
