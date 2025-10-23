@@ -30,7 +30,7 @@ class UserInSchema(Schema):
     email = fields.Email(required=True, metadata={"description": "Email address", "example": "guest@example.com"})
     password = fields.Str(required=True, load_only=True, validate=validate.Length(min=8), metadata={"description": "Password (min 8 chars). Will not be returned in responses.", "example": "strongP@ssw0rd"})
     phone = fields.Str(required=True, validate=validate.Regexp(r'^\+?[\d\s\-\(\)]+$'), metadata={"description": "Phone number", "example": "+380501234567"})
-    role = fields.Str(required=True, validate=validate.OneOf([r.value for r in UserRole]), metadata={"description": "User role", "example": "GUEST"})
+    role = fields.Str(required=True, attribute="role.value", validate=validate.OneOf([r.value for r in UserRole]), metadata={"description": "User role", "example": "GUEST"})
 
 # for PATCH (partial)
 class UserPatchSchema(Schema):
@@ -43,4 +43,4 @@ class UserPatchSchema(Schema):
     email = fields.Email(metadata={"description": "Email address", "example": "guest@example.com"})
     password = fields.Str(load_only=True, validate=validate.Length(min=8), metadata={"description": "Password (min 8 chars). Will not be returned in responses.", "example": "strongP@ssw0rd"})
     phone = fields.Str(validate=validate.Regexp(r'^\+?[\d\s\-\(\)]+$'), metadata={"description": "Phone number", "example": "+380501234567"})
-    role = fields.Str(validate=validate.OneOf([r.value for r in UserRole]), metadata={"description": "User role", "example": "GUEST"})
+    role = fields.Str(attribute="role.value", validate=validate.OneOf([r.value for r in UserRole]), metadata={"description": "User role", "example": "GUEST"})

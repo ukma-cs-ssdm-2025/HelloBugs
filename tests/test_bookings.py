@@ -60,7 +60,7 @@ def test_booking(db_session, test_user_registered, test_room):
 
 
 def test_create_booking_with_non_registered_user(db_session, test_room):
-    """Тест бронювання для гостя (без user_id, тільки email)"""
+    """Тест бронювання для гостя"""
     booking_data = {
         'room_id': test_room.room_id,
         'check_in_date': date.today() + timedelta(days=2),
@@ -124,7 +124,7 @@ def test_get_booking_by_code(db_session, test_booking):
     assert booking.status is not None
 
 
-def test_cancel_booking_success(db_session, test_booking):  # Додав test_booking
+def test_cancel_booking_success(db_session, test_booking):
     result = cancel_booking(db_session, test_booking.booking_code)
     db_session.commit()
 
@@ -141,8 +141,6 @@ def test_get_user_bookings(db_session, test_booking, test_user_registered):
 
     for booking in user_bookings:
         assert booking.user_id == test_user_registered.user_id
-
-    print(f"✅ Знайдено {len(user_bookings)} бронювань для користувача {test_user_registered.user_id}")
 
 
 def test_get_user_bookings_empty(db_session, test_user_registered):
