@@ -31,7 +31,23 @@ class Room(Base):
     photo_urls = Column(JSON, nullable=True)
 
     bookings = relationship("Booking", back_populates="room")
-    # amenities = relationship("RoomAmenity", back_populates="room")
+    amenities = relationship("RoomAmenity", back_populates="room")
+
+    def to_dict(self):
+        """Convert room to dictionary for schema compatibility."""
+        return {
+            'id': self.room_id,
+            'room_number': self.room_number,
+            'room_type': self.room_type.value,
+            'max_guest': self.max_guest,
+            'base_price': float(self.base_price),
+            'status': self.status.value,
+            'description': self.description,
+            'floor': self.floor,
+            'size_sqm': float(self.size_sqm) if self.size_sqm else None,
+            'main_photo_url': self.main_photo_url,
+            'photo_urls': self.photo_urls or []
+        }
 
 
 class Amenity(Base):
@@ -41,7 +57,7 @@ class Amenity(Base):
     amenity_name = Column(String, nullable=False)
     icon_url = Column(String, nullable=True)
 
-    # rooms = relationship("RoomAmenity", back_populates="amenity")
+    rooms = relationship("RoomAmenity", back_populates="amenity")
 
 
 class RoomAmenity(Base):
@@ -56,5 +72,5 @@ class RoomAmenity(Base):
         PrimaryKeyConstraint("room_id", "amenity_id", name="pk_room_amenity"),
     )
 
-    # room = relationship("Room", back_populates="amenities")
-    # amenity = relationship("Amenity", back_populates="rooms")
+    room = relationship("Room", back_populates="amenities")
+    amenity = relationship("Amenity", back_populates="rooms")
