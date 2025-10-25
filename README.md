@@ -57,7 +57,7 @@ cd HelloBugs
 ```
 ### 1. Запустити додаток
 ```bash
-docker-compose up
+docker-compose up --build
 ```
 🌘 Доступний за адресою: http://localhost:3000
 
