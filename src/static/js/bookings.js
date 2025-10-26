@@ -1,12 +1,32 @@
 async function loadBookings(filterStatus = 'all') {
     const container = document.getElementById('bookings-container');
     const emptyState = document.getElementById('empty-state');
+    const bookingsSection = document.querySelector('.bookings-section'); // Додайте цей селектор
+
+    if (!authManager.isAuthenticated()) {
+    container.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: #666;">
+            <h2>Увійдіть для перегляду та редагування деталей бронювань<\h2>
+        </div>
+    `;
+    return;
+    }
+
+    if (bookingsSection) {
+        bookingsSection.style.display = 'block';
+    }
 
     try {
         const response = await fetch('/api/v1/bookings/');
         if (!response.ok) throw new Error('Помилка завантаження');
 
         let bookings = await response.json();
+
+        const isStaffOrAdmin = authManager.user.role === 'ADMIN' || authManager.user.role === 'STAFF';
+
+        if (!isStaffOrAdmin) {
+            bookings = bookings.filter(b => b.user_id === authManager.user.id);
+        }
 
         if (filterStatus !== 'all') {
             bookings = bookings.filter(b => b.status === filterStatus);
@@ -15,6 +35,17 @@ async function loadBookings(filterStatus = 'all') {
         if (bookings.length === 0) {
             container.innerHTML = '';
             emptyState.style.display = 'block';
+            emptyState.innerHTML = `
+                <div class="empty-state">
+                    <h3>Бронювання не знайдені</h3>
+                    <p>${filterStatus !== 'all' ? `Немає бронювань зі статусом "${filterStatus}"` : 'У вас ще немає бронювань'}</p>
+                    ${!isStaffOrAdmin ? `
+                        <button class="btn btn-primary" onclick="document.getElementById('create-booking-btn').click()">
+                            Створити перше бронювання
+                        </button>
+                    ` : ''}
+                </div>
+            `;
             return;
         }
 

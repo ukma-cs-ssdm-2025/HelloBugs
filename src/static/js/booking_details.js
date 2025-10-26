@@ -65,9 +65,9 @@ function displayBookingDetails(booking) {
     
     // Інформація про гостя
     document.getElementById('guest-name').textContent = 
-        `${booking.guest_first_name} ${booking.guest_last_name}`;
-    document.getElementById('guest-email').textContent = booking.guest_email;
-    document.getElementById('guest-phone').textContent = booking.guest_phone;
+        `${booking.first_name} ${booking.last_name}`;
+    document.getElementById('guest-email').textContent = booking.email;
+    document.getElementById('guest-phone').textContent = booking.phone;
     
     // Дати
     const checkIn = new Date(booking.check_in_date);
