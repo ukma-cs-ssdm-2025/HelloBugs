@@ -197,31 +197,38 @@ def create_staff():
 @blp.route('/login', methods=['POST'])
 def login():
     """User login"""
-    data = request.get_json()
-    
-    if not data or not data.get('email') or not data.get('password'):
-        return jsonify({'message': 'Email and password are required'}), 400
-    
-    user = db.query(User).filter_by(email=data['email'], is_registered=True).first()
-    
-    if not user or not user.check_password(data['password']):
-        return jsonify({'message': 'Invalid email or password'}), 401
-    
-    # Generate auth token
-    token = user.generate_auth_token()
-    
-    return jsonify({
-        'message': 'Login successful',
-        'token': token,
-        'user': {
-            'id': user.user_id,
-            'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'role': user.role.value,
-            'is_admin': user.role == UserRole.ADMIN
-        }
-    })
+    try:
+        data = request.get_json(silent=True) or {}
+
+        email = (data.get('email') or '').strip().lower()
+        password = data.get('password') or ''
+
+        if not email or not password:
+            return jsonify({'message': 'Email and password are required'}), 400
+
+        user = db.query(User).filter_by(email=email, is_registered=True).first()
+
+        if not user or not user.check_password(password):
+            return jsonify({'message': 'Invalid email or password'}), 401
+
+        # Generate auth token
+        token = user.generate_auth_token()
+
+        return jsonify({
+            'message': 'Login successful',
+            'token': token,
+            'user': {
+                'id': user.user_id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role.value,
+                'is_admin': user.role == UserRole.ADMIN
+            }
+        })
+    except Exception as e:
+        current_app.logger.error(f"Login error: {str(e)}")
+        return jsonify({'message': 'Internal server error during login'}), 500
 
 @blp.route('/me')
 @token_required

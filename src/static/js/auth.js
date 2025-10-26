@@ -1,6 +1,6 @@
 class AuthManager {
     constructor() {
-        this.token = this.getCookie('auth_token');
+        this.token = localStorage.getItem('access_token') || this.getCookie('auth_token');
         this.user = JSON.parse(localStorage.getItem('user') || 'null');
         this.init();
     }
@@ -129,6 +129,7 @@ class AuthManager {
                 this.token = data.token;
                 this.user = data.user;
                 localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('access_token', this.token);
                 this.setCookie('auth_token', this.token, 1);
                 this.updateNavigation();
                 return { success: true };
@@ -157,6 +158,7 @@ class AuthManager {
                 this.token = data.token;
                 this.user = data.user;
                 localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('access_token', this.token);
                 this.setCookie('auth_token', this.token, 1);
                 this.updateNavigation();
                 return { success: true, message: data.message };
@@ -179,6 +181,7 @@ class AuthManager {
         this.token = null;
         this.user = null;
         localStorage.removeItem('user');
+        localStorage.removeItem('access_token');
         this.setCookie('auth_token', '', -1);
         this.updateNavigation();
         if (window.location.pathname !== '/') window.location.href = '/';
@@ -191,7 +194,9 @@ class AuthManager {
             d.setTime(d.getTime() + days*24*60*60*1000);
             expires = "; expires=" + d.toUTCString();
         }
-        document.cookie = `${name}=${value || ""}${expires}; path=/`;
+        const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+        const sameSite = '; SameSite=Lax';
+        document.cookie = `${name}=${value || ""}${expires}; path=/${sameSite}${secure}`;
     }
 
     getCookie(name) {
