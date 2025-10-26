@@ -23,6 +23,18 @@ async function loadBookingDetails(bookingCode) {
         }
         
         const booking = await response.json();
+        // If booking doesn't include guest info and we don't have cached user, try to fetch current user
+        let accUser = (window.authManager && window.authManager.user) || JSON.parse(localStorage.getItem('user') || 'null');
+        if ((!booking.first_name || !booking.email) && !accUser) {
+            try {
+                const token = (window.authManager && window.authManager.token) || localStorage.getItem('access_token') || null;
+                const meRes = await fetch('/api/v1/auth/me', token ? { headers: { 'Authorization': `Bearer ${token}` } } : undefined);
+                if (meRes && meRes.ok) {
+                    accUser = await meRes.json();
+                    localStorage.setItem('user', JSON.stringify(accUser));
+                }
+            } catch {}
+        }
         displayBookingDetails(booking);
         
         // Завантажуємо інформацію про номер
@@ -63,11 +75,14 @@ function displayBookingDetails(booking) {
     statusBadge.textContent = statusText;
     statusBadge.className = `status-badge ${booking.status.toLowerCase()}`;
     
-    // Інформація про гостя
-    document.getElementById('guest-name').textContent = 
-        `${booking.first_name} ${booking.last_name}`;
-    document.getElementById('guest-email').textContent = booking.email;
-    document.getElementById('guest-phone').textContent = booking.phone;
+    const accUser = (window.authManager && window.authManager.user) || JSON.parse(localStorage.getItem('user') || 'null');
+    const firstName = booking.first_name || (accUser && accUser.first_name) || '-';
+    const lastName = booking.last_name || (accUser && accUser.last_name) || '';
+    const email = booking.email || (accUser && accUser.email) || '-';
+    const phone = booking.phone || (accUser && accUser.phone) || '-';
+    document.getElementById('guest-name').textContent = `${firstName} ${lastName}`.trim();
+    document.getElementById('guest-email').textContent = email;
+    document.getElementById('guest-phone').textContent = phone;
     
     // Дати
     const checkIn = new Date(booking.check_in_date);
