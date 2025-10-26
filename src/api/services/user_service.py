@@ -22,6 +22,8 @@ def create_user(session, data, via_booking=False):
 
         role = None
         if role_str:
+            if isinstance(role_str, dict):
+                role_str = role_str.get("value")
             try:
                 role = UserRole[role_str]
             except KeyError:
@@ -83,26 +85,42 @@ def update_user_partial(session, user_id, data):
 
     try:
         for key, value in data.items():
-            if key == "password" and value:
-                user.set_password(value)
-            elif key == "role" and value:
-                try:
-                    setattr(user, key, UserRole[value])
-                except KeyError:
-                    raise ValueError(f"Invalid role: {value}")
-            elif hasattr(user, key) and key not in ["user_id", "id"]:
+            if key in ["user_id", "id", "created_at", "is_registered"]:
+                continue
+            
+            if key == "password":
+                if value and value.strip():
+                    user.set_password(value)
+            elif key == "role":
+                if value:
+                    role_value = value
+                    if isinstance(value, dict):
+                        role_value = value.get("value", value.get("role"))
+                    try:
+                        user.role = UserRole[role_value]
+                    except (KeyError, TypeError) as e:
+                        print(f"Invalid role value: {role_value}, error: {e}")
+                        raise ValueError(f"Invalid role: {role_value}")
+            elif hasattr(user, key):
                 setattr(user, key, value)
 
         session.commit()
+        session.refresh(user) 
         return user
+        
     except IntegrityError as e:
         session.rollback()
+        print(f"IntegrityError updating user {user_id}: {e}")
         raise ValueError("User with this email or phone already exists")
     except SQLAlchemyError as e:
         session.rollback()
+        print(f"SQLAlchemyError updating user {user_id}: {e}")
         raise Exception(f"Database error updating user: {e}")
     except Exception as e:
         session.rollback()
+        print(f"Unexpected error updating user {user_id}: {e}")
+        import traceback
+        traceback.print_exc()
         raise e
 
 
@@ -122,24 +140,35 @@ def update_user_full(session, user_id, data):
         user.phone = data.get('phone')
 
         role_str = data.get('role')
+        if isinstance(role_str, dict):
+            role_str = role_str.get("value", role_str.get("role"))
         try:
             user.role = UserRole[role_str]
         except KeyError:
             raise ValueError(f"Invalid role: {role_str}")
 
         if data.get('password'):
-            user.set_password(data.get('password'))
+            password = data.get('password')
+            if password and password.strip():
+                user.set_password(password)
 
         session.commit()
+        session.refresh(user)
         return user
+        
     except IntegrityError as e:
         session.rollback()
+        print(f"IntegrityError in full update user {user_id}: {e}")
         raise ValueError("User with this email or phone already exists")
     except SQLAlchemyError as e:
         session.rollback()
+        print(f"SQLAlchemyError in full update user {user_id}: {e}")
         raise Exception(f"Database error updating user: {e}")
     except Exception as e:
         session.rollback()
+        print(f"Unexpected error in full update user {user_id}: {e}")
+        import traceback
+        traceback.print_exc()
         raise e
 
 
@@ -154,7 +183,9 @@ def delete_user(session, user_id):
         return True
     except SQLAlchemyError as e:
         session.rollback()
+        print(f"SQLAlchemyError deleting user {user_id}: {e}")
         raise Exception(f"Database error deleting user: {e}")
     except Exception as e:
         session.rollback()
+        print(f"Unexpected error deleting user {user_id}: {e}")
         raise e
