@@ -3,10 +3,12 @@ from flask import request, jsonify, g
 import jwt
 from datetime import datetime, timedelta
 import os
+from dotenv import load_dotenv
 from .models.user_model import User
 from .db import db
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+load_dotenv()
+SECRET_KEY = os.getenv('SECRET_KEY') or 'dev-secret-key'
 
 def create_token(user_id, role=None, is_admin=False):
     """Generate JWT token for a user"""
@@ -178,3 +180,48 @@ def is_token_expired(token: str) -> bool:
         return False
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         return True
+
+
+def _has_uppercase(password):
+    return any(char.isupper() for char in password)
+
+def _has_lowercase(password):
+    return any(char.islower() for char in password)
+
+def _has_digits(password):
+    return any(char.isdigit() for char in password)
+
+def _has_special_chars(password):
+    return any(not char.isalnum() for char in password)
+
+def _has_no_spaces(password):
+    return ' ' not in password
+
+def _meets_length_requirements(password, min_length=8):
+    return len(password) >= min_length if password else False
+
+def validate_password(password, min_length=8):
+    if not password:
+        return False, "Password cannot be empty"
+
+    validation_checks = [
+        (_has_uppercase(password),
+         "Password must contain at least one uppercase letter!"),
+        (_has_lowercase(password),
+         "Password must contain at least one lowercase letter!"),
+        (_has_digits(password),
+         "Password must contain at least one digit!"),
+        (_has_special_chars(password),
+         "Password must contain at least one special character!"),
+        (_has_no_spaces(password),
+         "Password cannot contain spaces!"),
+        (_meets_length_requirements(password, min_length),
+         f"Password must be at least {min_length} characters long!")
+    ]
+
+    failed_checks = [message for (is_valid, message) in validation_checks if not is_valid]
+
+    if failed_checks:
+        return False, "; ".join(failed_checks)
+
+    return True, "Password is valid"

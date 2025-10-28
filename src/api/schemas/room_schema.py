@@ -21,21 +21,15 @@ class RoomOutSchema(Schema):
 
     id = fields.Int(dump_only=True, attribute="room_id")
     room_number = fields.Str(required=True)
-    room_type = fields.Method("get_room_type")
+    room_type = fields.Str(required=True, attribute="room_type.value")
     max_guest = fields.Int(required=True)
     base_price = fields.Decimal(required=True, as_string=True)
-    status = fields.Method("get_status")
+    status = fields.Str(required=True, attribute="status.value")
     description = fields.Str(required=False)
     floor = fields.Int(required=True)
     size_sqm = fields.Decimal(required=False, as_string=True)
     main_photo_url = fields.Str(required=False)
     photo_urls = fields.List(fields.Str(), required=False)
-
-    def get_room_type(self, obj):
-        return obj.room_type.value if hasattr(obj.room_type, 'value') else str(obj.room_type)
-
-    def get_status(self, obj):
-        return obj.status.value if hasattr(obj.status, 'value') else str(obj.status)
 
 
 # for create/update input

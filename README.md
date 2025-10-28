@@ -43,6 +43,18 @@
 - [Quality Attributes](docs/api/quality-attributes.md)  
 - GitHub Pages: [https://ukma-cs-ssdm-2025.github.io/HelloBugs/](https://ukma-cs-ssdm-2025.github.io/HelloBugs/)
 
+## Стандарти якості та тестування
+- [Стратегія тестування](./docs/testing/testing-strategy.md)
+- [Debugging Log](./docs/testing/debugging-log.md)
+- [Static Analysis Report](./docs/code-quality/static-analysis.md)
+- [Звіт code review іншої команди](./docs/code-quality/review-report.md)
+- [Прогрес реалізації](./docs/code-quality/progress.md)
+
+## Командні правила
+- [Team Charter](./TeamCharter.md)
+
+## Відео Loom 
+- [Список відео (Loom/файли)](./Labs/)
 
 ## Як запустити проєкт
 
@@ -57,7 +69,7 @@ cd HelloBugs
 ```
 ### 1. Запустити додаток
 ```bash
-docker-compose up
+docker-compose up --build
 ```
 🌘 Доступний за адресою: http://localhost:3000
 

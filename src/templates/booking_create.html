@@ -20,20 +20,37 @@
                     <input type="hidden" id="user_id" name="user_id">
 
                     <div class="form-group">
-                        <label for="selected-room">Обраний номер *</label>
+                        <label for="selected-room">Обраний номер*</label>
                         <div class="selected-room-display" id="selected-room-display">
                             Номер не обрано
                         </div>
                     </div>
 
+                    <div class="form-group">
+                        <label for="guest_first_name">Ім'я*</label>
+                        <input type="text" id="guest_first_name" name="first_name" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="guest_last_name">Прізвище*</label>
+                        <input type="text" id="guest_last_name" name="last_name" class="form-input">
+                    </div>
+                    <div class="form-group">
+                       <label for="guest_phone">Телефон*</label>
+                       <input type="text" id="guest_phone" name="phone" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="guest_email">Email</label>
+                        <input type="email" id="guest_email" name="email" class="form-input">
+                    </div>
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="check_in_date">Дата заїзду *</label>
+                            <label for="check_in_date">Дата заїзду*</label>
                             <input type="date" id="check_in_date" name="check_in_date" required class="form-input">
                         </div>
 
                         <div class="form-group">
-                            <label for="check_out_date">Дата виїзду *</label>
+                            <label for="check_out_date">Дата виїзду*</label>
                             <input type="date" id="check_out_date" name="check_out_date" required class="form-input">
                         </div>
                     </div>

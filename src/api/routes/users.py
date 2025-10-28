@@ -9,6 +9,7 @@ from src.api.services.user_service import (
     update_user_full,
     delete_user
 )
+from src.api.db import db 
 
 blp = Blueprint(
     "Users",
@@ -24,7 +25,7 @@ class UserList(MethodView):
     def get(self):
         """Get all users"""
         try:
-            return get_all_users()
+            return get_all_users(db) 
         except Exception as e:
             abort(500, message=str(e))
 
@@ -33,7 +34,7 @@ class UserList(MethodView):
     def post(self, new_user):
         """Create a new user"""
         try:
-            result = create_user(new_user, via_booking=False)
+            result = create_user(db, new_user, via_booking=False) 
             return result
         except ValueError as e:
             abort(400, message=str(e))
@@ -46,7 +47,7 @@ class UserResource(MethodView):
     @blp.response(200, UserOutSchema, description="Get a single user by id.")
     def get(self, user_id):
         """Get a single user by ID"""
-        user = get_user_by_id(user_id)
+        user = get_user_by_id(db, user_id)  
         if not user:
             abort(404, message="User not found")
         return user
@@ -56,7 +57,7 @@ class UserResource(MethodView):
     def patch(self, patch_data, user_id):
         """Partially update user fields"""
         try:
-            user = update_user_partial(user_id, patch_data)
+            user = update_user_partial(db, user_id, patch_data) 
             if not user:
                 abort(404, message="User not found")
             return user
@@ -70,7 +71,7 @@ class UserResource(MethodView):
     def put(self, updated_user, user_id):
         """Replace a user completely"""
         try:
-            user = update_user_full(user_id, updated_user)
+            user = update_user_full(db, user_id, updated_user)  
             if not user:
                 abort(404, message="User not found")
             return user
@@ -83,7 +84,7 @@ class UserResource(MethodView):
     def delete(self, user_id):
         """Delete a user"""
         try:
-            success = delete_user(user_id)
+            success = delete_user(db, user_id)  
             if not success:
                 abort(404, message="User not found")
             return "", 204

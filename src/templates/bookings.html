@@ -7,19 +7,17 @@
     <div class="container">
         <h1 class="page-title">ВСІ БРОНЮВАННЯ</h1>
         <p class="page-subtitle">Перегляньте та створюйте нові бронювання</p>
-        <!-- для юзера будуть мої бронювання -->
     </div>
+    <div class="admin-only" style="display: none; margin-top: 20px;">
+            <button id="create-booking-btn" class="btn btn-success" style="margin-top: 20px;">
+                + Додати нове бронювання
+            </button>
+    </div>
+</div>
 </section>
 
 <section id="bookings-list" class="bookings-section">
     <div class="container">
-
-        <div class="bookings-top-bar">
-            <h2 class="section-title">Ваші бронювання</h2>
-            <button id="create-booking-btn" class="btn btn-primary">
-                Створити бронювання
-            </button>
-        </div>
 
         <div class="filter-tabs">
             <button class="tab-btn active" data-status="all">Всі</button>
@@ -46,40 +44,61 @@
     </div>
 </section>
 
+<!-- Модалка для створення бронювання -->
 <div id="create-booking-modal" class="modal">
     <div class="modal-content">
-        <span class="close-btn" id="close-modal">&times;</span>
-        <h2>Створити нове бронювання</h2>
+        <span id="close-modal" class="close">&times;</span>
 
         <form id="create-booking-form">
+            <input type="hidden" id="user_id" name="user_id">
+
             <div class="form-group">
-                <label for="room-select">Оберіть номер:</label>
+                <label for="room-select">Оберіть номер:*</label>
                 <select id="room-select" name="room_id" required>
                     <option value="">Завантаження...</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="check-in">Дата заїзду:</label>
-                <input type="date" id="check-in" name="check_in_date" required>
+                <label for="guest_first_name">Ім'я*</label>
+                <input type="text" id="guest_first_name" name="first_name" class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="guest_last_name">Прізвище*</label>
+                <input type="text" id="guest_last_name" name="last_name" class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="guest_phone">Телефон*</label>
+                <input type="text" id="guest_phone" name="phone" class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="guest_email">Email</label>
+                <input type="email" id="guest_email" name="email" class="form-input">
             </div>
 
-            <div class="form-group">
-                <label for="check-out">Дата виїзду:</label>
-                <input type="date" id="check-out" name="check_out_date" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="check-in">Дата заїзду:*</label>
+                    <input type="date" id="check-in" name="check_in_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="check-out">Дата виїзду:*</label>
+                    <input type="date" id="check-out" name="check_out_date" required>
+                </div>
             </div>
 
             <div class="form-group">
                 <label for="special-requests">Особливі побажання:</label>
-                <textarea id="special-requests" name="special_requests" rows="3" placeholder="Наприклад: номер з видом на місто"></textarea>
+                <textarea id="special-requests" name="special_requests" rows="3"></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary full-width">Підтвердити бронювання</button>
+            <div class="modal-buttons">
+                <button type="submit" class="btn btn-primary btn-small">Підтвердити бронювання</button>
+                <button type="button" id="cancel-modal-btn" class="btn btn-secondary btn-small">Скасувати</button>
+            </div>
         </form>
     </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/bookings.js') }}"></script>
-
-
 {% endblock %}

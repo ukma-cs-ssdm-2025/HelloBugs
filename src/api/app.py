@@ -9,7 +9,6 @@ from src.api.routes.bookings import blp as bookings_blp
 from src.api.routes.auth_routes import blp as auth_blp
 from src.api.auth import login_required_web, admin_required
 import os
-import sys
 import traceback
 from dotenv import load_dotenv
 from src.api.db import create_tables
@@ -53,7 +52,13 @@ def set_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers[
-        'Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'"
+        'Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "style-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com data:"
+        )
 
     if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'

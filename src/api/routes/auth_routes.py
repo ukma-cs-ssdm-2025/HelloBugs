@@ -1,3 +1,4 @@
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from flask import Blueprint, request, jsonify, current_app, g
 from flask_smorest import Blueprint as SmorestBlueprint
 from werkzeug.security import check_password_hash
@@ -21,36 +22,50 @@ def _auth_token_response(token: str, token_type: str = DEFAULT_TOKEN_TYPE, expir
         payload['role'] = role
     return jsonify(payload)
 
+
 @blp.route('/register', methods=['POST'])
 def register():
     """Register a new user"""
     data = request.get_json(silent=True)
     required_fields = ['email', 'password', 'first_name', 'last_name', 'phone']
-    if not data or not all(field in data for field in required_fields):
-        return jsonify({'message': 'Missing required fields'}), 400
-    
+
+    if not data:
+        return jsonify({'message': 'No JSON data provided'}), 400
+
+    if not all(field in data for field in required_fields):
+        missing = [field for field in required_fields if field not in data]
+        return jsonify({'message': f'Missing required fields: {", ".join(missing)}'}), 400
+
+    # Валідація email
+    if not isinstance(data['email'], str) or '@' not in data['email']:
+        return jsonify({'message': 'Invalid email format'}), 400
+
+    # Валідація пароля
+    if not isinstance(data['password'], str) or len(data['password']) < 6:
+        return jsonify({'message': 'Password must be at least 6 characters'}), 400
+
     # Check if user already exists
     if db.query(User).filter_by(email=data['email']).first():
         return jsonify({'message': 'Email already registered'}), 400
-    
+
     try:
         # Create new user
         user = User(
-            email=data['email'],
-            first_name=data['first_name'],
-            last_name=data['last_name'],
-            phone=data['phone'],
+            email=data['email'].strip().lower(),
+            first_name=data['first_name'].strip(),
+            last_name=data['last_name'].strip(),
+            phone=data['phone'].strip(),
             role=UserRole.GUEST,
             is_registered=True
         )
         user.set_password(data['password'])
-        
+
         db.add(user)
         db.commit()
-        
+
         # Generate auth token
         token = user.generate_auth_token()
-        
+
         return jsonify({
             'message': 'User registered successfully',
             'token': token,
@@ -63,11 +78,21 @@ def register():
                 'is_admin': user.role == UserRole.ADMIN
             }
         }), 201
-        
+
+    except IntegrityError as e:
+        db.rollback()
+        current_app.logger.error(f'Database integrity error: {str(e)}')
+        return jsonify({'message': 'User with this email or phone already exists'}), 400
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        current_app.logger.error(f'Database error: {str(e)}')
+        return jsonify({'message': 'Database error occurred'}), 500
+
     except Exception as e:
         db.rollback()
-        current_app.logger.error(f'Registration error: {str(e)}')
-        return jsonify({'message': 'Error registering user'}), 500
+        current_app.logger.error(f'Unexpected error during registration: {str(e)}')
+        return jsonify({'message': 'An unexpected error occurred'}), 500
 
 @blp.route('/create-admin', methods=['POST'])
 @token_required
@@ -172,31 +197,38 @@ def create_staff():
 @blp.route('/login', methods=['POST'])
 def login():
     """User login"""
-    data = request.get_json()
-    
-    if not data or not data.get('email') or not data.get('password'):
-        return jsonify({'message': 'Email and password are required'}), 400
-    
-    user = db.query(User).filter_by(email=data['email'], is_registered=True).first()
-    
-    if not user or not user.check_password(data['password']):
-        return jsonify({'message': 'Invalid email or password'}), 401
-    
-    # Generate auth token
-    token = user.generate_auth_token()
-    
-    return jsonify({
-        'message': 'Login successful',
-        'token': token,
-        'user': {
-            'id': user.user_id,
-            'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'role': user.role.value,
-            'is_admin': user.role == UserRole.ADMIN
-        }
-    })
+    try:
+        data = request.get_json(silent=True) or {}
+
+        email = (data.get('email') or '').strip().lower()
+        password = data.get('password') or ''
+
+        if not email or not password:
+            return jsonify({'message': 'Email and password are required'}), 400
+
+        user = db.query(User).filter_by(email=email, is_registered=True).first()
+
+        if not user or not user.check_password(password):
+            return jsonify({'message': 'Invalid email or password'}), 401
+
+        # Generate auth token
+        token = user.generate_auth_token()
+
+        return jsonify({
+            'message': 'Login successful',
+            'token': token,
+            'user': {
+                'id': user.user_id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role.value,
+                'is_admin': user.role == UserRole.ADMIN
+            }
+        })
+    except Exception as e:
+        current_app.logger.error(f"Login error: {str(e)}")
+        return jsonify({'message': 'Internal server error during login'}), 500
 
 @blp.route('/me')
 @token_required

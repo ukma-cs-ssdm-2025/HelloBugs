@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('password');
     const roleInput = document.getElementById('role');
 
-    const createBtn = document.querySelector('button.btn-primary');
+    const createBtn = document.querySelector('button.btn-success');
 
     window.openUserModal = function(title) {
         modal.classList.add('show');
@@ -21,23 +21,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.closeUserModal = function() {
         modal.classList.remove('show');
-        form.reset();
-        userIdInput.value = '';
-        passwordInput.required = false;
+        setTimeout(() => {
+            form.reset();
+            userIdInput.value = '';
+            passwordInput.required = false;
+        }, 300);
     }
 
     window.openCreateUserModal = function() {
+        form.reset();
+        userIdInput.value = '';
+        passwordInput.value = '';
+        passwordInput.required = true;
         window.openUserModal('Додати користувача');
-        passwordInput.required = true; 
     }
 
-    createBtn.addEventListener('click', () => {
-        window.openCreateUserModal();
-    });
+    if (createBtn) {
+        createBtn.addEventListener('click', () => {
+            window.openCreateUserModal();
+        });
+    }
 
     closeModalBtn.addEventListener('click', window.closeUserModal);
+    
     window.addEventListener('click', (e) => {
-        if (e.target === modal) window.closeUserModal();
+        if (e.target === modal) {
+            window.closeUserModal();
+        }
     });
 
     async function fetchUsers() {
@@ -90,8 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     emailInput.value = user.email;
                     phoneInput.value = user.phone || '';
                     roleInput.value = user.role;
-                    passwordInput.value = ''; // Очищаємо поле пароля
-                    passwordInput.required = false; // Пароль НЕ обов'язковий при редагуванні
+                    passwordInput.value = '';
+                    passwordInput.required = false;
 
                     window.openUserModal('Редагувати користувача');
                 } catch (err) {
@@ -121,12 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        e.stopPropagation();
         
         const userData = {
-            first_name: firstNameInput.value,
-            last_name: lastNameInput.value,
-            email: emailInput.value,
-            phone: phoneInput.value,
+            first_name: firstNameInput.value.trim(),
+            last_name: lastNameInput.value.trim(),
+            email: emailInput.value.trim(),
+            phone: phoneInput.value.trim(),
             role: roleInput.value
         };
 
@@ -139,25 +150,41 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (userId) {
                 // Update user (PATCH)
-                await authManager.makeAuthenticatedRequest(`/api/v1/users/${userId}`, {
+                console.log('Оновлення користувача ID:', userId);
+                const response = await authManager.makeAuthenticatedRequest(`/api/v1/users/${userId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(userData)
                 });
+                
+                if (!response.ok) {
+                    throw new Error('Помилка оновлення користувача');
+                }
+                
+                console.log('Користувач успішно оновлений');
             } else {
-                // Create user (POST) - пароль обов'язковий
+                // Create user (POST)
+                console.log('Створення нового користувача');
                 if (!userData.password) {
                     alert('Пароль є обов\'язковим при створенні користувача');
                     return;
                 }
-                await authManager.makeAuthenticatedRequest('/api/v1/users/', {
+                const response = await authManager.makeAuthenticatedRequest('/api/v1/users/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(userData)
                 });
+                
+                if (!response.ok) {
+                    throw new Error('Помилка створення користувача');
+                }
+                
+                console.log('Користувач успішно створений');
             }
+            
             window.closeUserModal();
-            fetchUsers();
+            await fetchUsers();
+            
         } catch (err) {
             console.error('Помилка при збереженні:', err);
             alert('Помилка при збереженні користувача. Перевірте консоль для деталей.');

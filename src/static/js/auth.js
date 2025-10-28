@@ -1,6 +1,6 @@
 class AuthManager {
     constructor() {
-        this.token = this.getCookie('auth_token');
+        this.token = localStorage.getItem('access_token') || this.getCookie('auth_token');
         this.user = JSON.parse(localStorage.getItem('user') || 'null');
         this.init();
     }
@@ -33,19 +33,21 @@ class AuthManager {
     }
 
     updateNavigation() {
-        const loginBtn = document.querySelector('.login-btn');
-        const navList = document.querySelector('.nav-list');
+    const loginBtn = document.querySelector('.login-btn');
+    const navList = document.querySelector('.nav-list');
 
-        if (this.isAuthenticated()) {
-            if (loginBtn) loginBtn.style.display = 'none';
-            this.addUserMenu(navList);
-            this.showAdminElements();
-        } else {
-            if (loginBtn) loginBtn.style.display = 'flex';
-            this.removeUserMenu(navList);
-            this.showAdminElements(); 
-        }
+    if (this.isAuthenticated()) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        this.addUserMenu(navList);
+        this.showAdminElements();
+        this.showStaffElements(); 
+    } else {
+        if (loginBtn) loginBtn.style.display = 'flex';
+        this.removeUserMenu(navList);
+        this.showAdminElements(); 
+        this.showStaffElements(); 
     }
+}
 
     addUserMenu(navList) {
         this.removeUserMenu(navList);
@@ -127,6 +129,7 @@ class AuthManager {
                 this.token = data.token;
                 this.user = data.user;
                 localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('access_token', this.token);
                 this.setCookie('auth_token', this.token, 1);
                 this.updateNavigation();
                 return { success: true };
@@ -136,10 +139,49 @@ class AuthManager {
         }
     }
 
+       async register(userData) {
+        try {
+            console.log('Sending registration request:', userData);
+
+            const res = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+
+            const data = await res.json();
+            console.log('Registration response:', data);
+
+            if (res.ok) {
+                this.token = data.token;
+                this.user = data.user;
+                localStorage.setItem('user', JSON.stringify(data.user));
+                localStorage.setItem('access_token', this.token);
+                this.setCookie('auth_token', this.token, 1);
+                this.updateNavigation();
+                return { success: true, message: data.message };
+            } else {
+                return {
+                    success: false,
+                    message: data.message || 'Registration failed'
+                };
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            return {
+                success: false,
+                message: 'Server connection error'
+            };
+        }
+    }
+
     logout() {
         this.token = null;
         this.user = null;
         localStorage.removeItem('user');
+        localStorage.removeItem('access_token');
         this.setCookie('auth_token', '', -1);
         this.updateNavigation();
         if (window.location.pathname !== '/') window.location.href = '/';
@@ -152,7 +194,9 @@ class AuthManager {
             d.setTime(d.getTime() + days*24*60*60*1000);
             expires = "; expires=" + d.toUTCString();
         }
-        document.cookie = `${name}=${value || ""}${expires}; path=/`;
+        const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+        const sameSite = '; SameSite=Lax';
+        document.cookie = `${name}=${value || ""}${expires}; path=/${sameSite}${secure}`;
     }
 
     getCookie(name) {
@@ -173,6 +217,39 @@ class AuthManager {
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
         return res;
     }
+
+    isStaff() {
+    return this.user && this.user.role === 'STAFF';
+}
+
+isStaffOrAdmin() {
+    return this.user && (this.user.role === 'STAFF' || this.user.role === 'ADMIN');
+}
+
+showStaffElements() {
+    const staffElements = document.querySelectorAll('.staff-only');
+    const adminOnlyElements = document.querySelectorAll('.admin-only');
+    
+    if (this.isStaffOrAdmin()) {
+        adminOnlyElements.forEach(element => {
+            element.style.display = 'block';
+        });
+    } else {
+        adminOnlyElements.forEach(element => {
+            element.style.display = 'none';
+        });
+    }
+    
+    if (this.isStaff()) {
+        staffElements.forEach(element => {
+            element.style.display = 'block';
+        });
+    } else {
+        staffElements.forEach(element => {
+            element.style.display = 'none';
+        });
+    }
+}
 }
 
 const authManager = new AuthManager();

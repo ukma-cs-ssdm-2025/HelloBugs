@@ -1,17 +1,17 @@
-from src.api.db import db
 from src.api.models.user_model import User, UserRole
 import datetime
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 
-def get_all_users():
+def get_all_users(session):
     try:
-        return db.query(User).all()
+        return session.query(User).all()
     except SQLAlchemyError as e:
         print(f"Database error fetching users: {e}")
+        raise
 
 
-def create_user(data, via_booking=False):
+def create_user(session, data, via_booking=False):
     try:
         email = data.get("email")
         first_name = data.get("first_name")
@@ -22,13 +22,15 @@ def create_user(data, via_booking=False):
 
         role = None
         if role_str:
+            if isinstance(role_str, dict):
+                role_str = role_str.get("value")
             try:
                 role = UserRole[role_str]
             except KeyError:
                 raise ValueError(f"Invalid role: {role_str}")
 
         if not via_booking:
-            existing_user = db.query(User).filter_by(email=email).first()
+            existing_user = session.query(User).filter_by(email=email).first()
             if existing_user and existing_user.is_registered:
                 raise ValueError("User with this email already exists")
 
@@ -45,61 +47,85 @@ def create_user(data, via_booking=False):
         if password:
             new_user.set_password(password)
 
-        db.add(new_user)
-        db.commit()
+        session.add(new_user)
+        session.commit()
         return new_user
 
     except IntegrityError as e:
-        db.rollback()
+        session.rollback()
         raise ValueError("User with this email or phone already exists")
     except SQLAlchemyError as e:
-        db.rollback()
+        session.rollback()
         raise Exception(f"Database error creating user: {e}")
     except Exception as e:
-        db.rollback()
+        session.rollback()
         raise e
 
 
-def get_user_by_id(user_id):
+def get_user_by_id(session, user_id):
     try:
-        return db.query(User).get(user_id)
+        return session.query(User).get(user_id)
     except SQLAlchemyError as e:
         print(f"Database error fetching user {user_id}: {e}")
         return None
 
 
-def update_user_partial(user_id, data):
-    user = db.query(User).get(user_id)
+def get_user_by_email(session, email):
+    try:
+        return session.query(User).filter_by(email=email).first()
+    except SQLAlchemyError as e:
+        print(f"Database error fetching user by email {email}: {e}")
+        return None
+
+
+def update_user_partial(session, user_id, data):
+    user = session.query(User).get(user_id)
     if not user:
         return None
 
     try:
         for key, value in data.items():
-            if key == "password" and value:
-                user.set_password(value)
-            elif key == "role" and value:
-                try:
-                    setattr(user, key, UserRole[value])
-                except KeyError:
-                    raise ValueError(f"Invalid role: {value}")
-            elif hasattr(user, key) and key not in ["user_id", "id"]:
+            if key in ["user_id", "id", "created_at", "is_registered"]:
+                continue
+            
+            if key == "password":
+                if value and value.strip():
+                    user.set_password(value)
+            elif key == "role":
+                if value:
+                    role_value = value
+                    if isinstance(value, dict):
+                        role_value = value.get("value", value.get("role"))
+                    try:
+                        user.role = UserRole[role_value]
+                    except (KeyError, TypeError) as e:
+                        print(f"Invalid role value: {role_value}, error: {e}")
+                        raise ValueError(f"Invalid role: {role_value}")
+            elif hasattr(user, key):
                 setattr(user, key, value)
 
-        db.commit()
+        session.commit()
+        session.refresh(user) 
         return user
+        
     except IntegrityError as e:
-        db.rollback()
+        session.rollback()
+        print(f"IntegrityError updating user {user_id}: {e}")
         raise ValueError("User with this email or phone already exists")
     except SQLAlchemyError as e:
-        db.rollback()
+        session.rollback()
+        print(f"SQLAlchemyError updating user {user_id}: {e}")
         raise Exception(f"Database error updating user: {e}")
     except Exception as e:
-        db.rollback()
+        session.rollback()
+        print(f"Unexpected error updating user {user_id}: {e}")
+        import traceback
+        traceback.print_exc()
         raise e
 
 
-def update_user_full(user_id, data):
-    user = db.query(User).get(user_id)
+def update_user_full(session, user_id, data):
+    user = session.query(User).get(user_id)
     if not user:
         return None
 
@@ -114,39 +140,52 @@ def update_user_full(user_id, data):
         user.phone = data.get('phone')
 
         role_str = data.get('role')
+        if isinstance(role_str, dict):
+            role_str = role_str.get("value", role_str.get("role"))
         try:
             user.role = UserRole[role_str]
         except KeyError:
             raise ValueError(f"Invalid role: {role_str}")
 
         if data.get('password'):
-            user.set_password(data.get('password'))
+            password = data.get('password')
+            if password and password.strip():
+                user.set_password(password)
 
-        db.commit()
+        session.commit()
+        session.refresh(user)
         return user
+        
     except IntegrityError as e:
-        db.rollback()
+        session.rollback()
+        print(f"IntegrityError in full update user {user_id}: {e}")
         raise ValueError("User with this email or phone already exists")
     except SQLAlchemyError as e:
-        db.rollback()
+        session.rollback()
+        print(f"SQLAlchemyError in full update user {user_id}: {e}")
         raise Exception(f"Database error updating user: {e}")
     except Exception as e:
-        db.rollback()
+        session.rollback()
+        print(f"Unexpected error in full update user {user_id}: {e}")
+        import traceback
+        traceback.print_exc()
         raise e
 
 
-def delete_user(user_id):
-    user = db.query(User).get(user_id)
+def delete_user(session, user_id):
+    user = session.query(User).get(user_id)
     if not user:
         return False
 
     try:
-        db.delete(user)
-        db.commit()
+        session.delete(user)
+        session.commit()
         return True
     except SQLAlchemyError as e:
-        db.rollback()
+        session.rollback()
+        print(f"SQLAlchemyError deleting user {user_id}: {e}")
         raise Exception(f"Database error deleting user: {e}")
     except Exception as e:
-        db.rollback()
+        session.rollback()
+        print(f"Unexpected error deleting user {user_id}: {e}")
         raise e
