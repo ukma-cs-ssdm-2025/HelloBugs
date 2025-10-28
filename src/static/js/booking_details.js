@@ -23,19 +23,21 @@ async function loadBookingDetails(bookingCode) {
         }
         
         const booking = await response.json();
-        // If booking doesn't include guest info and we don't have cached user, try to fetch current user
-        let accUser = (window.authManager && window.authManager.user) || JSON.parse(localStorage.getItem('user') || 'null');
-        if ((!booking.first_name || !booking.email) && !accUser) {
-            try {
-                const token = (window.authManager && window.authManager.token) || localStorage.getItem('access_token') || null;
-                const meRes = await fetch('/api/v1/auth/me', token ? { headers: { 'Authorization': `Bearer ${token}` } } : undefined);
-                if (meRes && meRes.ok) {
-                    accUser = await meRes.json();
-                    localStorage.setItem('user', JSON.stringify(accUser));
+
+        // Try to fetch the user who owns this booking (registered or guest account)
+        let bookingUser = null;
+        try {
+            if (booking.user_id) {
+                const userRes = await fetch(`/api/v1/users/${booking.user_id}`);
+                if (userRes.ok) {
+                    bookingUser = await userRes.json();
                 }
-            } catch {}
+            }
+        } catch (e) {
+            console.warn('Could not load booking user info:', e);
         }
-        displayBookingDetails(booking);
+
+        displayBookingDetails(booking, bookingUser);
         
         // Завантажуємо інформацію про номер
         loadRoomDetails(booking.room_id);
@@ -61,7 +63,7 @@ async function loadRoomDetails(roomId) {
     }
 }
 
-function displayBookingDetails(booking) {
+function displayBookingDetails(booking, bookingUser) {
     // Приховуємо loading
     document.getElementById('loading').style.display = 'none';
     document.getElementById('booking-content').style.display = 'block';
@@ -75,11 +77,17 @@ function displayBookingDetails(booking) {
     statusBadge.textContent = statusText;
     statusBadge.className = `status-badge ${booking.status.toLowerCase()}`;
     
-    const accUser = (window.authManager && window.authManager.user) || JSON.parse(localStorage.getItem('user') || 'null');
-    const firstName = booking.first_name || (accUser && accUser.first_name) || '-';
-    const lastName = booking.last_name || (accUser && accUser.last_name) || '';
-    const email = booking.email || (accUser && accUser.email) || '-';
-    const phone = booking.phone || (accUser && accUser.phone) || '-';
+    const fallbackAcc = (window.authManager && window.authManager.user) || JSON.parse(localStorage.getItem('user') || 'null');
+    const guest = bookingUser || {
+        first_name: booking.first_name,
+        last_name: booking.last_name,
+        email: booking.email,
+        phone: booking.phone
+    };
+    const firstName = (guest && guest.first_name) || (fallbackAcc && fallbackAcc.first_name) || '-';
+    const lastName = (guest && guest.last_name) || (fallbackAcc && fallbackAcc.last_name) || '';
+    const email = (guest && guest.email) || (fallbackAcc && fallbackAcc.email) || '-';
+    const phone = (guest && guest.phone) || (fallbackAcc && fallbackAcc.phone) || '-';
     document.getElementById('guest-name').textContent = `${firstName} ${lastName}`.trim();
     document.getElementById('guest-email').textContent = email;
     document.getElementById('guest-phone').textContent = phone;
