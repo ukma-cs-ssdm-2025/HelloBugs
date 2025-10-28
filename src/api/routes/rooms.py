@@ -1,6 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask import request
+from flask import request
 from datetime import date, timedelta
 import logging
 from src.api.schemas.room_schema import (
@@ -244,5 +245,33 @@ class AmenityResource(MethodView):
             if not success:
                 abort(404, message=f"Amenity with ID {amenity_id} not found")
             return "", 204
+        except Exception as e:
+            abort(500, message=str(e))
+
+
+# FR-011: Calendar of room occupancy (booked ranges)
+@blp.route("/<int:room_id>/booked-ranges")
+class RoomBookedRanges(MethodView):
+    def get(self, room_id: int):
+        """Get booked date ranges for a room within [start, end].
+        Query params:
+          - start: YYYY-MM-DD (optional, default=today)
+          - end: YYYY-MM-DD (optional, default=today+30 days)
+        Returns list of {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}.
+        """
+        try:
+            start_str = request.args.get("start")
+            end_str = request.args.get("end")
+
+            start_date = date.today() if not start_str else date.fromisoformat(start_str)
+            end_date = (start_date + timedelta(days=30)) if not end_str else date.fromisoformat(end_str)
+
+            if end_date <= start_date:
+                abort(400, message="'end' must be after 'start'")
+
+            ranges = get_room_booked_ranges(db, room_id, start_date, end_date)
+            return ranges
+        except ValueError:
+            abort(400, message="Invalid date format. Use YYYY-MM-DD")
         except Exception as e:
             abort(500, message=str(e))
