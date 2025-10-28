@@ -1,5 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+from flask import request
+from datetime import date, timedelta
 import logging
 from src.api.schemas.room_schema import (
     RoomInSchema, RoomOutSchema, RoomPatchSchema
@@ -15,6 +17,7 @@ from src.api.services.room_service import (
     update_room_full,
     delete_room
 )
+from src.api.services.booking_service import get_room_booked_ranges
 from src.api.services.amenity_service import (
     get_all_amenities,
     create_amenity,
@@ -112,6 +115,43 @@ class RoomResource(MethodView):
         if not success:
             abort(404, message=f"Room with ID {room_id} not found")
         return "", 204
+
+
+@blp.route("/<int:room_id>/availability")
+class RoomAvailability(MethodView):
+    @blp.alt_response(404, description="Room not found")
+    def get(self, room_id):
+        """Get booked date ranges for a room within a window.
+        Query params:
+        - start: YYYY-MM-DD (default: today)
+        - end: YYYY-MM-DD (default: today + 90 days)
+        """
+        room = get_room_by_id(db, room_id)
+        if not room:
+            abort(404, message=f"Room with ID {room_id} not found")
+
+        start_str = request.args.get("start")
+        end_str = request.args.get("end")
+        today = date.today()
+        try:
+            start_date = date.fromisoformat(start_str) if start_str else today
+        except ValueError:
+            start_date = today
+        try:
+            end_date = date.fromisoformat(end_str) if end_str else (today + timedelta(days=90))
+        except ValueError:
+            end_date = today + timedelta(days=90)
+
+        if end_date <= start_date:
+            end_date = start_date + timedelta(days=1)
+
+        booked = get_room_booked_ranges(db, room_id, start_date, end_date)
+        return {
+            "room_id": room_id,
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat(),
+            "booked": booked
+        }
 
 
 amenities_blp = Blueprint(
