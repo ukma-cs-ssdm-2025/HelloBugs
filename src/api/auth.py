@@ -3,10 +3,12 @@ from flask import request, jsonify, g
 import jwt
 from datetime import datetime, timedelta
 import os
+from dotenv import load_dotenv
 from .models.user_model import User
 from .db import db
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+load_dotenv()
+SECRET_KEY = os.getenv('SECRET_KEY') or 'dev-secret-key'
 
 def create_token(user_id, role=None, is_admin=False):
     """Generate JWT token for a user"""

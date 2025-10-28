@@ -7,6 +7,12 @@
     <div class="container">
         <h1 class="page-title">НАШІ НОМЕРИ</h1>
         <p class="page-subtitle">Оберіть ідеальний номер для вашого комфортного перебування</p>
+        
+        <div class="admin-only" style="display: none; margin-top: 20px;">
+            <button class="btn btn-success" onclick="openAddRoomModal()">
+                + Додати новий номер
+            </button>
+        </div>
     </div>
 </section>
 
@@ -100,6 +106,75 @@
         </div>
     </div>
 </section>
+
+<!-- Модальне вікно для додавання/редагування номера -->
+<div id="roomModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeRoomModal()">&times;</span>
+        <h2 id="modalTitle">Додати номер</h2>
+        <form id="roomForm">
+            <input type="hidden" id="roomId">
+            
+            <div class="form-group">
+                <label for="roomNumber">Номер кімнати*</label>
+                <input type="text" id="roomNumber" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="roomType">Тип номера*</label>
+                <select id="roomType" required>
+                    <option value="ECONOMY">Економ</option>
+                    <option value="STANDARD">Стандарт</option>
+                    <option value="DELUXE">Делюкс</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="maxGuest">Максимум гостей*</label>
+                <input type="number" id="maxGuest" min="1" max="10" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="basePrice">Базова ціна (грн)*</label>
+                <input type="number" id="basePrice" min="0" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="roomStatus">Статус*</label>
+                <select id="roomStatus" required>
+                    <option value="AVAILABLE">Доступний</option>
+                    <option value="OCCUPIED">Зайнятий</option>
+                    <option value="MAINTENANCE">На обслуговуванні</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="floor">Поверх*</label>
+                <input type="number" id="floor" min="1" max="50" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="sizeSqm">Площа (м²)</label>
+                <input type="number" id="sizeSqm" min="10" step="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Опис*</label>
+                <textarea id="description" rows="4" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="mainPhotoUrl">URL головного фото*</label>
+                <input type="url" id="mainPhotoUrl">
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Зберегти</button>
+                <button type="button" class="btn btn-secondary" onclick="closeRoomModal()">Скасувати</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script src="{{ url_for('static', filename='js/rooms.js') }}"></script>
 {% endblock %}
