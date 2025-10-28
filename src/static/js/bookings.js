@@ -72,6 +72,15 @@ function createBookingCard(booking) {
         'CANCELLED': 'Скасоване'
     };
 
+    const canEdit = (() => {
+        const u = authManager && authManager.user;
+        if (!u) return false;
+        const role = u.role;
+        const isStaffOrAdmin = role === 'ADMIN' || role === 'STAFF';
+        const isOwner = booking.user_id && u.id === booking.user_id;
+        return (isStaffOrAdmin || isOwner) && booking.status === 'ACTIVE';
+    })();
+
     return `
         <div class="booking-card" data-booking-code="${booking.booking_code}">
             <div class="booking-header">
@@ -117,6 +126,10 @@ function createBookingCard(booking) {
                     <button class="btn btn-small btn-secondary" onclick="viewBookingDetails('${booking.booking_code}')">
                         Детальніше
                     </button>
+                    ${canEdit ? `
+                    <button class="btn btn-small btn-primary" onclick='openEditBooking(${JSON.stringify(booking)})'>
+                        Редагувати
+                    </button>` : ''}
                     <button class="btn btn-small btn-danger" onclick="cancelBooking('${booking.booking_code}')">
                         Скасувати
                     </button>
@@ -181,6 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('create-booking-form');
     const roomSelect = document.getElementById('room-select');
 
+    const editModal = document.getElementById('edit-booking-modal');
+    const editCloseBtn = document.getElementById('edit-close-modal');
+    const editCancelBtn = document.getElementById('edit-cancel-modal-btn');
+    const editForm = document.getElementById('edit-booking-form');
+    const roomSelectEdit = document.getElementById('room-select-edit');
+
     openBtn.addEventListener('click', async () => {
         modal.style.display = 'flex';
         await loadAvailableRooms();
@@ -201,6 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === modal) {
             modal.style.display = 'none';
             form.reset();
+        }
+        if (e.target === editModal) {
+            editModal.style.display = 'none';
+            editForm.reset();
         }
     });
 
@@ -267,6 +290,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.cancelBooking = cancelBooking;
 window.viewBookingDetails = viewBookingDetails;
+window.openEditBooking = function(booking) {
+    const editModal = document.getElementById('edit-booking-modal');
+    const editForm = document.getElementById('edit-booking-form');
+    const roomSelectEdit = document.getElementById('room-select-edit');
+    const inInput = document.getElementById('edit-check-in');
+    const outInput = document.getElementById('edit-check-out');
+    const reqTextarea = document.getElementById('edit-special-requests');
+
+    editForm.reset();
+    document.getElementById('edit_booking_code').value = booking.booking_code;
+    inInput.value = booking.check_in_date;
+    outInput.value = booking.check_out_date;
+    reqTextarea.value = booking.special_requests || '';
+
+    (async () => {
+        await (async function(target){
+            try {
+                const res = await fetch('/api/v1/rooms/');
+                if (!res.ok) throw new Error('Помилка завантаження кімнат');
+                const rooms = await res.json();
+                target.innerHTML = `
+                    <option value="">-- Оберіть номер --</option>
+                    ${rooms.map(r => `
+                        <option value="${r.id}">№${r.room_number} — ${r.room_type} (${r.max_guest} гостей) — ${r.base_price}₴/ніч</option>
+                    `).join('')}
+                `;
+                target.value = booking.room_id;
+            } catch (e) {
+                console.error(e);
+                target.innerHTML = `<option>Помилка завантаження</option>`;
+            }
+        })(roomSelectEdit);
+        editModal.style.display = 'flex';
+    })();
+};
 
 function filterByStatus(status, e) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
