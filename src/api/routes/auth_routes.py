@@ -222,6 +222,8 @@ def login():
         # Generate auth token
         token = user.generate_auth_token()
 
+        role_value = _get_role_value(user)
+        is_admin = (role_value == 'ADMIN')
         return jsonify({
             'message': 'Login successful',
             'token': token,
@@ -230,8 +232,8 @@ def login():
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
-                'role': user.role.value,
-                'is_admin': user.role == UserRole.ADMIN
+                'role': role_value,
+                'is_admin': is_admin
             }
         })
     except Exception as e:

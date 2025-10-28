@@ -49,7 +49,13 @@ class User(Base):
 
     def check_password(self, password):
         """Check hashed password."""
-        return check_password_hash(self.password, password)
+        # Guard against None or malformed stored password
+        if not self.password:
+            return False
+        try:
+            return check_password_hash(self.password, password)
+        except Exception:
+            return False
 
     def generate_auth_token(self):
         """Generate JWT token for the user."""
