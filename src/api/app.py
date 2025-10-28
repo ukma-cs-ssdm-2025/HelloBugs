@@ -166,6 +166,11 @@ def users_page():
     """Сторінка з користувачами для Admin"""
     return render_template('users.html')
 
+@app.route('/contacts')
+def contacts_page():
+    """Сторінка контактів"""
+    return render_template('contacts.html')
+
 
 if __name__ == "__main__":
     create_tables()
