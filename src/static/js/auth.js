@@ -124,7 +124,15 @@ class AuthManager {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
             });
-            const data = await res.json();
+            // Try to parse JSON; if fails, fallback to text
+            let data;
+            try {
+                data = await res.clone().json();
+            } catch (_) {
+                const text = await res.text();
+                data = { message: text || 'Server error' };
+            }
+
             if (res.ok) {
                 this.token = data.token;
                 this.user = data.user;
@@ -133,9 +141,17 @@ class AuthManager {
                 this.setCookie('auth_token', this.token, 1);
                 this.updateNavigation();
                 return { success: true };
-            } else return { success: false, message: data.message };
-        } catch {
-            return { success: false, message: 'Server error' };
+            } else {
+                console.error('Login failed:', {
+                    status: res.status,
+                    statusText: res.statusText,
+                    body: data
+                });
+                return { success: false, message: data.message || `Login failed (${res.status})` };
+            }
+        } catch (error) {
+            console.error('Login request error:', error);
+            return { success: false, message: 'Server connection error' };
         }
     }
 
@@ -151,8 +167,15 @@ class AuthManager {
                 body: JSON.stringify(userData)
             });
 
-            const data = await res.json();
-            console.log('Registration response:', data);
+            // Attempt JSON first; fallback to plain text
+            let data;
+            try {
+                data = await res.clone().json();
+            } catch (_) {
+                const text = await res.text();
+                data = { message: text || 'Server error' };
+            }
+            console.log('Registration response:', { status: res.status, statusText: res.statusText, body: data });
 
             if (res.ok) {
                 this.token = data.token;
@@ -165,7 +188,7 @@ class AuthManager {
             } else {
                 return {
                     success: false,
-                    message: data.message || 'Registration failed'
+                    message: data.message || `Registration failed (${res.status})`
                 };
             }
         } catch (error) {
