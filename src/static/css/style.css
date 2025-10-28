@@ -729,6 +729,32 @@ border-color: #B8963E;
     color: #B8963E;
 }
 
+.admin-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: end;
+}
+
+.admin-filters .filter-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin: 0;
+}
+
+.admin-filters label { margin: 0; }
+
+.admin-filters .filter-select,
+.admin-filters .filter-input { height: 44px; padding: 10px 14px; }
+
+.admin-filters .btn { height: 44px; padding: 0 16px; align-self: start; }
+
+@media (max-width: 768px) {
+  .admin-filters { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 768px) {
     .filters {
         flex-direction: column;

@@ -24,13 +24,18 @@
                 <label for="filter-role">Роль:</label>
                 <select id="filter-role" class="filter-select" onchange="filterUsers()">
                     <option value="">Всі ролі</option>
-                    <option value="GUEST">Клієнт</option>
+                    <option value="GUEST">Гість</option>
                     <option value="STAFF">Персонал</option>
                     <option value="ADMIN">Адміністратор</option>
                 </select>
             </div>
             <div class="filter-group">
-                <input type="text" id="search-user" class="filter-input" placeholder="Пошук за ім'ям або email..." onkeyup="searchUsers()">
+                <label for="search-user">Пошук:</label>
+                <input type="text" id="search-user" class="filter-input" placeholder="Пошук за прізвищем...">
+            </div>
+            <div class="filter-group">
+                <label>&nbsp;</label>
+                <button id="search-btn" class="btn btn-primary">Пошук</button>
             </div>
         </div>
 
@@ -108,7 +113,7 @@
             <div class="form-group">
                 <label for="role">Роль *</label>
                 <select id="role" name="role" required class="form-input">
-                    <option value="GUEST">Клієнт</option>
+                    <option value="GUEST">Гість</option>
                     <option value="STAFF">Персонал</option>
                     <option value="ADMIN">Адміністратор</option>
                 </select>
