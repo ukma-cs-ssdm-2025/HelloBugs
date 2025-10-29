@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const roleFilter = document.getElementById('filter-role');
     const searchInput = document.getElementById('search-user');
     const searchBtn = document.getElementById('search-btn');
+    const resetBtn = document.getElementById('reset-btn');
 
     window.openUserModal = function(title) {
         modal.classList.add('show');
@@ -111,6 +112,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (searchBtn) {
         searchBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            fetchUsers();
+        });
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (roleFilter) roleFilter.value = '';
+            if (searchInput) searchInput.value = '';
             fetchUsers();
         });
     }

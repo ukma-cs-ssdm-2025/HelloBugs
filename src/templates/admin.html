@@ -269,9 +269,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         getCount('/api/v1/bookings')
     ]);
 
-    document.getElementById('usersCount').textContent = (usersCnt ?? 'Помилка');
-    document.getElementById('roomsCount').textContent = (roomsCnt ?? 'Помилка');
-    document.getElementById('bookingsCount').textContent = (bookingsCnt ?? 'Помилка');
+    const usersEl = document.getElementById('usersCount');
+    const roomsEl = document.getElementById('roomsCount');
+    const bookingsEl = document.getElementById('bookingsCount');
+
+    usersEl.textContent = (usersCnt ?? 0);
+    roomsEl.textContent = (roomsCnt ?? 0);
+    bookingsEl.textContent = (bookingsCnt ?? 0);
+
+    if (usersCnt == null) usersEl.title = 'Не вдалося завантажити кількість користувачів';
+    if (roomsCnt == null) roomsEl.title = 'Не вдалося завантажити кількість номерів';
+    if (bookingsCnt == null) bookingsEl.title = 'Не вдалося завантажити кількість бронювань';
 
     
     document.querySelectorAll('.stat-card.clickable').forEach(card => {
