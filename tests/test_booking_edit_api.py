@@ -87,3 +87,46 @@ def test_patch_booking_conflict_returns_409(client, db_session, seed_user, seed_
 
     res = client.patch(f"/api/v1/bookings/{code}", json=payload)
     assert res.status_code in (409, 400, 403), res.get_json()
+
+
+def test_cannot_patch_cancelled_booking(client, db_session, seed_booking):
+    code = seed_booking.booking_code
+    # Cancel first
+    res_cancel = client.delete(f"/api/v1/bookings/{code}")
+    assert res_cancel.status_code == 204
+    # Then try to patch
+    res_patch = client.patch(f"/api/v1/bookings/{code}", json={"special_requests": "nope"})
+    assert res_patch.status_code in (403, 400)
+
+
+def test_cannot_put_cancelled_booking(client, db_session, seed_booking, seed_room):
+    code = seed_booking.booking_code
+    res_cancel = client.delete(f"/api/v1/bookings/{code}")
+    assert res_cancel.status_code == 204
+
+    payload = {
+        'user_id': seed_booking.user_id,
+        'room_id': seed_room.room_id,
+        'check_in_date': (date.today() + timedelta(days=10)).isoformat(),
+        'check_out_date': (date.today() + timedelta(days=12)).isoformat(),
+        'special_requests': 'recreate'
+    }
+    res_put = client.put(f"/api/v1/bookings/{code}", json=payload)
+    assert res_put.status_code in (403, 400)
+
+
+def test_patch_same_dates_updates_requests(client, db_session, seed_booking):
+    code = seed_booking.booking_code
+    payload = {
+        'special_requests': 'updated note'
+    }
+    res = client.patch(f"/api/v1/bookings/{code}", json=payload)
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data['special_requests'] == 'updated note'
+
+
+def test_delete_booking_returns_204(client, db_session, seed_booking):
+    code = seed_booking.booking_code
+    res = client.delete(f"/api/v1/bookings/{code}")
+    assert res.status_code == 204
