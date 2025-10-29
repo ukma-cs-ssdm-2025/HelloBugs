@@ -227,6 +227,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Обробники для модалки редагування: закрити/скасувати
+    editCloseBtn.addEventListener('click', () => {
+        editModal.style.display = 'none';
+        editForm.reset();
+    });
+    editCancelBtn.addEventListener('click', () => {
+        editModal.style.display = 'none';
+        editForm.reset();
+    });
+
+    // Edit modal: close/cancel
+    editCloseBtn.addEventListener('click', () => {
+        editModal.style.display = 'none';
+        editForm.reset();
+    });
+    editCancelBtn.addEventListener('click', () => {
+        editModal.style.display = 'none';
+        editForm.reset();
+    });
+
     async function loadAvailableRooms() {
         try {
             const res = await fetch('/api/v1/rooms/');
@@ -286,6 +306,46 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Помилка зʼєднання з сервером');
         }
     });
+    
+    // Submit edit form -> PATCH booking
+    editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(editForm);
+        const code = fd.get('booking_code');
+        const room_id = parseInt(fd.get('room_id'));
+        const check_in_date = fd.get('check_in_date');
+        const check_out_date = fd.get('check_out_date');
+        const special_requests = fd.get('special_requests') || null;
+
+        if (!room_id || !check_in_date || !check_out_date) {
+            alert('Будь ласка, заповніть усі обовʼязкові поля');
+            return;
+        }
+        if (new Date(check_out_date) <= new Date(check_in_date)) {
+            alert('Дата виїзду має бути пізніше дати заїзду');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/v1/bookings/${code}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ room_id, check_in_date, check_out_date, special_requests })
+            });
+            if (res.ok) {
+                alert('Зміни збережено');
+                editModal.style.display = 'none';
+                editForm.reset();
+                loadBookings();
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert('Помилка оновлення: ' + (err.message || 'невідома помилка'));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Помилка зʼєднання з сервером');
+        }
+    });
 });
 
 window.cancelBooking = cancelBooking;
@@ -300,8 +360,8 @@ window.openEditBooking = function(booking) {
 
     editForm.reset();
     document.getElementById('edit_booking_code').value = booking.booking_code;
-    inInput.value = booking.check_in_date;
-    outInput.value = booking.check_out_date;
+    inInput.value = (booking.check_in_date || '').slice(0,10);
+    outInput.value = (booking.check_out_date || '').slice(0,10);
     reqTextarea.value = booking.special_requests || '';
 
     (async () => {
