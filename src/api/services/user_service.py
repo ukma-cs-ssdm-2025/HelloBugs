@@ -62,6 +62,27 @@ def create_user(session, data, via_booking=False):
         raise e
 
 
+def search_users(session, role: str = None, last_name: str = None):
+    try:
+        query = session.query(User)
+
+        if role:
+            try:
+                role_enum = UserRole[role]
+                query = query.filter(User.role == role_enum)
+            except KeyError:
+                return []
+
+        if last_name:
+            like_value = f"%{last_name}%"
+            query = query.filter(User.last_name.ilike(like_value))
+
+        return query.all()
+    except SQLAlchemyError as e:
+        print(f"Database error searching users: {e}")
+        raise
+
+
 def get_user_by_id(session, user_id):
     try:
         return session.query(User).get(user_id)

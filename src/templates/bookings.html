@@ -14,6 +14,45 @@
             </button>
     </div>
 </div>
+
+<!-- Модалка для редагування бронювання -->
+<div id="edit-booking-modal" class="modal">
+    <div class="modal-content">
+        <span id="edit-close-modal" class="close">&times;</span>
+
+        <form id="edit-booking-form">
+            <input type="hidden" id="edit_booking_code" name="booking_code">
+
+            <div class="form-group">
+                <label for="room-select-edit">Оберіть номер:*</label>
+                <select id="room-select-edit" name="room_id" required>
+                    <option value="">Завантаження...</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-check-in">Дата заїзду:*</label>
+                    <input type="date" id="edit-check-in" name="check_in_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-check-out">Дата виїзду:*</label>
+                    <input type="date" id="edit-check-out" name="check_out_date" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-special-requests">Особливі побажання:</label>
+                <textarea id="edit-special-requests" name="special_requests" rows="3"></textarea>
+            </div>
+
+            <div class="modal-buttons">
+                <button type="submit" class="btn btn-primary btn-small">Зберегти зміни</button>
+                <button type="button" id="edit-cancel-modal-btn" class="btn btn-secondary btn-small">Скасувати</button>
+            </div>
+        </form>
+    </div>
+    </div>
 </section>
 
 <section id="bookings-list" class="bookings-section">

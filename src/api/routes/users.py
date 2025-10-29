@@ -1,5 +1,6 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
+from flask import request
 from src.api.schemas.user_schema import UserInSchema, UserOutSchema, UserPatchSchema
 from src.api.services.user_service import (
     get_all_users,
@@ -7,7 +8,8 @@ from src.api.services.user_service import (
     get_user_by_id,
     update_user_partial,
     update_user_full,
-    delete_user
+    delete_user,
+    search_users
 )
 from src.api.db import db 
 
@@ -23,8 +25,14 @@ class UserList(MethodView):
 
     @blp.response(200, UserOutSchema(many=True), description="List all users.")
     def get(self):
-        """Get all users"""
+        """Get all users or search by role/last_name"""
         try:
+            role = request.args.get('role', type=str)
+            last_name = request.args.get('last_name', type=str)
+
+            if (role and role.strip()) or (last_name and last_name.strip()):
+                return search_users(db, role=role.strip() if role else None, last_name=last_name.strip() if last_name else None)
+
             return get_all_users(db) 
         except Exception as e:
             abort(500, message=str(e))

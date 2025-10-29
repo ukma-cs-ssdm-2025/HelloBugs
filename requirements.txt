@@ -14,3 +14,4 @@ email-validator==2.1.0.post1
 python-dateutil==2.8.2
 pytest-cov==7.0.0
 coverage-badge==1.1.2
+alembic==1.12.1

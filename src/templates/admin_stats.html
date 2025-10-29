@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Статистика - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">СТАТИСТИКА</h1>
+    <p class="page-subtitle">Зведені показники системи з фільтрами за період</p>
+  </div>
+</section>
+
+<section class="stats-section">
+  <div class="container">
+    <div class="filters-row">
+      <div class="filter-col">
+        <label for="stats-from">Від</label>
+        <input type="date" id="stats-from" />
+      </div>
+      <div class="filter-col">
+        <label for="stats-to">До</label>
+        <input type="date" id="stats-to" />
+      </div>
+      <div class="filter-col apply-col">
+        <label style="visibility:hidden">apply</label>
+        <button id="stats-apply" class="btn btn-primary">Показати</button>
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-body">
+          <h4>Користувачі</h4>
+          <div class="kpi-main" id="usersTotal">—</div>
+          <div class="kpi-sub">За період: <span id="usersPeriod">—</span></div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon">🏨</div>
+        <div class="kpi-body">
+          <h4>Номери</h4>
+          <div class="kpi-main" id="roomsTotal">—</div>
+          <div class="kpi-sub muted">Статичний показник</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon">📅</div>
+        <div class="kpi-body">
+          <h4>Бронювання</h4>
+          <div class="kpi-main" id="bookingsTotal">—</div>
+          <div class="kpi-sub">За період: <span id="bookingsPeriod">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.stats-section{padding:40px 0;background:#f8f9fa}
+.filters-row{display:flex;gap:12px;align-items:flex-end;margin-bottom:16px}
+.filter-col{display:flex;flex-direction:column}
+.filter-col input[type="date"]{height:38px}
+.apply-col button{height:38px}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.kpi-card{display:flex;gap:12px;align-items:center;background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.kpi-icon{width:48px;height:48px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px}
+.kpi-body h4{margin:0 0 4px 0;color:var(--dark-blue);font-size:16px}
+.kpi-main{font-size:22px;font-weight:700;color:#2c3e50}
+.kpi-sub{font-size:13px;color:var(--gray)}
+.muted{color:var(--gray)}
+@media(max-width:768px){.filters-row{flex-wrap:wrap}}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+  const token = (window.authManager && window.authManager.token) || localStorage.getItem('access_token') || null;
+  const baseHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+  const usersTotalEl = document.getElementById('usersTotal');
+  const usersPeriodEl = document.getElementById('usersPeriod');
+  const roomsTotalEl = document.getElementById('roomsTotal');
+  const bookingsTotalEl = document.getElementById('bookingsTotal');
+  const bookingsPeriodEl = document.getElementById('bookingsPeriod');
+
+  const fromInput = document.getElementById('stats-from');
+  const toInput = document.getElementById('stats-to');
+  const applyBtn = document.getElementById('stats-apply');
+
+  // Defaults: this month
+  const today = new Date();
+  const firstMonthDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  fromInput.value = firstMonthDay.toISOString().slice(0,10);
+  toInput.value = today.toISOString().slice(0,10);
+
+  async function fetchList(url){
+    try{
+      let res = await fetch(url, { headers: baseHeaders });
+      if(!res.ok){
+        const altUrl = url.endsWith('/') ? url.slice(0,-1) : (url + '/');
+        res = await fetch(altUrl, { headers: baseHeaders });
+      }
+      if(!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    }catch(_){ return []; }
+  }
+
+  function inPeriod(d, from, to){
+    if(!d) return false;
+    const dt = new Date(d);
+    if (isNaN(dt)) return false;
+    return dt >= from && dt <= new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23,59,59,999);
+  }
+
+  async function loadStats(){
+    // Load lists
+    const [users, rooms, bookings] = await Promise.all([
+      fetchList('/api/v1/users'),
+      fetchList('/api/v1/rooms'),
+      fetchList('/api/v1/bookings')
+    ]);
+
+    usersTotalEl.textContent = users.length;
+    roomsTotalEl.textContent = rooms.length;
+    bookingsTotalEl.textContent = bookings.length;
+
+    const from = new Date(fromInput.value);
+    const to = new Date(toInput.value);
+    if (isNaN(from) || isNaN(to) || to < from){
+      usersPeriodEl.textContent = '—';
+      bookingsPeriodEl.textContent = '—';
+      return;
+    }
+
+    const usersNew = users.filter(u => inPeriod(u.created_at, from, to)).length;
+    const bookingsInPeriod = bookings.filter(b => inPeriod(b.created_at, from, to)).length;
+
+    usersPeriodEl.textContent = usersNew;
+    bookingsPeriodEl.textContent = bookingsInPeriod;
+  }
+
+  await loadStats();
+  applyBtn.addEventListener('click', (e)=>{ e.preventDefault(); loadStats(); });
+});
+</script>
+{% endblock %}

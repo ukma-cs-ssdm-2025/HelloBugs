@@ -240,33 +240,6 @@ def delete_room(session, room_id):
         raise
 
 
-def search_available_rooms(session, check_in=None, check_out=None, room_type=None,
-                           min_price=None, max_price=None, guests=None):
-    try:
-        query = session.query(Room).filter(Room.status == RoomStatus.AVAILABLE)
-
-        if room_type:
-            if isinstance(room_type, str):
-                room_type = RoomType[room_type]
-            query = query.filter(Room.room_type == room_type)
-
-        if min_price is not None:
-            query = query.filter(Room.base_price >= min_price)
-
-        if max_price is not None:
-            query = query.filter(Room.base_price <= max_price)
-
-        if guests:
-            query = query.filter(Room.max_guest >= guests)
-
-        rooms = query.all()
-        return rooms
-
-    except SQLAlchemyError as e:
-        logger.error(f"Database error searching rooms: {e}")
-        raise Exception(f"Database error: {e}")
-
-
 def get_room_with_amenities(session, room_id):
     try:
         room = session.query(Room).get(room_id)

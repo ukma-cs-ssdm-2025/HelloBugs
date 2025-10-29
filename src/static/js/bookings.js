@@ -1,15 +1,15 @@
 async function loadBookings(filterStatus = 'all') {
     const container = document.getElementById('bookings-container');
     const emptyState = document.getElementById('empty-state');
-    const bookingsSection = document.querySelector('.bookings-section'); // Додайте цей селектор
+    const bookingsSection = document.querySelector('.bookings-section'); 
 
     if (!authManager.isAuthenticated()) {
-    container.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px; color: #666;">
-            <h2>Увійдіть для перегляду та редагування деталей бронювань<\h2>
-        </div>
-    `;
-    return;
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: #666;">
+                <h2>Увійдіть для перегляду та редагування деталей бронювань</h2>
+            </div>
+        `;
+        return;
     }
 
     if (bookingsSection) {
@@ -61,6 +61,7 @@ function createBookingCard(booking) {
     const checkIn = new Date(booking.check_in_date).toLocaleDateString('uk-UA');
     const checkOut = new Date(booking.check_out_date).toLocaleDateString('uk-UA');
     const created = new Date(booking.created_at).toLocaleDateString('uk-UA');
+    const updated = booking.updated_at ? new Date(booking.updated_at).toLocaleDateString('uk-UA') : null;
 
     const nights = Math.ceil(
         (new Date(booking.check_out_date) - new Date(booking.check_in_date)) / (1000 * 60 * 60 * 24)
@@ -72,13 +73,22 @@ function createBookingCard(booking) {
         'CANCELLED': 'Скасоване'
     };
 
+    const canEdit = (() => {
+        const u = authManager && authManager.user;
+        if (!u) return false;
+        const role = u.role;
+        const isStaffOrAdmin = role === 'ADMIN' || role === 'STAFF';
+        const isOwner = booking.user_id && u.id === booking.user_id;
+        return (isStaffOrAdmin || isOwner) && booking.status === 'ACTIVE';
+    })();
+
     return `
         <div class="booking-card" data-booking-code="${booking.booking_code}">
             <div class="booking-header">
                 <div>
                     <div class="booking-code">Код бронювання: ${booking.booking_code}</div>
                     <div style="margin-top: 5px; color: var(--gray); font-size: 13px;">
-                        Створено: ${created}
+                        Створено: ${created}${updated ? ` · Оновлено: ${updated}` : ''}
                     </div>
                 </div>
                 <span class="booking-status status-${booking.status}">
@@ -117,6 +127,10 @@ function createBookingCard(booking) {
                     <button class="btn btn-small btn-secondary" onclick="viewBookingDetails('${booking.booking_code}')">
                         Детальніше
                     </button>
+                    ${canEdit ? `
+                    <button class="btn btn-small btn-primary" onclick='openEditBooking(${JSON.stringify(booking)})'>
+                        Редагувати
+                    </button>` : ''}
                     <button class="btn btn-small btn-danger" onclick="cancelBooking('${booking.booking_code}')">
                         Скасувати
                     </button>
@@ -152,6 +166,37 @@ function viewBookingDetails(bookingCode) {
     window.location.href = `/booking/details?code=${bookingCode}`;
 }
 
+function toggleGuestDataFields() {
+    const isAuthenticated = authManager.isAuthenticated();
+    const isStaffOrAdmin = isAuthenticated && 
+        (authManager.user.role === 'ADMIN' || authManager.user.role === 'STAFF');
+    
+    const guestFields = [
+        'guest_email',
+        'guest_first_name', 
+        'guest_last_name',
+        'guest_phone'
+    ];
+    
+    if (isStaffOrAdmin) {
+        guestFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.removeAttribute('readonly');
+                field.style.backgroundColor = '';
+            }
+        });
+    } else if (isAuthenticated) {
+        guestFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.setAttribute('readonly', 'readonly');
+                field.style.backgroundColor = '#f5f5f5';
+            }
+        });
+    }
+}
+
 function autofillGuestData() {
     if (!authManager.isAuthenticated()) return;
 
@@ -162,6 +207,8 @@ function autofillGuestData() {
     document.getElementById('guest_first_name').value = user.first_name || '';
     document.getElementById('guest_last_name').value = user.last_name || '';
     document.getElementById('guest_phone').value = user.phone || '';
+    
+    toggleGuestDataFields();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -180,6 +227,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelModalBtn = document.getElementById('cancel-modal-btn');
     const form = document.getElementById('create-booking-form');
     const roomSelect = document.getElementById('room-select');
+
+    const editModal = document.getElementById('edit-booking-modal');
+    const editCloseBtn = document.getElementById('edit-close-modal');
+    const editCancelBtn = document.getElementById('edit-cancel-modal-btn');
+    const editForm = document.getElementById('edit-booking-form');
+    const roomSelectEdit = document.getElementById('room-select-edit');
 
     openBtn.addEventListener('click', async () => {
         modal.style.display = 'flex';
@@ -202,6 +255,19 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.style.display = 'none';
             form.reset();
         }
+        if (e.target === editModal) {
+            editModal.style.display = 'none';
+            editForm.reset();
+        }
+    });
+
+    editCloseBtn.addEventListener('click', () => {
+        editModal.style.display = 'none';
+        editForm.reset();
+    });
+    editCancelBtn.addEventListener('click', () => {
+        editModal.style.display = 'none';
+        editForm.reset();
     });
 
     async function loadAvailableRooms() {
@@ -227,19 +293,29 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(form);
+        
         const data = {
             room_id: parseInt(formData.get('room_id')),
             check_in_date: formData.get('check_in_date'),
             check_out_date: formData.get('check_out_date'),
-            special_requests: formData.get('special_requests') || null,
-            email: formData.get('email') || null,
-            first_name: formData.get('first_name') || null,
-            last_name: formData.get('last_name') || null,
-            phone: formData.get('phone') || null
+            special_requests: formData.get('special_requests') || null
         };
 
-        if (authManager.isAuthenticated()) {
+        const isStaffOrAdmin = authManager.isAuthenticated() && 
+            (authManager.user.role === 'ADMIN' || authManager.user.role === 'STAFF');
+        
+        if (isStaffOrAdmin) {
+            data.email = formData.get('email') || null;
+            data.first_name = formData.get('first_name') || null;
+            data.last_name = formData.get('last_name') || null;
+            data.phone = formData.get('phone') || null;
+        } else if (authManager.isAuthenticated()) {
             data.user_id = authManager.user.id;
+        } else {
+            data.email = formData.get('email') || null;
+            data.first_name = formData.get('first_name') || null;
+            data.last_name = formData.get('last_name') || null;
+            data.phone = formData.get('phone') || null;
         }
 
         try {
@@ -263,10 +339,88 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Помилка зʼєднання з сервером');
         }
     });
+    
+    editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(editForm);
+        const code = fd.get('booking_code');
+        const room_id = parseInt(fd.get('room_id'));
+        const check_in_date = fd.get('check_in_date');
+        const check_out_date = fd.get('check_out_date');
+        const special_requests = fd.get('special_requests') || null;
+
+        if (!room_id || !check_in_date || !check_out_date) {
+            alert('Будь ласка, заповніть усі обовʼязкові поля');
+            return;
+        }
+        if (new Date(check_out_date) <= new Date(check_in_date)) {
+            alert('Дата виїзду має бути пізніше дати заїзду');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/v1/bookings/${code}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ room_id, check_in_date, check_out_date, special_requests })
+            });
+            if (res.ok) {
+                alert('Зміни збережено');
+                editModal.style.display = 'none';
+                editForm.reset();
+                loadBookings();
+            } else {
+                if (res.status === 409) {
+                    alert('Обрані дати недоступні для цього номеру. Оберіть інший період або номер.');
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert('Помилка оновлення: ' + (err.message || 'невідома помилка'));
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Помилка зʼєднання з сервером');
+        }
+    });
 });
 
 window.cancelBooking = cancelBooking;
 window.viewBookingDetails = viewBookingDetails;
+window.openEditBooking = function(booking) {
+    const editModal = document.getElementById('edit-booking-modal');
+    const editForm = document.getElementById('edit-booking-form');
+    const roomSelectEdit = document.getElementById('room-select-edit');
+    const inInput = document.getElementById('edit-check-in');
+    const outInput = document.getElementById('edit-check-out');
+    const reqTextarea = document.getElementById('edit-special-requests');
+
+    editForm.reset();
+    document.getElementById('edit_booking_code').value = booking.booking_code;
+    inInput.value = (booking.check_in_date || '').slice(0,10);
+    outInput.value = (booking.check_out_date || '').slice(0,10);
+    reqTextarea.value = booking.special_requests || '';
+
+    (async () => {
+        await (async function(target){
+            try {
+                const res = await fetch('/api/v1/rooms/');
+                if (!res.ok) throw new Error('Помилка завантаження кімнат');
+                const rooms = await res.json();
+                target.innerHTML = `
+                    <option value="">-- Оберіть номер --</option>
+                    ${rooms.map(r => `
+                        <option value="${r.id}">№${r.room_number} — ${r.room_type} (${r.max_guest} гостей) — ${r.base_price}₴/ніч</option>
+                    `).join('')}
+                `;
+                target.value = booking.room_id;
+            } catch (e) {
+                console.error(e);
+                target.innerHTML = `<option>Помилка завантаження</option>`;
+            }
+        })(roomSelectEdit);
+        editModal.style.display = 'flex';
+    })();
+};
 
 function filterByStatus(status, e) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));

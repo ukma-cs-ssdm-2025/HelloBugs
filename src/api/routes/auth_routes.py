@@ -44,17 +44,25 @@ def register():
     if not isinstance(data['password'], str) or len(data['password']) < 6:
         return jsonify({'message': 'Password must be at least 6 characters'}), 400
 
-    # Check if user already exists
-    if db.query(User).filter_by(email=data['email']).first():
+    # Normalize input
+    email_norm = (data['email'] or '').strip().lower()
+    phone_norm = (data['phone'] or '').strip()
+    first_name = (data['first_name'] or '').strip()
+    last_name = (data['last_name'] or '').strip()
+
+    # Check if user already exists (by email or phone)
+    if db.query(User).filter_by(email=email_norm).first():
         return jsonify({'message': 'Email already registered'}), 400
+    if db.query(User).filter_by(phone=phone_norm).first():
+        return jsonify({'message': 'Phone already registered'}), 400
 
     try:
         # Create new user
         user = User(
-            email=data['email'].strip().lower(),
-            first_name=data['first_name'].strip(),
-            last_name=data['last_name'].strip(),
-            phone=data['phone'].strip(),
+            email=email_norm,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone_norm,
             role=UserRole.GUEST,
             is_registered=True
         )
@@ -81,17 +89,17 @@ def register():
 
     except IntegrityError as e:
         db.rollback()
-        current_app.logger.error(f'Database integrity error: {str(e)}')
+        current_app.logger.exception('Database integrity error during registration')
         return jsonify({'message': 'User with this email or phone already exists'}), 400
 
     except SQLAlchemyError as e:
         db.rollback()
-        current_app.logger.error(f'Database error: {str(e)}')
+        current_app.logger.exception('Database error during registration')
         return jsonify({'message': 'Database error occurred'}), 500
 
     except Exception as e:
         db.rollback()
-        current_app.logger.error(f'Unexpected error during registration: {str(e)}')
+        current_app.logger.exception('Unexpected error during registration')
         return jsonify({'message': 'An unexpected error occurred'}), 500
 
 @blp.route('/create-admin', methods=['POST'])
@@ -214,6 +222,8 @@ def login():
         # Generate auth token
         token = user.generate_auth_token()
 
+        role_value = _get_role_value(user)
+        is_admin = (role_value == 'ADMIN')
         return jsonify({
             'message': 'Login successful',
             'token': token,
@@ -222,12 +232,12 @@ def login():
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
-                'role': user.role.value,
-                'is_admin': user.role == UserRole.ADMIN
+                'role': role_value,
+                'is_admin': is_admin
             }
         })
     except Exception as e:
-        current_app.logger.error(f"Login error: {str(e)}")
+        current_app.logger.exception("Login error")
         return jsonify({'message': 'Internal server error during login'}), 500
 
 @blp.route('/me')
