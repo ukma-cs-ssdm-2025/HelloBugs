@@ -27,6 +27,8 @@ from src.api.services.amenity_service import (
     delete_amenity
 )
 from src.api.db import db
+from src.api.models.room_model import Room, RoomType, RoomStatus
+from src.api.models.booking_model import Booking, BookingStatus
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +45,66 @@ class RoomList(MethodView):
     @blp.response(200, RoomOutSchema(many=True), description="List of all rooms")
     @blp.alt_response(500, description="Internal server error")
     def get(self):
-        """Get all rooms"""
+        """Get rooms. If query params provided, apply server-side filtering.
+        Query params (optional):
+          - check_in: YYYY-MM-DD
+          - check_out: YYYY-MM-DD (must be after check_in)
+          - room_type: ECONOMY|STANDARD|DELUXE
+          - min_price: float
+          - max_price: float
+          - guests: int
+        """
         try:
-            return get_all_rooms(db)
+            check_in_str = request.args.get("check_in")
+            check_out_str = request.args.get("check_out")
+
+            room_type = request.args.get("room_type")
+            min_price = request.args.get("min_price", type=float)
+            max_price = request.args.get("max_price", type=float)
+            guests = request.args.get("guests", type=int)
+
+            if not any([check_in_str, check_out_str, room_type, min_price is not None, max_price is not None, guests]):
+                return get_all_rooms(db)
+
+            check_in_date = None
+            check_out_date = None
+            if check_in_str or check_out_str:
+                if not (check_in_str and check_out_str):
+                    abort(400, message="Both 'check_in' and 'check_out' are required when filtering by dates")
+                try:
+                    check_in_date = date.fromisoformat(check_in_str)
+                    check_out_date = date.fromisoformat(check_out_str)
+                except ValueError:
+                    abort(400, message="Invalid date format. Use YYYY-MM-DD")
+                if check_out_date <= check_in_date:
+                    abort(400, message="'check_out' must be after 'check_in'")
+
+            query = db.query(Room)
+            if room_type:
+                try:
+                    rt = RoomType[room_type]
+                except KeyError:
+                    abort(400, message=f"Invalid room_type: {room_type}")
+                query = query.filter(Room.room_type == rt)
+            if min_price is not None:
+                query = query.filter(Room.base_price >= min_price)
+            if max_price is not None:
+                query = query.filter(Room.base_price <= max_price)
+            if guests:
+                query = query.filter(Room.max_guest >= guests)
+
+            candidates = query.all()
+
+            if check_in_date and check_out_date:
+                overlapping = db.query(Booking.room_id).filter(
+                    Booking.status != BookingStatus.CANCELLED,
+                    ~(((Booking.check_out_date <= check_in_date)) | ((Booking.check_in_date >= check_out_date)))
+                ).distinct().all()
+                occupied_room_ids = {rid for (rid,) in overlapping}
+                available = [room for room in candidates if room.room_id not in occupied_room_ids]
+                return available
+
+            return candidates
         except Exception as e:
             logger.error(f"Error getting rooms: {e}")
             abort(500, message=str(e))
