@@ -4,12 +4,12 @@ async function loadBookings(filterStatus = 'all') {
     const bookingsSection = document.querySelector('.bookings-section'); 
 
     if (!authManager.isAuthenticated()) {
-    container.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px; color: #666;">
-            <h2>Увійдіть для перегляду та редагування деталей бронювань<\h2>
-        </div>
-    `;
-    return;
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: #666;">
+                <h2>Увійдіть для перегляду та редагування деталей бронювань</h2>
+            </div>
+        `;
+        return;
     }
 
     if (bookingsSection) {
@@ -166,6 +166,37 @@ function viewBookingDetails(bookingCode) {
     window.location.href = `/booking/details?code=${bookingCode}`;
 }
 
+function toggleGuestDataFields() {
+    const isAuthenticated = authManager.isAuthenticated();
+    const isStaffOrAdmin = isAuthenticated && 
+        (authManager.user.role === 'ADMIN' || authManager.user.role === 'STAFF');
+    
+    const guestFields = [
+        'guest_email',
+        'guest_first_name', 
+        'guest_last_name',
+        'guest_phone'
+    ];
+    
+    if (isStaffOrAdmin) {
+        guestFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.removeAttribute('readonly');
+                field.style.backgroundColor = '';
+            }
+        });
+    } else if (isAuthenticated) {
+        guestFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.setAttribute('readonly', 'readonly');
+                field.style.backgroundColor = '#f5f5f5';
+            }
+        });
+    }
+}
+
 function autofillGuestData() {
     if (!authManager.isAuthenticated()) return;
 
@@ -176,6 +207,8 @@ function autofillGuestData() {
     document.getElementById('guest_first_name').value = user.first_name || '';
     document.getElementById('guest_last_name').value = user.last_name || '';
     document.getElementById('guest_phone').value = user.phone || '';
+    
+    toggleGuestDataFields();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -228,17 +261,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Обробники для модалки редагування: закрити/скасувати
-    editCloseBtn.addEventListener('click', () => {
-        editModal.style.display = 'none';
-        editForm.reset();
-    });
-    editCancelBtn.addEventListener('click', () => {
-        editModal.style.display = 'none';
-        editForm.reset();
-    });
-
-    // Edit modal: close/cancel
     editCloseBtn.addEventListener('click', () => {
         editModal.style.display = 'none';
         editForm.reset();
@@ -271,19 +293,29 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(form);
+        
         const data = {
             room_id: parseInt(formData.get('room_id')),
             check_in_date: formData.get('check_in_date'),
             check_out_date: formData.get('check_out_date'),
-            special_requests: formData.get('special_requests') || null,
-            email: formData.get('email') || null,
-            first_name: formData.get('first_name') || null,
-            last_name: formData.get('last_name') || null,
-            phone: formData.get('phone') || null
+            special_requests: formData.get('special_requests') || null
         };
 
-        if (authManager.isAuthenticated()) {
+        const isStaffOrAdmin = authManager.isAuthenticated() && 
+            (authManager.user.role === 'ADMIN' || authManager.user.role === 'STAFF');
+        
+        if (isStaffOrAdmin) {
+            data.email = formData.get('email') || null;
+            data.first_name = formData.get('first_name') || null;
+            data.last_name = formData.get('last_name') || null;
+            data.phone = formData.get('phone') || null;
+        } else if (authManager.isAuthenticated()) {
             data.user_id = authManager.user.id;
+        } else {
+            data.email = formData.get('email') || null;
+            data.first_name = formData.get('first_name') || null;
+            data.last_name = formData.get('last_name') || null;
+            data.phone = formData.get('phone') || null;
         }
 
         try {
@@ -308,7 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Submit edit form -> PATCH booking
     editForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(editForm);
