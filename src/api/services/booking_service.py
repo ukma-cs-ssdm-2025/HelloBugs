@@ -300,10 +300,27 @@ def get_room_booked_ranges(session, room_id: int, start_date: date, end_date: da
             ~(((Booking.check_out_date <= start_date)) | ((Booking.check_in_date >= end_date)))
         ).all()
 
+        from datetime import datetime as _dt, date as _date
+
+        def _to_date(v):
+            if isinstance(v, _date) and not isinstance(v, _dt):
+                return v
+            if isinstance(v, _dt):
+                return v.date()
+            try:
+                return _date.fromisoformat(str(v)[:10])
+            except Exception:
+                return v
+
+        s_start = _to_date(start_date)
+        s_end = _to_date(end_date)
+
         ranges = []
         for b in overlapping:
-            s = max(b.check_in_date, start_date)
-            e = min(b.check_out_date, end_date)
+            b_start = _to_date(b.check_in_date)
+            b_end = _to_date(b.check_out_date)
+            s = max(b_start, s_start)
+            e = min(b_end, s_end)
             ranges.append({
                 "start": s.isoformat(),
                 "end": e.isoformat()
