@@ -144,6 +144,13 @@ def admin_panel():
     from flask import g
     return render_template('admin.html', user=g.current_user)
 
+@app.route('/admin/stats')
+@login_required_web
+@admin_required
+def admin_stats_page():
+    """Сторінка статистики з фільтрами"""
+    return render_template('admin_stats.html')
+
 @app.route('/bookings')
 def bookings_page():
     """Бронювання"""
