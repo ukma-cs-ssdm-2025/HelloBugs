@@ -1,7 +1,7 @@
 async function loadBookings(filterStatus = 'all') {
     const container = document.getElementById('bookings-container');
     const emptyState = document.getElementById('empty-state');
-    const bookingsSection = document.querySelector('.bookings-section'); // Додайте цей селектор
+    const bookingsSection = document.querySelector('.bookings-section'); 
 
     if (!authManager.isAuthenticated()) {
     container.innerHTML = `
@@ -61,6 +61,7 @@ function createBookingCard(booking) {
     const checkIn = new Date(booking.check_in_date).toLocaleDateString('uk-UA');
     const checkOut = new Date(booking.check_out_date).toLocaleDateString('uk-UA');
     const created = new Date(booking.created_at).toLocaleDateString('uk-UA');
+    const updated = booking.updated_at ? new Date(booking.updated_at).toLocaleDateString('uk-UA') : null;
 
     const nights = Math.ceil(
         (new Date(booking.check_out_date) - new Date(booking.check_in_date)) / (1000 * 60 * 60 * 24)
@@ -87,7 +88,7 @@ function createBookingCard(booking) {
                 <div>
                     <div class="booking-code">Код бронювання: ${booking.booking_code}</div>
                     <div style="margin-top: 5px; color: var(--gray); font-size: 13px;">
-                        Створено: ${created}
+                        Створено: ${created}${updated ? ` · Оновлено: ${updated}` : ''}
                     </div>
                 </div>
                 <span class="booking-status status-${booking.status}">
@@ -338,8 +339,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 editForm.reset();
                 loadBookings();
             } else {
-                const err = await res.json().catch(() => ({}));
-                alert('Помилка оновлення: ' + (err.message || 'невідома помилка'));
+                if (res.status === 409) {
+                    alert('Обрані дати недоступні для цього номеру. Оберіть інший період або номер.');
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    alert('Помилка оновлення: ' + (err.message || 'невідома помилка'));
+                }
             }
         } catch (err) {
             console.error(err);
