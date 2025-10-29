@@ -239,30 +239,29 @@
 <script>
 // Load admin statistics
 document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        // Load users count
-        const usersResponse = await authManager.makeAuthenticatedRequest('/api/v1/users');
-        if (usersResponse.ok) {
-            const usersData = await usersResponse.json();
-            document.getElementById('usersCount').textContent = usersData.length || 0;
+    const token = (window.authManager && window.authManager.token) || localStorage.getItem('access_token') || null;
+    const baseHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+    async function getCount(url) {
+        try {
+            const res = await fetch(url, { headers: baseHeaders });
+            if (!res.ok) return null;
+            const data = await res.json();
+            return Array.isArray(data) ? data.length : (data?.total || 0);
+        } catch (_) {
+            return null;
         }
-        
-        // Load rooms count
-        const roomsResponse = await authManager.makeAuthenticatedRequest('/api/v1/rooms');
-        if (roomsResponse.ok) {
-            const roomsData = await roomsResponse.json();
-            document.getElementById('roomsCount').textContent = roomsData.length || 0;
-        }
-        
-        // Load bookings count
-        const bookingsResponse = await authManager.makeAuthenticatedRequest('/api/v1/bookings');
-        if (bookingsResponse.ok) {
-            const bookingsData = await bookingsResponse.json();
-            document.getElementById('bookingsCount').textContent = bookingsData.length || 0;
-        }
-    } catch (error) {
-        console.error('Error loading admin statistics:', error);
     }
+
+    const [usersCnt, roomsCnt, bookingsCnt] = await Promise.all([
+        getCount('/api/v1/users'),
+        getCount('/api/v1/rooms'),
+        getCount('/api/v1/bookings')
+    ]);
+
+    document.getElementById('usersCount').textContent = usersCnt ?? '—';
+    document.getElementById('roomsCount').textContent = roomsCnt ?? '—';
+    document.getElementById('bookingsCount').textContent = bookingsCnt ?? '—';
 });
 </script>
 {% endblock %}
