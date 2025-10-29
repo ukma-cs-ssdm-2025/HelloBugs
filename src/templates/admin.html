@@ -20,21 +20,21 @@
             <div class="admin-stats">
                 <h3>Статистика системи</h3>
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card clickable" data-href="/users" title="Перейти до користувачів">
                         <div class="stat-icon">👥</div>
                         <div class="stat-info">
                             <h4>Користувачі</h4>
                             <p id="usersCount">Завантаження...</p>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" data-href="/rooms" title="Перейти до номерів">
                         <div class="stat-icon">🏨</div>
                         <div class="stat-info">
                             <h4>Номери</h4>
                             <p id="roomsCount">Завантаження...</p>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card clickable" data-href="/bookings" title="Перейти до бронювань">
                         <div class="stat-icon">📅</div>
                         <div class="stat-info">
                             <h4>Бронювання</h4>
@@ -144,6 +144,8 @@
     transform: translateY(-5px);
 }
 
+.stat-card.clickable { cursor: pointer; }
+
 .stat-icon {
     font-size: 32px;
     width: 50px;
@@ -244,10 +246,18 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function getCount(url) {
         try {
-            const res = await fetch(url, { headers: baseHeaders });
+           
+            let res = await fetch(url, { headers: baseHeaders });
+            if (!res.ok) {
+                const altUrl = url.endsWith('/') ? url.slice(0, -1) : (url + '/');
+                res = await fetch(altUrl, { headers: baseHeaders });
+            }
             if (!res.ok) return null;
             const data = await res.json();
-            return Array.isArray(data) ? data.length : (data?.total || 0);
+            if (Array.isArray(data)) return data.length;
+            if (typeof data?.count === 'number') return data.count;
+            if (typeof data?.total === 'number') return data.total;
+            return null;
         } catch (_) {
             return null;
         }
@@ -259,9 +269,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         getCount('/api/v1/bookings')
     ]);
 
-    document.getElementById('usersCount').textContent = usersCnt ?? '—';
-    document.getElementById('roomsCount').textContent = roomsCnt ?? '—';
-    document.getElementById('bookingsCount').textContent = bookingsCnt ?? '—';
+    document.getElementById('usersCount').textContent = (usersCnt ?? 'Помилка');
+    document.getElementById('roomsCount').textContent = (roomsCnt ?? 'Помилка');
+    document.getElementById('bookingsCount').textContent = (bookingsCnt ?? 'Помилка');
+
+    
+    document.querySelectorAll('.stat-card.clickable').forEach(card => {
+        card.addEventListener('click', () => {
+            const href = card.getAttribute('data-href');
+            if (href) window.location.href = href;
+        });
+    });
 });
 </script>
 {% endblock %}
