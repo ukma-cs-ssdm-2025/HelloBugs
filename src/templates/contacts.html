@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Контакти - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">КОНТАКТИ</h1>
+    <p class="page-subtitle">Ми завжди на звʼязку</p>
+  </div>
+</section>
+
+<section class="contacts-section">
+  <div class="container contacts-grid">
+    <div class="contact-card">
+      <h3>Готель Хрещатик</h3>
+      <div class="contact-row"><span>Адреса:</span><span>м. Київ, вул. Хрещатик, 1</span></div>
+      <div class="contact-row"><span>Телефон:</span><a href="tel:+380441234567">+380956666666</a></div>
+      <div class="contact-row"><span>Email:</span><a href="mailto:info@hotel.com">info@hotel.com</a></div>
+      <div class="contact-row"><span>Графік:</span><span>Цілодобово</span></div>
+    </div>
+
+    <div class="contact-card">
+      <h3>Звʼязатися з нами</h3>
+      <form id="contactForm" class="contact-form">
+        <input type="text" id="c_name" name="name" placeholder="Ваше імʼя" required>
+        <input type="email" id="c_email" name="email" placeholder="Ваш email" required>
+        <textarea id="c_message" name="message" rows="5" placeholder="Ваше повідомлення" required></textarea>
+        <button type="submit" class="btn btn-primary">Надіслати</button>
+        <div id="contact_ok" class="success-message" style="display:none;">Дякуємо! Ми звʼяжемось з вами.</div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+.contacts-section{padding:60px 0;background:#f8f9fa}
+.contacts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.contact-card{background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.05);padding:24px}
+.contact-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e9ecef}
+.contact-row:last-child{border-bottom:none}
+.contact-form{display:flex;flex-direction:column;gap:12px}
+.contact-form input,.contact-form textarea{width:100%;padding:12px 14px;border:1px solid #dee2e6;border-radius:8px;background:#fff}
+.success-message{margin-top:8px;color:#2e7d32}
+</style>
+
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var ok = document.getElementById('contact_ok');
+  ok.style.display = 'block';
+  setTimeout(function(){ ok.style.display = 'none'; }, 3000);
+  this.reset();
+});
+</script>
+{% endblock %}

@@ -14,6 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const createBtn = document.querySelector('button.btn-success');
 
+    const roleFilter = document.getElementById('filter-role');
+    const searchInput = document.getElementById('search-user');
+    const searchBtn = document.getElementById('search-btn');
+    const resetBtn = document.getElementById('reset-btn');
+
     window.openUserModal = function(title) {
         modal.classList.add('show');
         document.getElementById('modal-title').innerText = title;
@@ -52,7 +57,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchUsers() {
         try {
-            const response = await authManager.makeAuthenticatedRequest('/api/v1/users/');
+            const params = new URLSearchParams();
+            const roleVal = roleFilter ? roleFilter.value : '';
+            const lastNameVal = searchInput ? searchInput.value.trim() : '';
+
+            if (roleVal) params.set('role', roleVal);
+            if (lastNameVal) params.set('last_name', lastNameVal);
+
+            const url = params.toString() ? `/api/v1/users/?${params.toString()}` : '/api/v1/users/';
+            const response = await authManager.makeAuthenticatedRequest(url);
             const users = await response.json();
             usersTableBody.innerHTML = '';
 
@@ -84,6 +97,41 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error fetching users:", error);
             usersTableBody.innerHTML = `<tr><td colspan="8" class="loading">Помилка завантаження користувачів</td></tr>`;
         }
+    }
+
+    // Global functions for inline handlers
+    window.filterUsers = function() {
+        fetchUsers();
+    };
+
+    window.searchUsers = function() {
+        fetchUsers();
+    };
+
+    // UI event bindings
+    if (searchBtn) {
+        searchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fetchUsers();
+        });
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (roleFilter) roleFilter.value = '';
+            if (searchInput) searchInput.value = '';
+            fetchUsers();
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                fetchUsers();
+            }
+        });
     }
 
     function addTableEventListeners() {

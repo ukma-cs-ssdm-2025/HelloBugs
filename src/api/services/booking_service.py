@@ -286,3 +286,46 @@ def get_upcoming_checkins(session, days=7):
     except SQLAlchemyError as e:
         logger.error(f"Database error fetching upcoming checkins: {e}")
         raise Exception(f"Database error: {e}")
+
+def get_room_booked_ranges(session, room_id: int, start_date: date, end_date: date):
+    """Return list of occupied date ranges for the room within [start_date, end_date].
+    Dates are returned as dicts: {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}
+    where end is exclusive (check_out_date).
+    """
+    try:
+        from src.api.models.booking_model import Booking, BookingStatus
+        overlapping = session.query(Booking).filter(
+            Booking.room_id == room_id,
+            Booking.status != BookingStatus.CANCELLED,
+            ~(((Booking.check_out_date <= start_date)) | ((Booking.check_in_date >= end_date)))
+        ).all()
+
+        from datetime import datetime as _dt, date as _date
+
+        def _to_date(v):
+            if isinstance(v, _date) and not isinstance(v, _dt):
+                return v
+            if isinstance(v, _dt):
+                return v.date()
+            try:
+                return _date.fromisoformat(str(v)[:10])
+            except Exception:
+                return v
+
+        s_start = _to_date(start_date)
+        s_end = _to_date(end_date)
+
+        ranges = []
+        for b in overlapping:
+            b_start = _to_date(b.check_in_date)
+            b_end = _to_date(b.check_out_date)
+            s = max(b_start, s_start)
+            e = min(b_end, s_end)
+            ranges.append({
+                "start": s.isoformat(),
+                "end": e.isoformat()
+            })
+        return ranges
+    except SQLAlchemyError as e:
+        logger.error(f"Database error fetching booked ranges for room {room_id}: {e}")
+        raise Exception(f"Database error: {e}")

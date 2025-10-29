@@ -18,7 +18,11 @@ def create_token(user_id, role=None, is_admin=False):
         'is_admin': is_admin,
         'exp': datetime.utcnow() + timedelta(days=1)  # Token expires in 1 day
     }
-    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    # PyJWT v1 returns bytes, v2 returns str
+    if isinstance(token, bytes):
+        token = token.decode('utf-8')
+    return token
 
 def token_required(f):
     """Decorator to require authentication"""

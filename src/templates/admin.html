@@ -19,29 +19,8 @@
             
             <div class="admin-stats">
                 <h3>Статистика системи</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">👥</div>
-                        <div class="stat-info">
-                            <h4>Користувачі</h4>
-                            <p id="usersCount">Завантаження...</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🏨</div>
-                        <div class="stat-info">
-                            <h4>Номери</h4>
-                            <p id="roomsCount">Завантаження...</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📅</div>
-                        <div class="stat-info">
-                            <h4>Бронювання</h4>
-                            <p id="bookingsCount">Завантаження...</p>
-                        </div>
-                    </div>
-                </div>
+                <p style="margin-bottom:16px;color:var(--gray)">Перейдіть на сторінку статистики, щоб переглядати показники та фільтрувати за періодами.</p>
+                <a href="/admin/stats" class="btn btn-primary">Переглянути статистику</a>
             </div>
             
             <div class="admin-actions">
@@ -124,48 +103,7 @@
     font-size: 24px;
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-.stat-card {
-    background-color: var(--gray-light);
-    padding: 25px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    transition: transform 0.3s;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-}
-
-.stat-icon {
-    font-size: 32px;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--gold);
-    border-radius: 50%;
-}
-
-.stat-info h4 {
-    color: var(--dark-blue);
-    margin-bottom: 5px;
-    font-size: 16px;
-}
-
-.stat-info p {
-    color: var(--gray);
-    font-size: 14px;
-    font-weight: 500;
-}
+.muted{color:var(--gray);font-size:12px}
 
 .admin-actions h3 {
     color: var(--dark-blue);
@@ -237,32 +175,13 @@
 </style>
 
 <script>
-// Load admin statistics
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        // Load users count
-        const usersResponse = await authManager.makeAuthenticatedRequest('/api/v1/users');
-        if (usersResponse.ok) {
-            const usersData = await usersResponse.json();
-            document.getElementById('usersCount').textContent = usersData.length || 0;
-        }
-        
-        // Load rooms count
-        const roomsResponse = await authManager.makeAuthenticatedRequest('/api/v1/rooms');
-        if (roomsResponse.ok) {
-            const roomsData = await roomsResponse.json();
-            document.getElementById('roomsCount').textContent = roomsData.length || 0;
-        }
-        
-        // Load bookings count
-        const bookingsResponse = await authManager.makeAuthenticatedRequest('/api/v1/bookings');
-        if (bookingsResponse.ok) {
-            const bookingsData = await bookingsResponse.json();
-            document.getElementById('bookingsCount').textContent = bookingsData.length || 0;
-        }
-    } catch (error) {
-        console.error('Error loading admin statistics:', error);
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.stat-card.clickable').forEach(card => {
+        card.addEventListener('click', () => {
+            const href = card.getAttribute('data-href');
+            if (href) window.location.href = href;
+        });
+    });
 });
 </script>
 {% endblock %}

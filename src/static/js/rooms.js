@@ -17,11 +17,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('roomForm').addEventListener('submit', handleRoomFormSubmit);
 });
 
-async function loadRooms() {
+async function loadRooms(params = {}) {
     const roomsContainer = document.getElementById('rooms-container');
     
     try {
-        const res = await fetch('/api/v1/rooms/');
+        const url = new URL('/api/v1/rooms/', window.location.origin);
+        Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') {
+                url.searchParams.set(k, v);
+            }
+        });
+        const res = await fetch(url.toString());
         const data = await res.json();
         allRooms = data;
         displayRooms(allRooms);
@@ -254,7 +260,7 @@ async function handleRoomFormSubmit(e) {
     }
 }
 
-function applyFilters() {
+async function applyFilters() {
     const checkin = document.getElementById('filter-checkin').value;
     const checkout = document.getElementById('filter-checkout').value;
     const roomType = document.getElementById('filter-type').value;
@@ -266,40 +272,42 @@ function applyFilters() {
         alert('Дата виїзду має бути пізніше дати заїзду!');
         return;
     }
-    
-    let filteredRooms = allRooms.filter(room => {
-        if (roomType && room.room_type !== roomType) {
-            return false;
-        }
-        
-        if (capacity && room.max_guest < parseInt(capacity)) {
-            return false;
-        }
-        
-        if (priceRange) {
-            const price = parseFloat(room.base_price);
-            if (priceRange.includes('+')) {
-                const minPrice = parseInt(priceRange);
-                if (price < minPrice) return false;
-            } else {
-                const [minPrice, maxPrice] = priceRange.split('-').map(Number);
-                if (price < minPrice || price > maxPrice) return false;
+    let min_price;
+    let max_price;
+    if (priceRange) {
+        if (priceRange.includes('+')) {
+            min_price = parseInt(priceRange);
+        } else {
+            const parts = priceRange.split('-').map(Number);
+            if (parts.length === 2) {
+                min_price = parts[0];
+                max_price = parts[1];
             }
         }
-        
-        if (checkin && checkout && room.status !== 'AVAILABLE') {
-            return false;
-        }
-        
-        return true;
-    });
-    
-    if (sortBy) {
-        filteredRooms = sortRooms(filteredRooms, sortBy);
     }
-        
-    displayRooms(filteredRooms);
-    showFilterResults(filteredRooms.length, allRooms.length);
+
+    let guests;
+    if (capacity) {
+        guests = parseInt(capacity);
+    }
+
+    const params = {
+        check_in: checkin || undefined,
+        check_out: checkout || undefined,
+        room_type: roomType || undefined,
+        min_price: min_price !== undefined ? min_price : undefined,
+        max_price: max_price !== undefined ? max_price : undefined,
+        guests: guests !== undefined ? guests : undefined,
+    };
+
+    await loadRooms(params);
+
+    let result = [...allRooms];
+    if (sortBy) {
+        result = sortRooms(result, sortBy);
+    }
+    displayRooms(result);
+    showFilterResults(result.length, allRooms.length);
 }
 
 function sortRooms(rooms, sortBy) {
@@ -356,7 +364,7 @@ function resetFilters() {
         message.remove();
     }
     
-    displayRooms(allRooms);
+    loadRooms();
 }
 
 window.bookRoom = bookRoom;

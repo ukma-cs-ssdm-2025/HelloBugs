@@ -23,6 +23,7 @@ async function fetchRoomDetails(roomId) {
         displayRoomInfo(room);
         document.getElementById('room_id').value = room.id;
         localStorage.setItem('selected_room_id', room.id); 
+        initAvailabilityCalendar(room.id);
     } catch (error) {
         console.error('Error loading room:', error);
         showNoRoomSelected();
@@ -83,6 +84,10 @@ function autofillGuestData() {
 document.addEventListener('DOMContentLoaded', () => {
     loadRoomInfo();
     autofillGuestData();
+    attachDateInputSync();
+    const params = new URLSearchParams(window.location.search);
+    const initialRoomId = params.get('room_id') || localStorage.getItem('selected_room_id');
+    initAvailabilityCalendar(initialRoomId ? parseInt(initialRoomId) : null);
 
     const form = document.getElementById('create-booking-form');
     form.addEventListener('submit', async (e) => {
@@ -127,3 +132,210 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+let calState = {
+    roomId: null,
+    startMonth: new Date(),
+    monthsToShow: 2,
+    bookedRanges: [],
+    selectedStart: null,
+    selectedEnd: null,
+};
+
+function attachDateInputSync() {
+    const inEl = document.getElementById('check_in_date');
+    const outEl = document.getElementById('check_out_date');
+    const nightsEl = document.getElementById('nights-count');
+
+    function diffNights() {
+        if (inEl.value && outEl.value) {
+            const n = (new Date(outEl.value) - new Date(inEl.value)) / (1000*60*60*24);
+            nightsEl.textContent = n > 0 ? n : 0;
+        } else {
+            nightsEl.textContent = 0;
+        }
+    }
+
+    inEl.addEventListener('change', () => {
+        calState.selectedStart = inEl.value || null;
+        if (calState.selectedEnd && calState.selectedStart && calState.selectedEnd <= calState.selectedStart) {
+            calState.selectedEnd = null;
+            outEl.value = '';
+        }
+        renderCalendar();
+        diffNights();
+    });
+    outEl.addEventListener('change', () => {
+        calState.selectedEnd = outEl.value || null;
+        renderCalendar();
+        diffNights();
+    });
+
+    diffNights();
+}
+
+async function initAvailabilityCalendar(roomId) {
+    calState.roomId = roomId;
+    const container = document.getElementById('availability-calendar');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="cal-nav">
+        <button class="cal-btn cal-prev" aria-label="Попередній місяць">‹</button>
+        <div class="cal-months"></div>
+        <button class="cal-btn cal-next" aria-label="Наступний місяць">›</button>
+      </div>
+      <div class="cal-grid-wrapper"></div>
+      <div class="cal-legend">
+        <span class="dot booked"></span> Зайнято
+        <span class="dot selected"></span> Обрано
+      </div>
+    `;
+
+    container.querySelector('.cal-prev').addEventListener('click', async () => {
+        calState.startMonth = addMonths(calState.startMonth, -1);
+        await loadAvailability();
+        renderCalendar();
+    });
+    container.querySelector('.cal-next').addEventListener('click', async () => {
+        calState.startMonth = addMonths(calState.startMonth, 1);
+        await loadAvailability();
+        renderCalendar();
+    });
+
+    await loadAvailability();
+    renderCalendar();
+}
+
+async function loadAvailability() {
+    if (!calState.roomId) return;
+    const start = firstDayOfMonth(calState.startMonth);
+    const end = addMonths(start, calState.monthsToShow);
+    const startStr = toISODate(start);
+    const endStr = toISODate(end);
+    const res = await fetch(`/api/v1/rooms/${calState.roomId}/availability?start=${startStr}&end=${endStr}`);
+    const data = await res.json();
+    calState.bookedRanges = data.booked || [];
+}
+
+function renderCalendar() {
+    const wrapper = document.querySelector('#availability-calendar .cal-grid-wrapper');
+    const monthsTitle = document.querySelector('#availability-calendar .cal-months');
+    if (!wrapper) return;
+    wrapper.innerHTML = '';
+    monthsTitle.innerHTML = '';
+
+    let m = new Date(calState.startMonth);
+    for (let i = 0; i < calState.monthsToShow; i++) {
+        const monthEl = buildMonth(m);
+        wrapper.appendChild(monthEl);
+        const title = document.createElement('div');
+        title.className = 'cal-month-title';
+        title.textContent = monthLabel(m);
+        monthsTitle.appendChild(title);
+        m = addMonths(m, 1);
+    }
+}
+
+function buildMonth(dateObj) {
+    const monthStart = new Date(dateObj.getFullYear(), dateObj.getMonth(), 1);
+    const monthEnd = new Date(dateObj.getFullYear(), dateObj.getMonth()+1, 0);
+    const grid = document.createElement('div');
+    grid.className = 'cal-month';
+
+    const weekdays = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+    const head = document.createElement('div');
+    head.className = 'cal-weekdays';
+    weekdays.forEach(d => { const s=document.createElement('span'); s.textContent=d; head.appendChild(s); });
+    grid.appendChild(head);
+
+    const firstWeekday = (monthStart.getDay()+6)%7; // Monday=0
+    const daysGrid = document.createElement('div');
+    daysGrid.className = 'cal-days';
+    for (let i=0; i<firstWeekday; i++) {
+        const blank = document.createElement('button');
+        blank.className = 'cal-day blank';
+        blank.tabIndex = -1;
+        blank.disabled = true;
+        daysGrid.appendChild(blank);
+    }
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    for (let d=1; d<=monthEnd.getDate(); d++) {
+        const curr = new Date(dateObj.getFullYear(), dateObj.getMonth(), d);
+        const currStr = toISODate(curr);
+        const btn = document.createElement('button');
+        btn.className = 'cal-day';
+        btn.textContent = String(d);
+
+        const isPast = curr < today;
+        const isBooked = isDateBooked(currStr);
+        const isSelectedStart = calState.selectedStart === currStr;
+        const inRange = calState.selectedStart && calState.selectedEnd && currStr > calState.selectedStart && currStr < calState.selectedEnd;
+
+        if (isBooked || isPast) {
+            btn.classList.add('booked');
+            btn.disabled = true;
+        } else {
+            btn.classList.add('available');
+            btn.addEventListener('click', () => onDayClick(currStr));
+        }
+
+        if (isSelectedStart) btn.classList.add('selected');
+        if (inRange) btn.classList.add('in-range');
+
+        daysGrid.appendChild(btn);
+    }
+
+    grid.appendChild(daysGrid);
+    return grid;
+}
+
+function onDayClick(dateStr) {
+    const inEl = document.getElementById('check_in_date');
+    const outEl = document.getElementById('check_out_date');
+
+    if (!calState.selectedStart || (calState.selectedStart && calState.selectedEnd)) {
+        calState.selectedStart = dateStr;
+        calState.selectedEnd = null;
+        inEl.value = dateStr;
+        outEl.value = '';
+    } else {
+        if (dateStr <= calState.selectedStart) return;
+        if (!isRangeFree(calState.selectedStart, dateStr)) return;
+        calState.selectedEnd = dateStr;
+        outEl.value = dateStr;
+    }
+    renderCalendar();
+    const evt = new Event('change'); inEl.dispatchEvent(evt); outEl.dispatchEvent(evt);
+}
+
+function isDateBooked(dateStr) {
+    const d = dateStr;
+    return calState.bookedRanges.some(r => d >= r.start && d < r.end);
+}
+
+function isRangeFree(startStr, endStr) {
+    let curr = new Date(startStr);
+    const end = new Date(endStr);
+    while (curr < end) {
+        const currStr = toISODate(curr);
+        if (isDateBooked(currStr)) return false;
+        curr.setDate(curr.getDate()+1);
+    }
+    return true;
+}
+
+// Helpers
+function toISODate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function firstDayOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function addMonths(d, n) { return new Date(d.getFullYear(), d.getMonth()+n, 1); }
+function monthLabel(d) {
+    const months = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+    return `${months[d.getMonth()]} ${d.getFullYear()}`;
+}
