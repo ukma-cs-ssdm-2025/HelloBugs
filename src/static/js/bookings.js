@@ -163,7 +163,7 @@ async function cancelBooking(bookingCode) {
 }
 
 function viewBookingDetails(bookingCode) {
-    window.location.href = `/booking/details?code=${bookingCode}`;
+    globalThis.location.href = `/booking/details?code=${bookingCode}`;
 }
 
 function toggleGuestDataFields() {
@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.reset();
     });
 
-    window.addEventListener('click', (e) => {
+    globalThis.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.style.display = 'none';
             form.reset();
@@ -384,9 +384,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-window.cancelBooking = cancelBooking;
-window.viewBookingDetails = viewBookingDetails;
-window.openEditBooking = function(booking) {
+globalThis.cancelBooking = cancelBooking;
+globalThis.viewBookingDetails = viewBookingDetails;
+globalThis.openEditBooking = function(booking) {
     const editModal = document.getElementById('edit-booking-modal');
     const editForm = document.getElementById('edit-booking-form');
     const roomSelectEdit = document.getElementById('room-select-edit');
