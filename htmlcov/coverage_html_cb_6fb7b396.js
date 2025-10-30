@@ -36,7 +36,7 @@ function on_click(sel, fn) {
 function getCellValue(row, column = 0) {
     const cell = row.cells[column]  // nosemgrep: eslint.detect-object-injection
     if (cell.childElementCount == 1) {
-        var child = cell.firstElementChild;
+        let child = cell.firstElementChild;
         if (child.tagName === "A") {
             child = child.firstElementChild;
         }
@@ -61,7 +61,7 @@ function sortColumn(th) {
     // clear state on other headers and then set the new sorting direction.
     const currentSortOrder = th.getAttribute("aria-sort");
     [...th.parentElement.cells].forEach(header => header.setAttribute("aria-sort", "none"));
-    var direction;
+    let direction;
     if (currentSortOrder === "none") {
         direction = th.dataset.defaultSortOrder || "ascending";
     }
@@ -147,7 +147,7 @@ coverage.wire_up_filter = function () {
         // Accumulate the percentage as fraction
         totals[totals.length - 1] = { "numer": 0, "denom": 0 };  // nosemgrep: eslint.detect-object-injection
 
-        var text = document.getElementById("filter").value;
+        const text = document.getElementById("filter").value;
         // Store filter value
         localStorage.setItem(coverage.FILTER_STORAGE, text);
         const casefold = (text === text.toLowerCase());
@@ -157,12 +157,12 @@ coverage.wire_up_filter = function () {
 
         // Hide / show elements.
         table_body_rows.forEach(row => {
-            var show = false;
+            let show = false;
             // Check the text filter.
             for (let column = 0; column < totals.length; column++) {
-                cell = row.cells[column];
+                let cell = row.cells[column];
                 if (cell.classList.contains("name")) {
-                    var celltext = cell.textContent;
+                    let celltext = cell.textContent;
                     if (casefold) {
                         celltext = celltext.toLowerCase();
                     }
@@ -190,7 +190,7 @@ coverage.wire_up_filter = function () {
 
             for (let column = 0; column < totals.length; column++) {
                 // Accumulate dynamic totals
-                cell = row.cells[column]  // nosemgrep: eslint.detect-object-injection
+                let cell = row.cells[column]  // nosemgrep: eslint.detect-object-injection
                 if (cell.classList.contains("name")) {
                     continue;
                 }
@@ -316,7 +316,7 @@ coverage.LINE_FILTERS_STORAGE = "COVERAGE_LINE_FILTERS";
 
 coverage.pyfile_ready = function () {
     // If we're directed to a particular line number, highlight the line.
-    var frag = location.hash;
+    const frag = location.hash;
     if (frag.length > 2 && frag[1] === "t") {
         document.querySelector(frag).closest(".n").classList.add("highlight");
         coverage.set_sel(parseInt(frag.substr(2), 10));
@@ -353,7 +353,7 @@ coverage.pyfile_ready = function () {
         coverage.filters = {run: false, exc: true, mis: true, par: true};
     }
 
-    for (cls in coverage.filters) {
+    for (let cls in coverage.filters) {
         coverage.set_line_visibilty(cls, coverage.filters[cls]);  // nosemgrep: eslint.detect-object-injection
     }
 
@@ -454,8 +454,8 @@ coverage.to_next_chunk = function () {
     const c = coverage;
 
     // Find the start of the next colored chunk.
-    var probe = c.sel_end;
-    var chunk_indicator, probe_line;
+    let probe = c.sel_end;
+    let chunk_indicator, probe_line;
     while (true) {
         probe_line = c.line_elt(probe);
         if (!probe_line) {
@@ -469,10 +469,10 @@ coverage.to_next_chunk = function () {
     }
 
     // There's a next chunk, `probe` points to it.
-    var begin = probe;
+    const begin = probe;
 
     // Find the end of this chunk.
-    var next_indicator = chunk_indicator;
+    let next_indicator = chunk_indicator;
     while (next_indicator === chunk_indicator) {
         probe++;
         probe_line = c.line_elt(probe);
@@ -486,12 +486,12 @@ coverage.to_prev_chunk = function () {
     const c = coverage;
 
     // Find the end of the prev colored chunk.
-    var probe = c.sel_begin-1;
-    var probe_line = c.line_elt(probe);
+    let probe = c.sel_begin-1;
+    let probe_line = c.line_elt(probe);
     if (!probe_line) {
         return;
     }
-    var chunk_indicator = c.chunk_indicator(probe_line);
+    let chunk_indicator = c.chunk_indicator(probe_line);
     while (probe > 1 && !chunk_indicator) {
         probe--;
         probe_line = c.line_elt(probe);
@@ -502,10 +502,10 @@ coverage.to_prev_chunk = function () {
     }
 
     // There's a prev chunk, `probe` points to its last line.
-    var end = probe+1;
+    const end = probe+1;
 
     // Find the beginning of this chunk.
-    var prev_indicator = chunk_indicator;
+    let prev_indicator = chunk_indicator;
     while (prev_indicator === chunk_indicator) {
         probe--;
         if (probe <= 0) {
@@ -577,17 +577,17 @@ coverage.to_prev_chunk_nicely = function () {
 // Select line number lineno, or if it is in a colored chunk, select the
 // entire chunk
 coverage.select_line_or_chunk = function (lineno) {
-    var c = coverage;
-    var probe_line = c.line_elt(lineno);
+    const c = coverage;
+    let probe_line = c.line_elt(lineno);
     if (!probe_line) {
         return;
     }
-    var the_indicator = c.chunk_indicator(probe_line);
+    const the_indicator = c.chunk_indicator(probe_line);
     if (the_indicator) {
         // The line is in a highlighted chunk.
         // Search backward for the first line.
-        var probe = lineno;
-        var indicator = the_indicator;
+        let probe = lineno;
+        let indicator = the_indicator;
         while (probe > 0 && indicator === the_indicator) {
             probe--;
             probe_line = c.line_elt(probe);
@@ -596,7 +596,7 @@ coverage.select_line_or_chunk = function (lineno) {
             }
             indicator = c.chunk_indicator(probe_line);
         }
-        var begin = probe + 1;
+        const begin = probe + 1;
 
         // Search forward for the last line.
         probe = lineno;
@@ -708,14 +708,14 @@ coverage.wire_up_sticky_header = function () {
 };
 
 coverage.expand_contexts = function (e) {
-    var ctxs = e.target.parentNode.querySelector(".ctxs");
+    const ctxs = e.target.parentNode.querySelector(".ctxs");
 
     if (!ctxs.classList.contains("expanded")) {
-        var ctxs_text = ctxs.textContent;
-        var width = Number(ctxs_text[0]);
+        const ctxs_text = ctxs.textContent;
+        const width = Number(ctxs_text[0]);
         ctxs.textContent = "";
-        for (var i = 1; i < ctxs_text.length; i += width) {
-            key = ctxs_text.substring(i, i + width).trim();
+        for (let i = 1; i < ctxs_text.length; i += width) {
+            const key = ctxs_text.substring(i, i + width).trim();
             ctxs.appendChild(document.createTextNode(contexts[key]));
             ctxs.appendChild(document.createElement("br"));
         }
