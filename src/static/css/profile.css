@@ -81,6 +81,7 @@
     padding: 25px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--border-color);
+    animation: fadeIn 0.5s ease-out forwards;
 }
 
 .profile-card h3 {
@@ -195,10 +196,6 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-.profile-card {
-    animation: fadeIn 0.5s ease-out forwards;
 }
 
 .profile-card:nth-child(2) {
