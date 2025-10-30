@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(form);
         
         const data = {
-            room_id: parseInt(formData.get('room_id')),
+            room_id: Number.parseInt(formData.get('room_id')),
             check_in_date: formData.get('check_in_date'),
             check_out_date: formData.get('check_out_date'),
             special_requests: formData.get('special_requests') || null
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const fd = new FormData(editForm);
         const code = fd.get('booking_code');
-        const room_id = parseInt(fd.get('room_id'));
+        const room_id = Number.parseInt(fd.get('room_id'));
         const check_in_date = fd.get('check_in_date');
         const check_out_date = fd.get('check_out_date');
         const special_requests = fd.get('special_requests') || null;
