@@ -3,7 +3,7 @@ from src.api.models.room_model import Room, RoomStatus
 from src.api.models.user_model import User
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy import or_, not_
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 import logging
 import time
 import random
@@ -14,6 +14,43 @@ def generate_booking_code():
     timestamp = int(time.time() * 1000) % 1000000
     random_part = random.randint(10000, 99999)
     return f"BK{timestamp}{random_part}"
+
+def _validate_dates(check_in, check_out):
+    if check_in >= check_out:
+        raise ValueError("Check-out date must be after check-in date")
+    if check_in < date.today():
+        raise ValueError("Check-in date cannot be in the past")
+
+def _resolve_user(session, user_id, email, data):
+    if user_id:
+        user = session.query(User).get(user_id)
+        if not user:
+            raise ValueError("User not found")
+        return user.user_id
+    if email:
+        existing_user = session.query(User).filter_by(email=email).first()
+        if existing_user:
+            if existing_user.is_registered:
+                raise ValueError("This email is already registered. Please log in to make a booking.")
+            return existing_user.user_id
+        new_guest = User(
+            email=email,
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
+            phone=data.get('phone'),
+            is_registered=False,
+            created_at=datetime.now(timezone.utc)
+        )
+        session.add(new_guest)
+        session.flush()
+        return new_guest.user_id
+    raise ValueError("Either user_id or email must be provided")
+
+def _get_room_or_error(session, room_id):
+    room = session.query(Room).get(room_id)
+    if not room:
+        raise ValueError("Room not found")
+    return room
 
 def check_room_availability(session, room_id, check_in, check_out, exclude_booking_code=None):
     try:
@@ -81,50 +118,16 @@ def create_booking(session, data):
     try:
         check_in = data.get('check_in_date')
         check_out = data.get('check_out_date')
-
-        if check_in >= check_out:
-            raise ValueError("Check-out date must be after check-in date")
-
-        if check_in < date.today():
-            raise ValueError("Check-in date cannot be in the past")
+        _validate_dates(check_in, check_out)
 
         room_id = data.get('room_id')
         is_available, message = check_room_availability(session, room_id, check_in, check_out)
-
         if not is_available:
             raise ValueError(message)
 
-        user_id = data.get('user_id')
-        email = data.get('email')
+        user_id = _resolve_user(session, data.get('user_id'), data.get('email'), data)
 
-        if user_id:
-            user = session.query(User).get(user_id)
-            if not user:
-                raise ValueError("User not found")
-        elif email:
-            existing_user = session.query(User).filter_by(email=email).first()
-            if existing_user:
-                if existing_user.is_registered:
-                    raise ValueError("This email is already registered. Please log in to make a booking.")
-                user_id = existing_user.user_id
-            else:
-                new_guest = User(
-                    email=email,
-                    first_name=data.get('first_name'),
-                    last_name=data.get('last_name'),
-                    phone=data.get('phone'),
-                    is_registered=False,
-                    created_at=datetime.now()
-                )
-                session.add(new_guest)
-                session.flush()
-                user_id = new_guest.user_id
-        else:
-            raise ValueError("Either user_id or email must be provided")
-
-        room = session.query(Room).get(room_id)
-        if not room:
-            raise ValueError("Room not found")
+        _get_room_or_error(session, room_id)
 
         booking_code = generate_booking_code()
 
@@ -136,8 +139,8 @@ def create_booking(session, data):
             check_out_date=check_out,
             special_requests=data.get('special_requests'),
             status=data.get('status', BookingStatus.ACTIVE),
-            created_at=datetime.now(),
-            updated_at=datetime.now()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
 
         session.add(new_booking)
@@ -181,7 +184,7 @@ def update_booking_partial(session, booking_code, data):
             if hasattr(booking, key) and key not in ['booking_code', 'created_at']:
                 setattr(booking, key, value)
 
-        booking.updated_at = datetime.utcnow()
+        booking.updated_at = datetime.now(timezone.utc)
         return booking
 
     except Exception as e:
@@ -212,7 +215,7 @@ def update_booking_full(session, booking_code, data):
         booking.check_in_date = check_in
         booking.check_out_date = check_out
         booking.special_requests = data.get('special_requests')
-        booking.updated_at = datetime.now()
+        booking.updated_at = datetime.now(timezone.utc)
 
         return booking
 
@@ -230,7 +233,7 @@ def cancel_booking(session, booking_code):
             return True
 
         booking.status = BookingStatus.CANCELLED
-        booking.updated_at = datetime.utcnow()
+        booking.updated_at = datetime.now(timezone.utc)
         return True
 
     except Exception as e:
