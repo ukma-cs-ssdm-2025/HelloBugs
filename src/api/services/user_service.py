@@ -41,7 +41,7 @@ def create_user(session, data, via_booking=False):
             phone=phone,
             role=role,
             is_registered=not via_booking,
-            created_at=datetime.datetime.utcnow()
+            created_at=datetime.datetime.now(datetime.timezone.utc)
         )
 
         if password:
