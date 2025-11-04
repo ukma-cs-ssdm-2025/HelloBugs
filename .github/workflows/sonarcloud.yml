@@ -30,9 +30,9 @@ name: SonarCloud analysis
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main"]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -43,10 +43,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-
       - name: Analyze with SonarCloud
 
         # You can pin the exact commit or the version.
@@ -61,7 +57,7 @@ jobs:
             # mandatory
             -Dsonar.projectKey=
             -Dsonar.organization=
-            -Dsonar.exclusions=htmlcov/**
+            -Dsonar.exclusions=**/htmlcov/**
             # Comma-separated paths to directories containing main source files.
             #-Dsonar.sources= # optional, default is project base directory
             # Comma-separated paths to directories containing test source files.

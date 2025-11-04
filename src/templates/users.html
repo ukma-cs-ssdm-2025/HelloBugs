@@ -34,7 +34,7 @@
                 <input type="text" id="search-user" class="filter-input" placeholder="Пошук за прізвищем...">
             </div>
             <div class="filter-group buttons-group">
-                <label style="visibility:hidden;">Кнопки</label>
+                <div style="visibility:hidden;">Кнопки</div>
                 <div class="btn-row">
                     <button id="search-btn" class="btn btn-primary">Пошук</button>
                     <button id="reset-btn" class="btn btn-secondary">Скинути</button>
@@ -81,7 +81,7 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2 id="modal-title">Додати користувача</h2>
-            <span class="close-btn" onclick="closeUserModal()">&times;</span>
+            <button type="button" class="close-btn" onclick="closeUserModal()" aria-label="Закрити модальне вікно">&times;</button>
         </div>
         <form id="user-form" class="user-form">
             <input type="hidden" id="user-id" name="id">
@@ -132,17 +132,19 @@
 
 <script src="{{ url_for('static', filename='js/users.js') }}"></script>
 <style>
-  .admin-filters{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:16px}
-  .filter-group{display:flex;flex-direction:column;min-width:240px}
-  .filter-group.buttons-group{min-width:auto}
-  .btn-row{display:flex;gap:8px}
-  .filter-input,.filter-select{height:40px}
-  @media (max-width:768px){.filter-group{min-width:100%}.btn-row{justify-content:flex-start}}
+  .admin-filters { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 16px; }
+  .filter-group { display: flex; flex-direction: column; min-width: 240px; }
+  .filter-group.buttons-group { min-width: auto; }
+  .btn-row { display: flex; gap: 8px; }
+  .filter-input, .filter-select { height: 40px; }
+  @media (max-width: 768px) {
+      .filter-group { min-width: 100%; }
+      .btn-row { justify-content: flex-start; }
+  }
   /* Table minor tweaks */
-  .users-table-container{margin-top:8px}
-  .users-table .loading{text-align:center}
-  .role-badge{padding:4px 8px;border-radius:12px;background:#eef}
-  .btn.btn-edit{margin-right:6px}
-}
+  .users-table-container { margin-top: 8px; }
+  .users-table .loading { text-align: center; }
+  .role-badge { padding: 4px 8px; border-radius: 12px; background: #eef; }
+  .btn.btn-edit { margin-right: 6px; }
 </style>
 {% endblock %}
