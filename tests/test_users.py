@@ -4,16 +4,18 @@ from src.api.services.user_service import (create_user, get_all_users, get_user_
                                            get_user_by_email, update_user_partial, delete_user)
 from src.api.models.user_model import User, UserRole
 from werkzeug.security import generate_password_hash, check_password_hash
+import secrets
 import uuid
 
 @pytest.fixture
 def test_user_dict():
+    pwd = secrets.token_urlsafe(12)
     return {
         "email": f"user_{uuid.uuid4().hex[:8]}@example.com",
         "first_name": "Registered",
         "last_name": "User",
         "phone": "+380674567892",
-        "password": "testpassword123",
+        "password": pwd,
         "role": "GUEST"
     }
 
@@ -25,7 +27,7 @@ def existing_user(db_session):
         last_name="User",
         phone="+380674567892",
         is_registered=True,
-        password=generate_password_hash("testpassword123"),
+        password=generate_password_hash(secrets.token_urlsafe(12)),
         role=UserRole.GUEST,
         created_at=datetime.now()
     )
@@ -44,15 +46,16 @@ def test_create_user_success(db_session, test_user_dict):
     assert user.last_name == test_user_dict["last_name"]
     assert user.role == UserRole.GUEST
     assert user.is_registered == True
-    assert check_password_hash(user.password, "testpassword123")
+    assert check_password_hash(user.password, test_user_dict["password"])
 
 def test_create_user_duplicate_email(db_session, existing_user):
+    pwd2 = secrets.token_urlsafe(12)
     duplicate_data = {
         "email": existing_user.email,
         "first_name": "Second",
         "last_name": "User",
         "phone": "+380502222222",
-        "password": "password456",
+        "password": pwd2,
         "role": "GUEST"
     }
 
@@ -93,14 +96,13 @@ def test_update_user_partial(db_session, existing_user):
     assert updated_user.email == existing_user.email
 
 def test_update_user_password(db_session, existing_user):
-    update_data = {
-        "password": "newpassword123"
-    }
+    new_pwd = secrets.token_urlsafe(12)
+    update_data = {"password": new_pwd}
 
     updated_user = update_user_partial(db_session, existing_user.user_id, update_data)
     db_session.commit()
 
-    assert check_password_hash(updated_user.password, "newpassword123")
+    assert check_password_hash(updated_user.password, new_pwd)
 
 def test_delete_user(db_session, existing_user):
     result = delete_user(db_session, existing_user.user_id)
@@ -125,7 +127,7 @@ def test_create_user_with_invalid_role(db_session):
         "first_name": "Invalid",
         "last_name": "Role",
         "phone": "+380509998877",
-        "password": "password123",
+        "password": secrets.token_urlsafe(12),
         "role": "CUSTOMER"
     }
 
