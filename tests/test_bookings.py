@@ -8,6 +8,7 @@ from src.api.models.booking_model import Booking, BookingStatus
 from src.api.models.room_model import Room, RoomStatus, RoomType
 from src.api.models.user_model import User, UserRole
 from werkzeug.security import generate_password_hash
+import secrets
 import uuid
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def test_user_registered(db_session):
         last_name="User",
         phone="+380674567892",
         is_registered=True,
-        password=generate_password_hash("testpassword123"),
+        password=generate_password_hash(secrets.token_urlsafe(16)),
         role=UserRole.GUEST,
         created_at=datetime.now()
     )
@@ -150,7 +151,7 @@ def test_get_user_bookings_empty(db_session, test_user_registered):
         last_name="User",
         phone="+380999999999",
         is_registered=True,
-        password=generate_password_hash("password123"),
+        password=generate_password_hash(secrets.token_urlsafe(16)),
         role=UserRole.GUEST,
         created_at=datetime.now()
     )
