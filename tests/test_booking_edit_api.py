@@ -4,6 +4,7 @@ from src.api.services.booking_service import create_booking
 from src.api.models.user_model import User, UserRole
 from src.api.models.room_model import Room, RoomType, RoomStatus
 from werkzeug.security import generate_password_hash
+import secrets
 
 @pytest.fixture
 def seed_user(db_session):
@@ -13,7 +14,7 @@ def seed_user(db_session):
         last_name="Tester",
         phone="+380500000001",
         is_registered=True,
-        password=generate_password_hash("secret123"),
+        password=generate_password_hash(secrets.token_urlsafe(16)),
         role=UserRole.GUEST,
     )
     db_session.add(u)
