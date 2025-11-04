@@ -87,14 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
     attachDateInputSync();
     const params = new URLSearchParams(window.location.search);
     const initialRoomId = params.get('room_id') || localStorage.getItem('selected_room_id');
-    initAvailabilityCalendar(initialRoomId ? parseInt(initialRoomId) : null);
+    initAvailabilityCalendar(initialRoomId ? Number.parseInt(initialRoomId) : null);
 
     const form = document.getElementById('create-booking-form');
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(form);
         const data = {
-            room_id: parseInt(formData.get('room_id')),
+            room_id: Number.parseInt(formData.get('room_id')),
             check_in_date: formData.get('check_in_date'),
             check_out_date: formData.get('check_out_date'),
             special_requests: formData.get('special_requests') || null,
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data.user_id = authManager.user.id;
         } else {
             const userId = localStorage.getItem('user_id');
-            if (userId) data.user_id = parseInt(userId);
+            if (userId) data.user_id = Number.parseInt(userId);
         }
 
         try {
@@ -316,12 +316,9 @@ function isDateBooked(dateStr) {
 }
 
 function isRangeFree(startStr, endStr) {
-    let curr = new Date(startStr);
-    const end = new Date(endStr);
-    while (curr < end) {
+    for (let curr = new Date(startStr); curr < new Date(endStr); curr.setDate(curr.getDate() + 1)) {
         const currStr = toISODate(curr);
         if (isDateBooked(currStr)) return false;
-        curr.setDate(curr.getDate()+1);
     }
     return true;
 }
