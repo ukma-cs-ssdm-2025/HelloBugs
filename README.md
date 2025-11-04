@@ -1,7 +1,7 @@
 # HelloBugs
 [![CI Test](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml/badge.svg?branch=main)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml)
 [![CI/CD Staging](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml/badge.svg)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml)
-![Coverage](https://codecov.io/gh/ukma-cs-ssdm-2025/HelloBugs/branch/main/graph/badge.svg)
+[![coverage](https://codecov.io/github/ukma-cs-ssdm-2025/HelloBugs/graph/badge.svg?token=JLC4ED2WR6)](https://codecov.io/github/ukma-cs-ssdm-2025/HelloBugs)
 
 ## Інформація про команду
 **Склад:**
