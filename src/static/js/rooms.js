@@ -191,7 +191,7 @@ async function handleRoomFormSubmit(e) {
     const basePrice = document.getElementById('basePrice').value;
     const sizeSqm = document.getElementById('sizeSqm').value;
     
-    if (!basePrice || parseFloat(basePrice) <= 0) {
+    if (!basePrice || Number.parseFloat(basePrice) <= 0) {
         alert('Будь ласка, вкажіть коректну базову ціну');
         return;
     }
@@ -199,10 +199,10 @@ async function handleRoomFormSubmit(e) {
     const roomData = {
         room_number: document.getElementById('roomNumber').value.trim(),
         room_type: document.getElementById('roomType').value,
-        max_guest: parseInt(document.getElementById('maxGuest').value),
+        max_guest: Number.parseInt(document.getElementById('maxGuest').value),
         base_price: basePrice.toString(),
         status: document.getElementById('roomStatus').value,
-        floor: parseInt(document.getElementById('floor').value),
+        floor: Number.parseInt(document.getElementById('floor').value),
         size_sqm: sizeSqm ? sizeSqm.toString() : null,
         description: document.getElementById('description').value.trim(),
         main_photo_url: document.getElementById('mainPhotoUrl').value.trim() || null,
@@ -276,7 +276,7 @@ async function applyFilters() {
     let max_price;
     if (priceRange) {
         if (priceRange.includes('+')) {
-            min_price = parseInt(priceRange);
+            min_price = Number.parseInt(priceRange);
         } else {
             const parts = priceRange.split('-').map(Number);
             if (parts.length === 2) {
@@ -288,7 +288,7 @@ async function applyFilters() {
 
     let guests;
     if (capacity) {
-        guests = parseInt(capacity);
+        guests = Number.parseInt(capacity);
     }
 
     const params = {
@@ -315,9 +315,9 @@ function sortRooms(rooms, sortBy) {
     
     switch(sortBy) {
         case 'price-asc':
-            return sorted.sort((a, b) => parseFloat(a.base_price) - parseFloat(b.base_price));
+            return sorted.sort((a, b) => Number.parseFloat(a.base_price) - Number.parseFloat(b.base_price));
         case 'price-desc':
-            return sorted.sort((a, b) => parseFloat(b.base_price) - parseFloat(a.base_price));
+            return sorted.sort((a, b) => Number.parseFloat(b.base_price) - Number.parseFloat(a.base_price));
         case 'capacity-asc':
             return sorted.sort((a, b) => a.max_guest - b.max_guest);
         case 'capacity-desc':
