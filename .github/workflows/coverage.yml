@@ -41,7 +41,7 @@ jobs:
             --cov-fail-under=80
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@5a109159ebdc0e9525d17d3e3c1d2e1a717c97cd
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
