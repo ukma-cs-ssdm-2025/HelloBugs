@@ -8,6 +8,7 @@ from src.api.services.room_service import (
 )
 from src.api.models.room_model import Room, RoomType, RoomStatus, Amenity, RoomAmenity
 import uuid
+import math
 
 @pytest.fixture
 def test_room_data():
@@ -117,7 +118,7 @@ def test_update_room_partial(db_session, existing_room):
     updated_room = update_room_partial(db_session, existing_room.room_id, update_data)
     db_session.commit()
 
-    assert updated_room.base_price == 1700.0
+    assert math.isclose(updated_room.base_price, 1700.0, rel_tol=1e-9, abs_tol=1e-9)
     assert updated_room.status == RoomStatus.MAINTENANCE
     assert updated_room.description == "Updated description"
 
