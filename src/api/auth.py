@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import request, jsonify, g
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 from dotenv import load_dotenv
 from .models.user_model import User
@@ -16,7 +16,7 @@ def create_token(user_id, role=None, is_admin=False):
         'user_id': user_id,
         'role': role,
         'is_admin': is_admin,
-        'exp': datetime.utcnow() + timedelta(days=1)  # Token expires in 1 day
+        'exp': datetime.now(timezone.utc) + timedelta(days=1)  # Token expires in 1 day
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
     # PyJWT v1 returns bytes, v2 returns str
