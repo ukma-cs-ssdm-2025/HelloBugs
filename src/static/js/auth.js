@@ -225,8 +225,9 @@ class AuthManager {
     getCookie(name) {
         const nameEQ = name + "=";
         const ca = document.cookie.split(';');
-        for(let c of ca) {
-            while (c.charAt(0)==' ') c = c.substring(1);
+        for (const cookie of ca) {
+            let c = cookie;
+            while (c.charAt(0) == ' ') c = c.substring(1);
             if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length);
         }
         return null;
