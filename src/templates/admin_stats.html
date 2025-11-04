@@ -21,7 +21,7 @@
         <input type="date" id="stats-to" />
       </div>
       <div class="filter-col apply-col">
-        <label style="visibility:hidden">apply</label>
+        <label for="stats-apply" style="visibility:hidden">apply</label>
         <button id="stats-apply" class="btn btn-primary">Показати</button>
       </div>
     </div>
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   function inPeriod(d, from, to){
     if(!d) return false;
     const dt = new Date(d);
-    if (isNaN(dt)) return false;
+    if (Number.isNaN(dt.getTime())) return false;
     return dt >= from && dt <= new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23,59,59,999);
   }
 
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     const from = new Date(fromInput.value);
     const to = new Date(toInput.value);
-    if (isNaN(from) || isNaN(to) || to < from){
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to < from){
       usersPeriodEl.textContent = '—';
       bookingsPeriodEl.textContent = '—';
       return;
