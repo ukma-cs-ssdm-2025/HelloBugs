@@ -39,9 +39,9 @@
 ## Скріншоти з SonarCloud
 
 ### До рефакторингу:
-![SonarCloud Before](docs/refactoring/before_screenshot.png)
+![SonarCloud Before](./before_screenshot.png)
 ### Після рефакторингу:
-![SonarCloud After](docs/refactoring/after_screenshot.png)
+![SonarCloud After](./after_screenshot.png)
 
 ## Результат регресійного тестування
 - Всі тести пройшли успішно  
