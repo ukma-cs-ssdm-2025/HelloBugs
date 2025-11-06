@@ -24,7 +24,7 @@ def test_user_registered(db_session):
         created_at=datetime.now()
     )
     db_session.add(user)
-    db_session.flush()
+    db_session.commit()
     return user
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def test_room(db_session):
         description="Cozy room"
     )
     db_session.add(room)
-    db_session.flush()
+    db_session.commit()
     return room
 
 
@@ -156,7 +156,7 @@ def test_get_user_bookings_empty(db_session, test_user_registered):
         created_at=datetime.now()
     )
     db_session.add(new_user)
-    db_session.flush()
+    db_session.commit()
 
     user_bookings = get_user_bookings(db_session, new_user.user_id)
 
@@ -191,7 +191,7 @@ def test_update_booking_full(db_session, test_booking, test_room):
         description="Deluxe room"
     )
     db_session.add(another_room)
-    db_session.flush()
+    db_session.commit()
 
     update_data = {
         'room_id': another_room.room_id,
