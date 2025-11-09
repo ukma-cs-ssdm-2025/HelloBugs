@@ -4,11 +4,12 @@ import jwt
 from datetime import datetime, timedelta, timezone
 import os
 from dotenv import load_dotenv
-from .models.user_model import User
+from .models.user_model import User, UserRole
 from .db import db
 
 load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY') or 'dev-secret-key'
+
 
 def create_token(user_id, role=None, is_admin=False):
     """Generate JWT token for a user"""
@@ -23,6 +24,20 @@ def create_token(user_id, role=None, is_admin=False):
     if isinstance(token, bytes):
         token = token.decode('utf-8')
     return token
+
+def generate_auth_token_for_user(user: User):
+    """Generate JWT token for a user object."""
+    role_value = user.role.value if user.role else 'GUEST'
+    return create_token(user.user_id, role=role_value, is_admin=user.role == UserRole.ADMIN)
+
+def verify_auth_token(token):
+    """Verify the authentication token."""
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return db.query(User).get(data['user_id'])
+    except jwt.InvalidTokenError:
+        return None
+
 
 def token_required(f):
     """Decorator to require authentication"""
@@ -176,7 +191,7 @@ def token_optional(f):
 
 def is_token_expired(token: str) -> bool:
     """Check if a JWT token is expired without raising exceptions
-    
+
     Returns True if token is expired or invalid, False if valid
     """
     try:

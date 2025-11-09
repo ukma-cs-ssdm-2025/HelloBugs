@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Index, event
-from src.api.db import Base, db
+from src.api.db import Base
 from sqlalchemy.orm import relationship
 import enum
 import datetime
@@ -57,22 +57,7 @@ class User(Base):
         except Exception:
             return False
 
-    def generate_auth_token(self):
-        """Generate JWT token for the user."""
-        from src.api.auth import create_token  # Виправлений імпорт
-        role_value = self.role.value if self.role else 'GUEST'
-        return create_token(self.user_id, role=role_value, is_admin=self.role == UserRole.ADMIN)
-
-    @staticmethod
-    def verify_auth_token(token):
-        """Verify the authentication token."""
-        from src.api.auth import SECRET_KEY
-        from jwt import decode, InvalidTokenError
-        try:
-            data = decode(token, SECRET_KEY, algorithms=['HS256'])
-            return db.session.query(User).get(data['user_id'])
-        except InvalidTokenError:
-            return None
+    # МЕТОДИ generate_auth_token ТА verify_auth_token ВИДАЛЕНО ЗВІДСИ
 
     @property
     def is_admin(self):
