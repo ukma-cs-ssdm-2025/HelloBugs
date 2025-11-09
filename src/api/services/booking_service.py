@@ -10,16 +10,19 @@ import secrets
 
 logger = logging.getLogger(__name__)
 
+
 def generate_booking_code():
     timestamp = int(time.time() * 1000) % 1000000
-    random_part = secrets.randbelow(90000) + 10000  
+    random_part = secrets.randbelow(90000) + 10000
     return f"BK{timestamp}{random_part}"
+
 
 def _validate_dates(check_in, check_out):
     if check_in >= check_out:
         raise ValueError("Check-out date must be after check-in date")
     if check_in < date.today():
         raise ValueError("Check-in date cannot be in the past")
+
 
 def _resolve_user(session, user_id, email, data):
     if user_id:
@@ -126,6 +129,10 @@ def create_booking(session, data):
             raise ValueError(message)
 
         user_id = _resolve_user(session, data.get('user_id'), data.get('email'), data)
+
+        if not user_id:
+            logger.error(f"User resolution failed. Email: {data.get('email')}, UserID: {data.get('user_id')}")
+            raise ValueError("Could not resolve user ID for booking.")
 
         _get_room_or_error(session, room_id)
 

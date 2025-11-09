@@ -61,9 +61,6 @@ class BookingList(MethodView):
                 abort(404, message=str(e))
             else:
                 abort(400, message=str(e))
-        except Exception as e:
-            db.rollback()
-            abort(500, message=str(e))
 
 
 @blp.route("/user/<int:user_id>")
@@ -122,9 +119,6 @@ class BookingResource(MethodView):
                 abort(409, message=str(e))
             else:
                 abort(400, message=str(e))
-        except Exception as e:
-            db.rollback()
-            abort(500, message=str(e))
 
     @blp.arguments(BookingInSchema)
     @blp.response(200, BookingOutSchema, description="Booking replaced successfully.")
@@ -147,9 +141,6 @@ class BookingResource(MethodView):
                 abort(409, message=str(e))
             else:
                 abort(400, message=str(e))
-        except Exception as e:
-            db.rollback()
-            abort(500, message=str(e))
 
     @blp.response(204, description="Booking cancelled successfully")
     @blp.alt_response(404, description="Booking not found")
