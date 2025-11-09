@@ -6,13 +6,13 @@ from sqlalchemy import or_, not_
 from datetime import datetime, date, timedelta, timezone
 import logging
 import time
-import random
+import secrets
 
 logger = logging.getLogger(__name__)
 
 def generate_booking_code():
     timestamp = int(time.time() * 1000) % 1000000
-    random_part = random.randint(10000, 99999)
+    random_part = secrets.randbelow(90000) + 10000  
     return f"BK{timestamp}{random_part}"
 
 def _validate_dates(check_in, check_out):
