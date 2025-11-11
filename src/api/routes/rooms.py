@@ -3,6 +3,7 @@ from flask_smorest import Blueprint, abort
 from flask import request
 from datetime import date, timedelta
 import logging
+from werkzeug.exceptions import BadRequest, HTTPException
 from src.api.schemas.room_schema import (
     RoomInSchema, RoomOutSchema, RoomPatchSchema
 )
@@ -104,6 +105,8 @@ class RoomList(MethodView):
                 return available
 
             return candidates
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logger.error(f"Error getting rooms: {e}")
             abort(500, message="Internal server error")
@@ -118,8 +121,13 @@ class RoomList(MethodView):
             result = create_room(db, new_room)
             return result
         except ValueError as e:
+            db.rollback()
             abort(409, message=str(e))
+        except HTTPException as e:
+            db.rollback()
+            raise e
         except Exception as e:
+            db.rollback()
             abort(500, message="Internal server error")
 
 
@@ -130,10 +138,16 @@ class RoomResource(MethodView):
     @blp.alt_response(404, description="Room not found")
     def get(self, room_id):
         """Get a single room by ID"""
-        room = get_room_by_id(db, room_id)
-        if not room:
-            abort(404, message=f"Room with ID {room_id} not found")
-        return room
+        try:
+            room = get_room_by_id(db, room_id)
+            if not room:
+                abort(404, message=f"Room with ID {room_id} not found")
+            return room
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error(f"Error getting room {room_id}: {e}")
+            abort(500, message="Internal server error")
 
     @blp.arguments(RoomPatchSchema)
     @blp.response(200, RoomOutSchema, description="Room updated successfully")
@@ -148,7 +162,15 @@ class RoomResource(MethodView):
                 abort(404, message=f"Room with ID {room_id} not found")
             return room
         except ValueError as e:
+            db.rollback()
             abort(409, message=str(e))
+        except HTTPException as e:
+            db.rollback()
+            raise e
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error patching room {room_id}: {e}")
+            abort(500, message="Internal server error")
 
     @blp.arguments(RoomInSchema)
     @blp.response(200, RoomOutSchema, description="Room replaced successfully")
@@ -163,17 +185,33 @@ class RoomResource(MethodView):
                 abort(404, message=f"Room with ID {room_id} not found")
             return room
         except ValueError as e:
+            db.rollback()
             abort(409, message=str(e))
+        except HTTPException as e:
+            db.rollback()
+            raise e
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error putting room {room_id}: {e}")
+            abort(500, message="Internal server error")
 
     @blp.response(204, description="Room deleted successfully")
     @blp.alt_response(404, description="Room not found")
     @blp.alt_response(400, description="Invalid request")
     def delete(self, room_id):
         """Delete a room"""
-        success = delete_room(db, room_id)
-        if not success:
-            abort(404, message=f"Room with ID {room_id} not found")
-        return "", 204
+        try:
+            success = delete_room(db, room_id)
+            if not success:
+                abort(404, message=f"Room with ID {room_id} not found")
+            return "", 204
+        except HTTPException as e:
+            db.rollback()
+            raise e
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error deleting room {room_id}: {e}")
+            abort(500, message="Internal server error")
 
 
 @blp.route("/<int:room_id>/availability")
@@ -185,32 +223,38 @@ class RoomAvailability(MethodView):
         - start: YYYY-MM-DD (default: today)
         - end: YYYY-MM-DD (default: today + 90 days)
         """
-        room = get_room_by_id(db, room_id)
-        if not room:
-            abort(404, message=f"Room with ID {room_id} not found")
-
-        start_str = request.args.get("start")
-        end_str = request.args.get("end")
-        today = date.today()
         try:
-            start_date = date.fromisoformat(start_str) if start_str else today
-        except ValueError:
-            start_date = today
-        try:
-            end_date = date.fromisoformat(end_str) if end_str else (today + timedelta(days=90))
-        except ValueError:
-            end_date = today + timedelta(days=90)
+            room = get_room_by_id(db, room_id)
+            if not room:
+                abort(404, message=f"Room with ID {room_id} not found")
 
-        if end_date <= start_date:
-            end_date = start_date + timedelta(days=1)
+            start_str = request.args.get("start")
+            end_str = request.args.get("end")
+            today = date.today()
+            try:
+                start_date = date.fromisoformat(start_str) if start_str else today
+            except ValueError:
+                start_date = today
+            try:
+                end_date = date.fromisoformat(end_str) if end_str else (today + timedelta(days=90))
+            except ValueError:
+                end_date = today + timedelta(days=90)
 
-        booked = get_room_booked_ranges(db, room_id, start_date, end_date)
-        return {
-            "room_id": room_id,
-            "start": start_date.isoformat(),
-            "end": end_date.isoformat(),
-            "booked": booked
-        }
+            if end_date <= start_date:
+                end_date = start_date + timedelta(days=1)
+
+            booked = get_room_booked_ranges(db, room_id, start_date, end_date)
+            return {
+                "room_id": room_id,
+                "start": start_date.isoformat(),
+                "end": end_date.isoformat(),
+                "booked": booked
+            }
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error(f"Error getting room availability {room_id}: {e}")
+            abort(500, message="Internal server error")
 
 
 amenities_blp = Blueprint(
@@ -230,6 +274,8 @@ class AmenityList(MethodView):
         try:
             result = get_all_amenities(db)
             return result
+        except HTTPException as e:
+            raise e
         except Exception as e:
             abort(500, message="Internal server error")
 
@@ -243,8 +289,13 @@ class AmenityList(MethodView):
             result = create_amenity(db, new_amenity)
             return result
         except ValueError as e:
+            db.rollback()
             abort(409, message=str(e))
+        except HTTPException as e:
+            db.rollback()
+            raise e
         except Exception as e:
+            db.rollback()
             abort(500, message="Internal server error")
 
 
@@ -255,10 +306,16 @@ class AmenityResource(MethodView):
     @amenities_blp.alt_response(404, description="Amenity not found")
     def get(self, amenity_id):
         """Get a single amenity by ID"""
-        amenity = get_amenity_by_id(db, amenity_id)
-        if not amenity:
-            abort(404, message=f"Amenity with ID {amenity_id} not found")
-        return amenity
+        try:
+            amenity = get_amenity_by_id(db, amenity_id)
+            if not amenity:
+                abort(404, message=f"Amenity with ID {amenity_id} not found")
+            return amenity
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            logger.error(f"Error getting amenity {amenity_id}: {e}")
+            abort(500, message="Internal server error")
 
     @amenities_blp.arguments(AmenityPatchSchema)
     @amenities_blp.response(200, AmenityOutSchema, description="Amenity updated successfully")
@@ -273,8 +330,13 @@ class AmenityResource(MethodView):
                 abort(404, message=f"Amenity with ID {amenity_id} not found")
             return amenity
         except ValueError as e:
+            db.rollback()
             abort(409, message=str(e))
+        except HTTPException as e:
+            db.rollback()
+            raise e
         except Exception as e:
+            db.rollback()
             abort(500, message="Internal server error")
 
     @amenities_blp.arguments(AmenityInSchema)
@@ -290,8 +352,13 @@ class AmenityResource(MethodView):
                 abort(404, message=f"Amenity with ID {amenity_id} not found")
             return amenity
         except ValueError as e:
+            db.rollback()
             abort(409, message=str(e))
+        except HTTPException as e:
+            db.rollback()
+            raise e
         except Exception as e:
+            db.rollback()
             abort(500, message="Internal server error")
 
     @amenities_blp.response(204, description="Amenity deleted successfully")
@@ -303,7 +370,11 @@ class AmenityResource(MethodView):
             if not success:
                 abort(404, message=f"Amenity with ID {amenity_id} not found")
             return "", 204
+        except HTTPException as e:
+            db.rollback()
+            raise e
         except Exception as e:
+            db.rollback()
             abort(500, message="Internal server error")
 
 
@@ -330,6 +401,11 @@ class RoomBookedRanges(MethodView):
             ranges = get_room_booked_ranges(db, room_id, start_date, end_date)
             return ranges
         except ValueError:
+            db.rollback()
             abort(400, message="Invalid date format. Use YYYY-MM-DD")
+        except HTTPException as e:
+            db.rollback()
+            raise e
         except Exception as e:
+            db.rollback()
             abort(500, message="Internal server error")

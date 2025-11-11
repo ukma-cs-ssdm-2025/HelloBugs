@@ -420,8 +420,8 @@ def test_api_get_rooms_exception_handling(client, monkeypatch):
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "get_all_rooms", mock_error)
 
-    with pytest.raises(Exception, match="Database error"):
-        client.get("/api/v1/rooms/")
+    response = client.get("/api/v1/rooms/")
+    assert response.status_code == 500
 
 
 def test_api_get_room_by_id_success(client, sample_room):
@@ -498,8 +498,8 @@ def test_api_get_all_amenities_exception(client, monkeypatch):
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "get_all_amenities", mock_error)
 
-    with pytest.raises(Exception, match="Database error"):
-        client.get("/api/v1/amenities/")
+    response = client.get("/api/v1/amenities/")
+    assert response.status_code == 500
 
 
 def test_api_create_amenity_success(client):
@@ -531,8 +531,8 @@ def test_api_create_amenity_exception(client, monkeypatch):
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "create_amenity", mock_error)
 
-    with pytest.raises(Exception, match="Unexpected error"):
-        client.post("/api/v1/amenities/", json={"amenity_name": "Test"})
+    response = client.post("/api/v1/amenities/", json={"amenity_name": "Test"})
+    assert response.status_code == 500
 
 
 def test_api_get_amenity_by_id_success(client, sample_amenity):
@@ -578,11 +578,11 @@ def test_api_patch_amenity_exception(client, sample_amenity, monkeypatch):
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "update_amenity", mock_error)
 
-    with pytest.raises(Exception, match="Unexpected error"):
-        client.patch(
-            f"/api/v1/amenities/{sample_amenity.amenity_id}",
-            json={"amenity_name": "Test"}
-        )
+    response = client.patch(
+        f"/api/v1/amenities/{sample_amenity.amenity_id}",
+        json={"amenity_name": "Test"}
+    )
+    assert response.status_code == 500
 
 
 def test_api_put_amenity_exception(client, sample_amenity, monkeypatch):
@@ -594,11 +594,11 @@ def test_api_put_amenity_exception(client, sample_amenity, monkeypatch):
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "update_amenity", mock_error)
 
-    with pytest.raises(Exception, match="Unexpected error"):
-        client.put(
-            f"/api/v1/amenities/{sample_amenity.amenity_id}",
-            json={"amenity_name": "Test"}
-        )
+    response = client.put(
+        f"/api/v1/amenities/{sample_amenity.amenity_id}",
+        json={"amenity_name": "Test"}
+    )
+    assert response.status_code == 500
 
 
 def test_api_delete_amenity_success(client, sample_amenity):
@@ -616,8 +616,8 @@ def test_api_delete_amenity_exception(client, sample_amenity, monkeypatch):
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "delete_amenity", mock_error)
 
-    with pytest.raises(Exception, match="Unexpected error"):
-        client.delete(f"/api/v1/amenities/{sample_amenity.amenity_id}")
+    response = client.delete(f"/api/v1/amenities/{sample_amenity.amenity_id}")
+    assert response.status_code == 500
 
 
 def test_api_room_booked_ranges_success(client, sample_room):
@@ -653,5 +653,5 @@ def test_api_room_booked_ranges_exception(client, sample_room, monkeypatch):
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "get_room_booked_ranges", mock_error)
 
-    with pytest.raises(Exception, match="Unexpected error"):
-        client.get(f"/api/v1/rooms/{sample_room.room_id}/booked-ranges")
+    response = client.get(f"/api/v1/rooms/{sample_room.room_id}/booked-ranges")
+    assert response.status_code == 500
