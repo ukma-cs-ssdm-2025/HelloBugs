@@ -106,7 +106,7 @@ class RoomList(MethodView):
             return candidates
         except Exception as e:
             logger.error(f"Error getting rooms: {e}")
-            raise e
+            abort(500, message="Internal server error")
 
     @blp.arguments(RoomInSchema)
     @blp.response(201, RoomOutSchema, description="Room created successfully")
@@ -119,6 +119,8 @@ class RoomList(MethodView):
             return result
         except ValueError as e:
             abort(409, message=str(e))
+        except Exception as e:
+            abort(500, message="Internal server error")
 
 
 @blp.route("/<int:room_id>")
@@ -225,8 +227,11 @@ class AmenityList(MethodView):
     @amenities_blp.alt_response(500, description="Internal server error")
     def get(self):
         """Get all amenities"""
-        result = get_all_amenities(db)
-        return result
+        try:
+            result = get_all_amenities(db)
+            return result
+        except Exception as e:
+            abort(500, message="Internal server error")
 
     @amenities_blp.arguments(AmenityInSchema)
     @amenities_blp.response(201, AmenityOutSchema, description="Amenity created successfully")
@@ -239,6 +244,8 @@ class AmenityList(MethodView):
             return result
         except ValueError as e:
             abort(409, message=str(e))
+        except Exception as e:
+            abort(500, message="Internal server error")
 
 
 @amenities_blp.route("/<int:amenity_id>")
@@ -267,6 +274,8 @@ class AmenityResource(MethodView):
             return amenity
         except ValueError as e:
             abort(409, message=str(e))
+        except Exception as e:
+            abort(500, message="Internal server error")
 
     @amenities_blp.arguments(AmenityInSchema)
     @amenities_blp.response(200, AmenityOutSchema, description="Amenity replaced successfully")
@@ -282,15 +291,20 @@ class AmenityResource(MethodView):
             return amenity
         except ValueError as e:
             abort(409, message=str(e))
+        except Exception as e:
+            abort(500, message="Internal server error")
 
     @amenities_blp.response(204, description="Amenity deleted successfully")
     @blp.alt_response(404, description="Amenity not found")
     def delete(self, amenity_id):
         """Delete an amenity"""
-        success = delete_amenity(db, amenity_id)
-        if not success:
-            abort(404, message=f"Amenity with ID {amenity_id} not found")
-        return "", 204
+        try:
+            success = delete_amenity(db, amenity_id)
+            if not success:
+                abort(404, message=f"Amenity with ID {amenity_id} not found")
+            return "", 204
+        except Exception as e:
+            abort(500, message="Internal server error")
 
 
 # FR-011: Calendar of room occupancy (booked ranges)
@@ -317,3 +331,5 @@ class RoomBookedRanges(MethodView):
             return ranges
         except ValueError:
             abort(400, message="Invalid date format. Use YYYY-MM-DD")
+        except Exception as e:
+            abort(500, message="Internal server error")

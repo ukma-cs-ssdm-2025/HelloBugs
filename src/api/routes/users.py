@@ -35,7 +35,7 @@ class UserList(MethodView):
 
             return get_all_users(db)
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
     @blp.arguments(UserInSchema)
     @blp.response(201, UserOutSchema, description="User created successfully.")
@@ -46,6 +46,8 @@ class UserList(MethodView):
             return result
         except ValueError as e:
             abort(400, message=str(e))
+        except Exception as e:
+            abort(500, message="Internal server error")
 
 @blp.route("/<int:user_id>")
 class UserResource(MethodView):
@@ -69,6 +71,8 @@ class UserResource(MethodView):
             return user
         except ValueError as e:
             abort(400, message=str(e))
+        except Exception as e:
+            abort(500, message="Internal server error")
 
     @blp.arguments(UserInSchema)
     @blp.response(200, UserOutSchema, description="Replace an existing user.")
@@ -81,6 +85,8 @@ class UserResource(MethodView):
             return user
         except ValueError as e:
             abort(400, message=str(e))
+        except Exception as e:
+            abort(500, message="Internal server error")
 
     @blp.response(204, description="User deleted successfully")
     def delete(self, user_id):
@@ -91,4 +97,4 @@ class UserResource(MethodView):
                 abort(404, message="User not found")
             return "", 204
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
