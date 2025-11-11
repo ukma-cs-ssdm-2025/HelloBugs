@@ -1,5 +1,5 @@
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-from flask import Blueprint, request, jsonify, current_app, g
+from flask import Blueprint, request, jsonify, current_app, g, abort
 from flask_smorest import Blueprint as SmorestBlueprint
 from werkzeug.security import check_password_hash
 from ..models.user_model import User, UserRole
@@ -109,7 +109,9 @@ def create_admin():
     if not g.current_user.is_admin:
         return jsonify({'message': 'Admin access required'}), 403
     
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if data is None:
+        abort(400, description='Invalid or missing JSON')
     
     # Validate required fields
     required_fields = ['email', 'password', 'first_name', 'last_name', 'phone']
