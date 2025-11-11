@@ -10,7 +10,8 @@ services:
       - FLASK_APP=src/api/app.py
       - PYTHONPATH=/app
     depends_on:
-      - db_test
+      db_test:
+        condition: service_healthy
     volumes:
       - .:/app
     command: pytest tests/ -v --disable-warnings

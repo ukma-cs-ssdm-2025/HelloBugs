@@ -1,7 +1,6 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask import request
-from flask import request
 from datetime import date, timedelta
 import logging
 from src.api.schemas.room_schema import (
@@ -107,7 +106,7 @@ class RoomList(MethodView):
             return candidates
         except Exception as e:
             logger.error(f"Error getting rooms: {e}")
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
     @blp.arguments(RoomInSchema)
     @blp.response(201, RoomOutSchema, description="Room created successfully")
@@ -121,7 +120,7 @@ class RoomList(MethodView):
         except ValueError as e:
             abort(409, message=str(e))
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
 
 @blp.route("/<int:room_id>")
@@ -232,7 +231,7 @@ class AmenityList(MethodView):
             result = get_all_amenities(db)
             return result
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
     @amenities_blp.arguments(AmenityInSchema)
     @amenities_blp.response(201, AmenityOutSchema, description="Amenity created successfully")
@@ -246,7 +245,7 @@ class AmenityList(MethodView):
         except ValueError as e:
             abort(409, message=str(e))
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
 
 @amenities_blp.route("/<int:amenity_id>")
@@ -263,9 +262,9 @@ class AmenityResource(MethodView):
 
     @amenities_blp.arguments(AmenityPatchSchema)
     @amenities_blp.response(200, AmenityOutSchema, description="Amenity updated successfully")
-    @amenities_blp.alt_response(400, description="Invalid amenity data")
-    @amenities_blp.alt_response(404, description="Amenity not found")
-    @amenities_blp.alt_response(409, description="Amenity name conflict")
+    @blp.alt_response(400, description="Invalid amenity data")
+    @blp.alt_response(404, description="Amenity not found")
+    @blp.alt_response(409, description="Amenity name conflict")
     def patch(self, patch_data, amenity_id):
         """Partially update amenity fields"""
         try:
@@ -276,13 +275,13 @@ class AmenityResource(MethodView):
         except ValueError as e:
             abort(409, message=str(e))
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
     @amenities_blp.arguments(AmenityInSchema)
     @amenities_blp.response(200, AmenityOutSchema, description="Amenity replaced successfully")
-    @amenities_blp.alt_response(404, description="Amenity not found")
-    @amenities_blp.alt_response(400, description="Invalid amenity data")
-    @amenities_blp.alt_response(409, description="Amenity name conflict")
+    @blp.alt_response(404, description="Amenity not found")
+    @blp.alt_response(400, description="Invalid amenity data")
+    @blp.alt_response(409, description="Amenity name conflict")
     def put(self, updated_amenity, amenity_id):
         """Replace an amenity completely"""
         try:
@@ -293,10 +292,10 @@ class AmenityResource(MethodView):
         except ValueError as e:
             abort(409, message=str(e))
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
     @amenities_blp.response(204, description="Amenity deleted successfully")
-    @amenities_blp.alt_response(404, description="Amenity not found")
+    @blp.alt_response(404, description="Amenity not found")
     def delete(self, amenity_id):
         """Delete an amenity"""
         try:
@@ -305,7 +304,7 @@ class AmenityResource(MethodView):
                 abort(404, message=f"Amenity with ID {amenity_id} not found")
             return "", 204
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
 
 # FR-011: Calendar of room occupancy (booked ranges)
@@ -333,4 +332,4 @@ class RoomBookedRanges(MethodView):
         except ValueError:
             abort(400, message="Invalid date format. Use YYYY-MM-DD")
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")

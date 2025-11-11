@@ -35,7 +35,7 @@ class BookingList(MethodView):
         try:
             return get_all_bookings(db)
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
     @blp.arguments(BookingInSchema)
     @blp.response(201, BookingOutSchema, description="Booking created successfully.")
@@ -55,15 +55,16 @@ class BookingList(MethodView):
             return booking
         except ValueError as e:
             db.rollback()
-            if "not available" in str(e).lower():
+            if "not available" in str(e).lower() or "already booked" in str(e).lower():
                 abort(409, message=str(e))
             elif "not found" in str(e).lower():
                 abort(404, message=str(e))
             else:
                 abort(400, message=str(e))
+
         except Exception as e:
             db.rollback()
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
 
 @blp.route("/user/<int:user_id>")
@@ -75,7 +76,7 @@ class UserBookings(MethodView):
         try:
             return get_user_bookings(db, user_id)
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
 
 @blp.route("/upcoming-checkins")
@@ -87,7 +88,7 @@ class UpcomingCheckins(MethodView):
         try:
             return get_upcoming_checkins(db)
         except Exception as e:
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
 
 @blp.route("/<string:booking_code>")
@@ -124,7 +125,7 @@ class BookingResource(MethodView):
                 abort(400, message=str(e))
         except Exception as e:
             db.rollback()
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
     @blp.arguments(BookingInSchema)
     @blp.response(200, BookingOutSchema, description="Booking replaced successfully.")
@@ -147,9 +148,10 @@ class BookingResource(MethodView):
                 abort(409, message=str(e))
             else:
                 abort(400, message=str(e))
+
         except Exception as e:
             db.rollback()
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
 
     @blp.response(204, description="Booking cancelled successfully")
     @blp.alt_response(404, description="Booking not found")
@@ -162,4 +164,4 @@ class BookingResource(MethodView):
             return "", 204
         except Exception as e:
             db.rollback()
-            abort(500, message=str(e))
+            abort(500, message="Internal server error")
