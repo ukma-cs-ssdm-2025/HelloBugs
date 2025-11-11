@@ -57,8 +57,6 @@ class User(Base):
         except Exception:
             return False
 
-    # МЕТОДИ generate_auth_token ТА verify_auth_token ВИДАЛЕНО ЗВІДСИ
-
     @property
     def is_admin(self):
         """Check if user has admin role."""

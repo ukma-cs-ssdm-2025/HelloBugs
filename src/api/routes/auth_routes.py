@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, current_app, g
 from flask_smorest import Blueprint as SmorestBlueprint
 from werkzeug.security import check_password_hash
 from ..models.user_model import User, UserRole
-from ..auth import token_required, admin_required, create_token
+from ..auth import token_required, admin_required, create_token, generate_auth_token_for_user
 from ..db import db
 
 blp = SmorestBlueprint('auth', __name__, url_prefix='/api/v1/auth')
@@ -72,7 +72,7 @@ def register():
         db.commit()
 
         # Generate auth token
-        token = user.generate_auth_token()
+        token = generate_auth_token_for_user(user)
 
         return jsonify({
             'message': 'User registered successfully',
@@ -220,7 +220,7 @@ def login():
             return jsonify({'message': 'Invalid email or password'}), 401
 
         # Generate auth token
-        token = user.generate_auth_token()
+        token = generate_auth_token_for_user(user)
 
         role_value = _get_role_value(user)
         is_admin = (role_value == 'ADMIN')
