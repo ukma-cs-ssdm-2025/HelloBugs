@@ -57,7 +57,7 @@ def _get_room_or_error(session, room_id):
 
 def check_room_availability(session, room_id, check_in, check_out, exclude_booking_code=None):
     try:
-        room = session.query(Room).get(room_id)
+        room = session.query(Room).with_for_update().get(room_id)
         if not room or room.status != RoomStatus.AVAILABLE:
             return False, "Room is not available"
 

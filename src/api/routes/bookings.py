@@ -55,7 +55,7 @@ class BookingList(MethodView):
             return booking
         except ValueError as e:
             db.rollback()
-            if "not available" in str(e).lower():
+            if "not available" in str(e).lower() or "already booked" in str(e).lower():
                 abort(409, message=str(e))
             elif "not found" in str(e).lower():
                 abort(404, message=str(e))
