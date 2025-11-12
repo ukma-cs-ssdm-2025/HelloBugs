@@ -153,4 +153,4 @@ def generate_booking_code():
 
 ![11 After](screenshots/11after.png)
 
-**Застосований патерн:** Data Integrity Management
+**Застосований патерн:** Pessimistic Locking
