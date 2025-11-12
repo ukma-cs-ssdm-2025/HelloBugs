@@ -82,7 +82,7 @@ def test_create_booking_with_non_registered_user(db_session, test_room):
     assert booking.room_id == test_room.room_id
     assert booking.user.is_registered == False
     assert booking.user.password is None
-    assert booking.user.role is None
+    assert booking.user.role == UserRole.GUEST
     assert booking.status == BookingStatus.ACTIVE
 
 

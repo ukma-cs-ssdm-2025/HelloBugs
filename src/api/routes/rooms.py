@@ -54,62 +54,57 @@ class RoomList(MethodView):
           - max_price: float
           - guests: int
         """
-        try:
-            check_in_str = request.args.get("check_in")
-            check_out_str = request.args.get("check_out")
+        check_in_str = request.args.get("check_in")
+        check_out_str = request.args.get("check_out")
 
-            room_type = request.args.get("room_type")
-            min_price = request.args.get("min_price", type=float)
-            max_price = request.args.get("max_price", type=float)
-            guests = request.args.get("guests", type=int)
+        room_type = request.args.get("room_type")
+        min_price = request.args.get("min_price", type=float)
+        max_price = request.args.get("max_price", type=float)
+        guests = request.args.get("guests", type=int)
 
-            if not any([check_in_str, check_out_str, room_type, min_price is not None, max_price is not None, guests]):
-                return get_all_rooms(db)
+        if not any([check_in_str, check_out_str, room_type, min_price is not None, max_price is not None, guests]):
+            return get_all_rooms(db)
 
-            check_in_date = None
-            check_out_date = None
-            if check_in_str or check_out_str:
-                if not (check_in_str and check_out_str):
-                    abort(400, message="Both 'check_in' and 'check_out' are required when filtering by dates")
-                try:
-                    check_in_date = date.fromisoformat(check_in_str)
-                    check_out_date = date.fromisoformat(check_out_str)
-                except ValueError:
-                    abort(400, message="Invalid date format. Use YYYY-MM-DD")
-                if check_out_date <= check_in_date:
-                    abort(400, message="'check_out' must be after 'check_in'")
+        check_in_date = None
+        check_out_date = None
+        if check_in_str or check_out_str:
+            if not (check_in_str and check_out_str):
+                abort(400, message="Both 'check_in' and 'check_out' are required when filtering by dates")
+            try:
+                check_in_date = date.fromisoformat(check_in_str)
+                check_out_date = date.fromisoformat(check_out_str)
+            except ValueError:
+                abort(400, message="Invalid date format. Use YYYY-MM-DD")
+            if check_out_date <= check_in_date:
+                abort(400, message="'check_out' must be after 'check_in'")
 
-            query = db.query(Room)
-            if room_type:
-                try:
-                    rt = RoomType[room_type]
-                except KeyError:
-                    abort(400, message=f"Invalid room_type: {room_type}")
-                query = query.filter(Room.room_type == rt)
-            if min_price is not None:
-                query = query.filter(Room.base_price >= min_price)
-            if max_price is not None:
-                query = query.filter(Room.base_price <= max_price)
-            if guests:
-                query = query.filter(Room.max_guest >= guests)
+        query = db.query(Room)
+        if room_type:
+            try:
+                rt = RoomType[room_type]
+            except KeyError:
+                abort(400, message=f"Invalid room_type: {room_type}")
+            query = query.filter(Room.room_type == rt)
+        if min_price is not None:
+            query = query.filter(Room.base_price >= min_price)
+        if max_price is not None:
+            query = query.filter(Room.base_price <= max_price)
+        if guests:
+            query = query.filter(Room.max_guest >= guests)
 
-            candidates = query.all()
+        candidates = query.all()
 
-            if check_in_date and check_out_date:
-                overlapping = db.query(Booking.room_id).filter(
-                    Booking.status != BookingStatus.CANCELLED,
-                    ~(((Booking.check_out_date <= check_in_date)) | ((Booking.check_in_date >= check_out_date)))
-                ).distinct().all()
-                occupied_room_ids = {rid for (rid,) in overlapping}
-                available = [room for room in candidates if room.room_id not in occupied_room_ids]
-                return available
+        if check_in_date and check_out_date:
+            overlapping = db.query(Booking.room_id).filter(
+                Booking.status != BookingStatus.CANCELLED,
+                ~(((Booking.check_out_date <= check_in_date)) | ((Booking.check_in_date >= check_out_date)))
+            ).distinct().all()
+            occupied_room_ids = {rid for (rid,) in overlapping}
+            available = [room for room in candidates if room.room_id not in occupied_room_ids]
+            return available
 
-            return candidates
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            logger.error(f"Error getting rooms: {e}")
-            abort(500, message="Internal server error")
+        return candidates
+
 
     @blp.arguments(RoomInSchema)
     @blp.response(201, RoomOutSchema, description="Room created successfully")
@@ -123,12 +118,6 @@ class RoomList(MethodView):
         except ValueError as e:
             db.rollback()
             abort(409, message=str(e))
-        except HTTPException as e:
-            db.rollback()
-            raise e
-        except Exception as e:
-            db.rollback()
-            abort(500, message="Internal server error")
 
 
 @blp.route("/<int:room_id>")
@@ -138,16 +127,10 @@ class RoomResource(MethodView):
     @blp.alt_response(404, description="Room not found")
     def get(self, room_id):
         """Get a single room by ID"""
-        try:
-            room = get_room_by_id(db, room_id)
-            if not room:
-                abort(404, message=f"Room with ID {room_id} not found")
-            return room
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            logger.error(f"Error getting room {room_id}: {e}")
-            abort(500, message="Internal server error")
+        room = get_room_by_id(db, room_id)
+        if not room:
+            abort(404, message=f"Room with ID {room_id} not found")
+        return room
 
     @blp.arguments(RoomPatchSchema)
     @blp.response(200, RoomOutSchema, description="Room updated successfully")
@@ -164,13 +147,6 @@ class RoomResource(MethodView):
         except ValueError as e:
             db.rollback()
             abort(409, message=str(e))
-        except HTTPException as e:
-            db.rollback()
-            raise e
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error patching room {room_id}: {e}")
-            abort(500, message="Internal server error")
 
     @blp.arguments(RoomInSchema)
     @blp.response(200, RoomOutSchema, description="Room replaced successfully")
@@ -187,31 +163,16 @@ class RoomResource(MethodView):
         except ValueError as e:
             db.rollback()
             abort(409, message=str(e))
-        except HTTPException as e:
-            db.rollback()
-            raise e
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error putting room {room_id}: {e}")
-            abort(500, message="Internal server error")
 
     @blp.response(204, description="Room deleted successfully")
     @blp.alt_response(404, description="Room not found")
     @blp.alt_response(400, description="Invalid request")
     def delete(self, room_id):
         """Delete a room"""
-        try:
-            success = delete_room(db, room_id)
-            if not success:
-                abort(404, message=f"Room with ID {room_id} not found")
-            return "", 204
-        except HTTPException as e:
-            db.rollback()
-            raise e
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error deleting room {room_id}: {e}")
-            abort(500, message="Internal server error")
+        success = delete_room(db, room_id)
+        if not success:
+            abort(404, message=f"Room with ID {room_id} not found")
+        return "", 204
 
 
 @blp.route("/<int:room_id>/availability")
@@ -223,38 +184,32 @@ class RoomAvailability(MethodView):
         - start: YYYY-MM-DD (default: today)
         - end: YYYY-MM-DD (default: today + 90 days)
         """
+        room = get_room_by_id(db, room_id)
+        if not room:
+            abort(404, message=f"Room with ID {room_id} not found")
+
+        start_str = request.args.get("start")
+        end_str = request.args.get("end")
+        today = date.today()
         try:
-            room = get_room_by_id(db, room_id)
-            if not room:
-                abort(404, message=f"Room with ID {room_id} not found")
+            start_date = date.fromisoformat(start_str) if start_str else today
+        except ValueError:
+            start_date = today
+        try:
+            end_date = date.fromisoformat(end_str) if end_str else (today + timedelta(days=90))
+        except ValueError:
+            end_date = today + timedelta(days=90)
 
-            start_str = request.args.get("start")
-            end_str = request.args.get("end")
-            today = date.today()
-            try:
-                start_date = date.fromisoformat(start_str) if start_str else today
-            except ValueError:
-                start_date = today
-            try:
-                end_date = date.fromisoformat(end_str) if end_str else (today + timedelta(days=90))
-            except ValueError:
-                end_date = today + timedelta(days=90)
+        if end_date <= start_date:
+            end_date = start_date + timedelta(days=1)
 
-            if end_date <= start_date:
-                end_date = start_date + timedelta(days=1)
-
-            booked = get_room_booked_ranges(db, room_id, start_date, end_date)
-            return {
-                "room_id": room_id,
-                "start": start_date.isoformat(),
-                "end": end_date.isoformat(),
-                "booked": booked
-            }
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            logger.error(f"Error getting room availability {room_id}: {e}")
-            abort(500, message="Internal server error")
+        booked = get_room_booked_ranges(db, room_id, start_date, end_date)
+        return {
+            "room_id": room_id,
+            "start": start_date.isoformat(),
+            "end": end_date.isoformat(),
+            "booked": booked
+        }
 
 
 amenities_blp = Blueprint(
@@ -271,13 +226,8 @@ class AmenityList(MethodView):
     @amenities_blp.alt_response(500, description="Internal server error")
     def get(self):
         """Get all amenities"""
-        try:
-            result = get_all_amenities(db)
-            return result
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            abort(500, message="Internal server error")
+        result = get_all_amenities(db)
+        return result
 
     @amenities_blp.arguments(AmenityInSchema)
     @amenities_blp.response(201, AmenityOutSchema, description="Amenity created successfully")
@@ -291,12 +241,6 @@ class AmenityList(MethodView):
         except ValueError as e:
             db.rollback()
             abort(409, message=str(e))
-        except HTTPException as e:
-            db.rollback()
-            raise e
-        except Exception as e:
-            db.rollback()
-            abort(500, message="Internal server error")
 
 
 @amenities_blp.route("/<int:amenity_id>")
@@ -306,22 +250,16 @@ class AmenityResource(MethodView):
     @amenities_blp.alt_response(404, description="Amenity not found")
     def get(self, amenity_id):
         """Get a single amenity by ID"""
-        try:
-            amenity = get_amenity_by_id(db, amenity_id)
-            if not amenity:
-                abort(404, message=f"Amenity with ID {amenity_id} not found")
-            return amenity
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            logger.error(f"Error getting amenity {amenity_id}: {e}")
-            abort(500, message="Internal server error")
+        amenity = get_amenity_by_id(db, amenity_id)
+        if not amenity:
+            abort(404, message=f"Amenity with ID {amenity_id} not found")
+        return amenity
 
     @amenities_blp.arguments(AmenityPatchSchema)
     @amenities_blp.response(200, AmenityOutSchema, description="Amenity updated successfully")
-    @blp.alt_response(400, description="Invalid amenity data")
-    @blp.alt_response(404, description="Amenity not found")
-    @blp.alt_response(409, description="Amenity name conflict")
+    @amenities_blp.alt_response(400, description="Invalid amenity data")
+    @amenities_blp.alt_response(404, description="Amenity not found")
+    @amenities_blp.alt_response(409, description="Amenity name conflict")
     def patch(self, patch_data, amenity_id):
         """Partially update amenity fields"""
         try:
@@ -332,18 +270,12 @@ class AmenityResource(MethodView):
         except ValueError as e:
             db.rollback()
             abort(409, message=str(e))
-        except HTTPException as e:
-            db.rollback()
-            raise e
-        except Exception as e:
-            db.rollback()
-            abort(500, message="Internal server error")
 
     @amenities_blp.arguments(AmenityInSchema)
     @amenities_blp.response(200, AmenityOutSchema, description="Amenity replaced successfully")
-    @blp.alt_response(404, description="Amenity not found")
-    @blp.alt_response(400, description="Invalid amenity data")
-    @blp.alt_response(409, description="Amenity name conflict")
+    @amenities_blp.alt_response(404, description="Amenity not found")
+    @amenities_blp.alt_response(400, description="Invalid amenity data")
+    @amenities_blp.alt_response(409, description="Amenity name conflict")
     def put(self, updated_amenity, amenity_id):
         """Replace an amenity completely"""
         try:
@@ -354,28 +286,15 @@ class AmenityResource(MethodView):
         except ValueError as e:
             db.rollback()
             abort(409, message=str(e))
-        except HTTPException as e:
-            db.rollback()
-            raise e
-        except Exception as e:
-            db.rollback()
-            abort(500, message="Internal server error")
 
     @amenities_blp.response(204, description="Amenity deleted successfully")
-    @blp.alt_response(404, description="Amenity not found")
+    @amenities_blp.alt_response(404, description="Amenity not found")
     def delete(self, amenity_id):
         """Delete an amenity"""
-        try:
-            success = delete_amenity(db, amenity_id)
-            if not success:
-                abort(404, message=f"Amenity with ID {amenity_id} not found")
-            return "", 204
-        except HTTPException as e:
-            db.rollback()
-            raise e
-        except Exception as e:
-            db.rollback()
-            abort(500, message="Internal server error")
+        success = delete_amenity(db, amenity_id)
+        if not success:
+            abort(404, message=f"Amenity with ID {amenity_id} not found")
+        return "", 204
 
 
 # FR-011: Calendar of room occupancy (booked ranges)
@@ -403,9 +322,3 @@ class RoomBookedRanges(MethodView):
         except ValueError:
             db.rollback()
             abort(400, message="Invalid date format. Use YYYY-MM-DD")
-        except HTTPException as e:
-            db.rollback()
-            raise e
-        except Exception as e:
-            db.rollback()
-            abort(500, message="Internal server error")
