@@ -1,25 +1,28 @@
 from src.api.models.booking_model import Booking, BookingStatus
 from src.api.models.room_model import Room, RoomStatus
-from src.api.models.user_model import User
+from src.api.models.user_model import User, UserRole
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy import or_, not_
 from datetime import datetime, date, timedelta, timezone
 import logging
 import time
-import random
+import secrets
 
 logger = logging.getLogger(__name__)
 
+
 def generate_booking_code():
     timestamp = int(time.time() * 1000) % 1000000
-    random_part = random.randint(10000, 99999)
+    random_part = secrets.randbelow(90000) + 10000
     return f"BK{timestamp}{random_part}"
+
 
 def _validate_dates(check_in, check_out):
     if check_in >= check_out:
         raise ValueError("Check-out date must be after check-in date")
     if check_in < date.today():
         raise ValueError("Check-in date cannot be in the past")
+
 
 def _resolve_user(session, user_id, email, data):
     if user_id:
@@ -33,12 +36,14 @@ def _resolve_user(session, user_id, email, data):
             if existing_user.is_registered:
                 raise ValueError("This email is already registered. Please log in to make a booking.")
             return existing_user.user_id
+
         new_guest = User(
             email=email,
             first_name=data.get('first_name'),
             last_name=data.get('last_name'),
             phone=data.get('phone'),
             is_registered=False,
+            role=UserRole.GUEST,
             created_at=datetime.now(timezone.utc)
         )
         session.add(new_guest)
@@ -46,17 +51,22 @@ def _resolve_user(session, user_id, email, data):
         return new_guest.user_id
     raise ValueError("Either user_id or email must be provided")
 
+
 def _get_room_or_error(session, room_id):
-    room = session.query(Room).get(room_id)
-    if not room:
-        raise ValueError("Room not found")
-    return room
+    try:
+        room = session.query(Room).get(room_id)
+        if not room:
+            raise ValueError("Room not found")
+        return room
+    except SQLAlchemyError as e:
+        logger.error(f"Database error getting room {room_id}: {e}")
+        raise Exception(f"Database error: {e}")
 
 def check_room_availability(session, room_id, check_in, check_out, exclude_booking_code=None):
     try:
-        room = session.query(Room).get(room_id)
+        room = session.query(Room).with_for_update().get(room_id)
         if not room or room.status != RoomStatus.AVAILABLE:
-            return False, "Room is not available"
+            raise ValueError(f"Room with ID {room_id} is not available")
 
         overlapping_query = session.query(Booking).filter(
             Booking.room_id == room_id,
@@ -75,20 +85,20 @@ def check_room_availability(session, room_id, check_in, check_out, exclude_booki
 
     except SQLAlchemyError as e:
         logger.error(f"Database error checking room availability: {e}")
-        return False, "Database error"
+        raise
 
 def calculate_total_price(session, room_id, check_in, check_out):
     try:
         room = session.query(Room).get(room_id)
         if not room:
-            return 0
+            raise ValueError(f"Room with ID {room_id} not found")
 
         nights = (check_out - check_in).days
         return float(room.base_price) * nights
 
     except Exception as e:
         logger.error(f"Error calculating total price: {e}")
-        return 0
+        raise
 
 def get_all_bookings(session):
     try:
@@ -121,13 +131,31 @@ def create_booking(session, data):
         _validate_dates(check_in, check_out)
 
         room_id = data.get('room_id')
-        is_available, message = check_room_availability(session, room_id, check_in, check_out)
-        if not is_available:
-            raise ValueError(message)
+        
+        # БЛОКУЄМО КІМНАТУ
+        room = session.query(Room).with_for_update().get(room_id)
+        if not room:
+            raise ValueError("Room not found")
+        if room.status != RoomStatus.AVAILABLE:
+            raise ValueError("Room is not available")
+
+        # Перевіряємо перекриття
+        overlapping = session.query(Booking).filter(
+            Booking.room_id == room_id,
+            Booking.status == BookingStatus.ACTIVE,
+            not_(or_(
+                check_out <= Booking.check_in_date,
+                check_in >= Booking.check_out_date
+            ))
+        ).count()
+        
+        if overlapping > 0:
+            raise ValueError("Room is already booked")
 
         user_id = _resolve_user(session, data.get('user_id'), data.get('email'), data)
-
-        _get_room_or_error(session, room_id)
+        
+        if not user_id:
+            raise ValueError("Could not resolve user ID for booking.")
 
         booking_code = generate_booking_code()
 
@@ -144,17 +172,21 @@ def create_booking(session, data):
         )
 
         session.add(new_booking)
+        session.commit()  
+        
         return new_booking
 
     except IntegrityError as e:
+        session.rollback()  
         logger.error(f"Integrity error creating booking: {e}")
         if "email" in str(e).lower():
-            raise ValueError("This email is already registered. Please log in or use a different email.")
+            raise ValueError("This email is already registered.")
         elif "booking_code" in str(e).lower():
             raise ValueError("System error - please try again")
         else:
             raise ValueError("Database error - please try again")
     except Exception as e:
+        session.rollback() 
         logger.error(f"Error creating booking: {e}")
         raise
 
@@ -162,7 +194,7 @@ def update_booking_partial(session, booking_code, data):
     try:
         booking = session.query(Booking).get(booking_code)
         if not booking:
-            return None
+            raise ValueError(f"Booking with ID {booking_code} not found")
 
         if booking.status in [BookingStatus.COMPLETED, BookingStatus.CANCELLED]:
             allowed_fields = {'status'}
@@ -195,7 +227,7 @@ def update_booking_full(session, booking_code, data):
     try:
         booking = session.query(Booking).get(booking_code)
         if not booking:
-            return None
+            raise ValueError(f"Booking with ID {booking_code} not found")
 
         if booking.status in [BookingStatus.COMPLETED, BookingStatus.CANCELLED]:
             raise ValueError("Cannot modify completed or cancelled bookings")
@@ -227,7 +259,7 @@ def cancel_booking(session, booking_code):
     try:
         booking = session.query(Booking).get(booking_code)
         if not booking:
-            return False
+            raise ValueError(f"Booking with ID {booking_code} not found")
 
         if booking.status == BookingStatus.CANCELLED:
             return True

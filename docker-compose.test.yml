@@ -9,8 +9,10 @@ services:
       - DATABASE_URL=postgresql://postgres:password123@db_test:5432/hotel_db_test
       - FLASK_APP=src/api/app.py
       - PYTHONPATH=/app
+      - SECRET_KEY=a_very_safe_test_key_that_is_not_default
     depends_on:
-      - db_test
+      db_test:
+        condition: service_healthy
     volumes:
       - .:/app
     command: pytest tests/ -v --disable-warnings

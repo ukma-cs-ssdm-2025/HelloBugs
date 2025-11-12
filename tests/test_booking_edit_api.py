@@ -18,7 +18,7 @@ def seed_user(db_session):
         role=UserRole.GUEST,
     )
     db_session.add(u)
-    db_session.flush()
+    db_session.commit()
     return u
 
 @pytest.fixture
@@ -34,7 +34,7 @@ def seed_room(db_session):
         description="Test room"
     )
     db_session.add(r)
-    db_session.flush()
+    db_session.commit()
     return r
 
 @pytest.fixture

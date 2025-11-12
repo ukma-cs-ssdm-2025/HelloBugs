@@ -70,7 +70,7 @@ def test_login_success(client, monkeypatch):
     mock_user.last_name = "Doe"
     mock_user.role = UserRole.GUEST
     mock_user.check_password = lambda pwd: pwd == "goodpass"
-    mock_user.generate_auth_token = lambda: "mock_login_token"
+    mock_user.generate_auth_token_for_user = lambda: "mock_login_token"
     mock_query = MagicMock()
     mock_query.filter_by.return_value.first.return_value = mock_user
     monkeypatch.setattr("src.api.routes.auth_routes.db.query", lambda x: mock_query)
