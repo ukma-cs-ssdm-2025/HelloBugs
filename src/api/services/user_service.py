@@ -108,7 +108,7 @@ def update_user_partial(session, user_id, data):
 
     try:
         for key, value in data.items():
-            if key in ["user_id", "id", "created_at", "is_registered"]:
+            if key in ["user_id", "id", "created_at"]:
                 continue
             
             if key == "password":
