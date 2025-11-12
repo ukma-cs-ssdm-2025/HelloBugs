@@ -50,6 +50,26 @@ engine = create_engine(DATABASE_URL)
 
 **Застосований патерн:** Connection Pool Management + Timeout Pattern
 
+### Проблема №2
+До:
+![2 Before](screenshots/2before.png)
+Після:
+![2 After](screenshots/2after.png)
+
+### Проблема №4
+До (взято один із фрагментів):
+![4 Before](screenshots/4before.png)
+Після: 
+![4 After](screenshots/4after.png)
+* Оскільки у Flask/Flask-Smorest HTTPException автоматично обробляються фреймворком і повертають коректні HTTP-відповіді, їх ловити вручну не потрібно. Залишено явно лише except ValueError для обробки очікуваних бізнес-помилок для конкретної дії.
+
+### Проблема №5
+До (взято один из фрагментів):
+![5 Before](screenshots/5before.png)
+Після:
+![5 After](screenshots/5after.png)
+
+
 ### Проблема №6: Витік внутрішніх деталей у 500-відповідях
 
 **Before:**
