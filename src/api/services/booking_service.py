@@ -125,12 +125,14 @@ def create_booking(session, data):
 
         room_id = data.get('room_id')
         
+        # БЛОКУЄМО КІМНАТУ
         room = session.query(Room).with_for_update().get(room_id)
         if not room:
             raise ValueError("Room not found")
         if room.status != RoomStatus.AVAILABLE:
             raise ValueError("Room is not available")
 
+        # Перевіряємо перекриття
         overlapping = session.query(Booking).filter(
             Booking.room_id == room_id,
             Booking.status == BookingStatus.ACTIVE,
@@ -146,7 +148,6 @@ def create_booking(session, data):
         user_id = _resolve_user(session, data.get('user_id'), data.get('email'), data)
         
         if not user_id:
-            logger.error(f"User resolution failed. Email: {data.get('email')}, UserID: {data.get('user_id')}")
             raise ValueError("Could not resolve user ID for booking.")
 
         booking_code = generate_booking_code()
@@ -164,17 +165,21 @@ def create_booking(session, data):
         )
 
         session.add(new_booking)
+        session.commit()  
+        
         return new_booking
 
     except IntegrityError as e:
+        session.rollback()  
         logger.error(f"Integrity error creating booking: {e}")
         if "email" in str(e).lower():
-            raise ValueError("This email is already registered. Please log in or use a different email.")
+            raise ValueError("This email is already registered.")
         elif "booking_code" in str(e).lower():
             raise ValueError("System error - please try again")
         else:
             raise ValueError("Database error - please try again")
     except Exception as e:
+        session.rollback() 
         logger.error(f"Error creating booking: {e}")
         raise
 
