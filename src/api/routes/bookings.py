@@ -51,10 +51,10 @@ class BookingList(MethodView):
 
         try:
             booking = create_booking(db, new_booking)
-            db.commit()
+            #db.commit()
             return booking
         except ValueError as e:
-            db.rollback()
+            #db.rollback()
             if "not available" in str(e).lower() or "already booked" in str(e).lower():
                 abort(409, message=str(e))
             elif "not found" in str(e).lower():
@@ -63,7 +63,7 @@ class BookingList(MethodView):
                 abort(400, message=str(e))
 
         except Exception as e:
-            db.rollback()
+            #db.rollback()
             abort(500, message="Internal server error")
 
 
