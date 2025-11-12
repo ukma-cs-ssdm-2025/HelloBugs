@@ -14,6 +14,8 @@ def get_all_users(session):
 def create_user(session, data, via_booking=False):
     try:
         email = data.get("email")
+        if not email or not isinstance(email, str):
+            raise ValueError("Email is required and must be a string")
         first_name = data.get("first_name")
         last_name = data.get("last_name")
         phone = data.get("phone")
@@ -102,11 +104,11 @@ def get_user_by_email(session, email):
 def update_user_partial(session, user_id, data):
     user = session.query(User).get(user_id)
     if not user:
-        return None
+        raise ValueError(f"User with ID {user_id} not found")
 
     try:
         for key, value in data.items():
-            if key in ["user_id", "id", "created_at", "is_registered"]:
+            if key in ["user_id", "id", "created_at"]:
                 continue
             
             if key == "password":
@@ -148,7 +150,7 @@ def update_user_partial(session, user_id, data):
 def update_user_full(session, user_id, data):
     user = session.query(User).get(user_id)
     if not user:
-        return None
+        raise ValueError(f"User with ID {user_id} not found")
 
     required_fields = ['email', 'first_name', 'last_name', 'phone', 'role']
     if not all(field in data for field in required_fields):
@@ -196,7 +198,7 @@ def update_user_full(session, user_id, data):
 def delete_user(session, user_id):
     user = session.query(User).get(user_id)
     if not user:
-        return False
+        raise ValueError(f"User with ID {user_id} not found")
 
     try:
         session.delete(user)

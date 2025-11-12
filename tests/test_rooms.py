@@ -7,10 +7,8 @@ from src.api.services.room_service import (
     get_room_with_amenities, get_rooms_by_type
 )
 from src.api.models.room_model import Room, RoomType, RoomStatus, Amenity, RoomAmenity
-from src.api.models.booking_model import Booking, BookingStatus
 import uuid
 import math
-from datetime import date, timedelta
 
 @pytest.fixture
 def test_room_data():
@@ -135,8 +133,8 @@ def test_delete_room(db_session, existing_room):
 
 
 def test_update_room_partial_not_found(db_session):
-    result = update_room_partial(db_session, 999999, {"base_price": 2000.0})
-    assert result is None
+    with pytest.raises(ValueError, match="Room with ID 999999 not found"):
+        update_room_partial(db_session, 999999, {"base_price": 2000.0})
 
 
 def test_update_room_partial_change_room_number(db_session, existing_room):
@@ -217,8 +215,8 @@ def test_update_room_partial_generic_exception(db_session, existing_room):
 
 
 def test_update_room_full_not_found(db_session):
-    result = update_room_full(db_session, 999999, {"room_number": "Test"})
-    assert result is None
+    with pytest.raises(ValueError, match="Room with ID 999999 not found"):
+        update_room_full(db_session, 999999, {"room_number": "Test"})
 
 
 def test_update_room_full_invalid_room_type(db_session, existing_room):
@@ -271,8 +269,8 @@ def test_update_room_full_sqlalchemy_error(db_session, existing_room):
 
 
 def test_delete_room_not_found(db_session):
-    result = delete_room(db_session, 999999)
-    assert result is False
+    with pytest.raises(ValueError, match="Room with ID 999999 not found"):
+        delete_room(db_session, 999999)
 
 
 def test_delete_room_sqlalchemy_error(db_session, existing_room):
@@ -294,8 +292,8 @@ def test_get_room_with_amenities(db_session, existing_room):
 
 
 def test_get_room_with_amenities_not_found(db_session):
-    room = get_room_with_amenities(db_session, 999999)
-    assert room is None
+    with pytest.raises(ValueError, match="Room with ID 999999 not found"):
+        get_room_with_amenities(db_session, 999999)
 
 
 def test_get_room_with_amenities_sqlalchemy_error(db_session):
@@ -374,7 +372,7 @@ def test_api_get_rooms_with_room_type_filter(client, sample_room):
 def test_api_get_rooms_with_invalid_room_type(client):
     """Test invalid room_type filter"""
     response = client.get("/api/v1/rooms/?room_type=INVALID")
-    assert response.status_code == 500  # abort(400) caught by except and converted to 500
+    assert response.status_code == 400
 
 
 def test_api_get_rooms_with_price_filters(client, sample_room):
@@ -392,41 +390,39 @@ def test_api_get_rooms_with_guests_filter(client, sample_room):
 def test_api_get_rooms_dates_missing_checkout(client):
     """Test date filter with missing check_out"""
     response = client.get("/api/v1/rooms/?check_in=2025-12-01")
-    assert response.status_code == 500  # abort(400) caught by except and converted to 500
+    assert response.status_code == 400
 
 
 def test_api_get_rooms_dates_missing_checkin(client):
     """Test date filter with missing check_in"""
     response = client.get("/api/v1/rooms/?check_out=2025-12-10")
-    assert response.status_code == 500  # abort(400) caught by except and converted to 500
+    assert response.status_code == 400
 
 
 def test_api_get_rooms_invalid_date_format(client):
     """Test invalid date format"""
     response = client.get("/api/v1/rooms/?check_in=invalid&check_out=2025-12-10")
-    assert response.status_code == 500  # abort(400) caught by except and converted to 500
+    assert response.status_code == 400
 
 
 def test_api_get_rooms_checkout_before_checkin(client):
     """Test check_out before check_in"""
     response = client.get("/api/v1/rooms/?check_in=2025-12-10&check_out=2025-12-05")
-    assert response.status_code == 500  # abort(400) caught by except and converted to 500
-
+    assert response.status_code == 400
 
 
 def test_api_get_rooms_exception_handling(client, monkeypatch):
     """Test exception handling in GET rooms"""
+
     def mock_error(*args, **kwargs):
         raise Exception("Database error")
-    
+
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "get_all_rooms", mock_error)
-    
-    response = client.get("/api/v1/rooms/")
-    assert response.status_code == 500
 
+    with pytest.raises(Exception, match="Database error"):
+        client.get("/api/v1/rooms/")
 
-# ==================== RoomResource GET tests (lines 134-137) ====================
 
 def test_api_get_room_by_id_success(client, sample_room):
     """Test GET /api/v1/rooms/<id> success"""
@@ -439,8 +435,6 @@ def test_api_get_room_by_id_not_found(client):
     response = client.get("/api/v1/rooms/999999")
     assert response.status_code == 404
 
-
-# ==================== RoomResource PATCH tests (lines 146-152) ====================
 
 def test_api_patch_room_success(client, sample_room):
     """Test PATCH /api/v1/rooms/<id> success"""
@@ -455,8 +449,6 @@ def test_api_patch_room_not_found(client):
     assert response.status_code == 404
 
 
-# ==================== RoomResource DELETE tests (lines 174-177) ====================
-
 def test_api_delete_room_success(client, sample_room):
     """Test DELETE /api/v1/rooms/<id> success"""
     response = client.delete(f"/api/v1/rooms/{sample_room.room_id}")
@@ -468,8 +460,6 @@ def test_api_delete_room_not_found(client):
     response = client.delete("/api/v1/rooms/999999")
     assert response.status_code == 404
 
-
-# ==================== RoomAvailability tests (lines 189-209) ====================
 
 def test_api_room_availability_success(client, sample_room):
     """Test GET /api/v1/rooms/<id>/availability"""
@@ -494,8 +484,6 @@ def test_api_room_availability_not_found(client):
     assert response.status_code == 404
 
 
-# ==================== AmenityList tests (lines 231-235, 243-249) ====================
-
 def test_api_get_all_amenities(client, sample_amenity):
     """Test GET /api/v1/amenities/"""
     response = client.get("/api/v1/amenities/")
@@ -506,12 +494,12 @@ def test_api_get_all_amenities_exception(client, monkeypatch):
     """Test exception handling in GET amenities"""
     def mock_error(*args, **kwargs):
         raise Exception("Database error")
-    
+
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "get_all_amenities", mock_error)
-    
-    response = client.get("/api/v1/amenities/")
-    assert response.status_code == 500
+
+    with pytest.raises(Exception, match="Database error"):
+        client.get("/api/v1/amenities/")
 
 
 def test_api_create_amenity_success(client):
@@ -536,17 +524,16 @@ def test_api_create_amenity_duplicate(client, sample_amenity):
 
 def test_api_create_amenity_exception(client, monkeypatch):
     """Test exception handling in POST amenity"""
+
     def mock_error(*args, **kwargs):
         raise Exception("Unexpected error")
-    
+
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "create_amenity", mock_error)
-    
-    response = client.post("/api/v1/amenities/", json={"amenity_name": "Test"})
-    assert response.status_code == 500
 
+    with pytest.raises(Exception, match="Unexpected error"):
+        client.post("/api/v1/amenities/", json={"amenity_name": "Test"})
 
-# ==================== AmenityResource tests (lines 259-262, 271-279, 288-296, 302-308) ====================
 
 def test_api_get_amenity_by_id_success(client, sample_amenity):
     """Test GET /api/v1/amenities/<id>"""
@@ -569,13 +556,12 @@ def test_api_patch_amenity_success(client, sample_amenity):
     assert response.status_code == 200
 
 
-
 def test_api_patch_amenity_conflict(client, sample_amenity, db_session):
     """Test PATCH amenity with name conflict"""
     amenity2 = Amenity(amenity_name="CONFLICT_AM", icon_url="url")
     db_session.add(amenity2)
     db_session.commit()
-    
+
     response = client.patch(
         f"/api/v1/amenities/{sample_amenity.amenity_id}",
         json={"amenity_name": "CONFLICT_AM"}
@@ -585,33 +571,34 @@ def test_api_patch_amenity_conflict(client, sample_amenity, db_session):
 
 def test_api_patch_amenity_exception(client, sample_amenity, monkeypatch):
     """Test exception in PATCH amenity"""
+
     def mock_error(*args, **kwargs):
         raise Exception("Unexpected error")
-    
+
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "update_amenity", mock_error)
-    
-    response = client.patch(
-        f"/api/v1/amenities/{sample_amenity.amenity_id}",
-        json={"amenity_name": "Test"}
-    )
-    assert response.status_code == 500
 
+    with pytest.raises(Exception, match="Unexpected error"):
+        client.patch(
+            f"/api/v1/amenities/{sample_amenity.amenity_id}",
+            json={"amenity_name": "Test"}
+        )
 
 
 def test_api_put_amenity_exception(client, sample_amenity, monkeypatch):
     """Test exception in PUT amenity"""
+
     def mock_error(*args, **kwargs):
         raise Exception("Unexpected error")
-    
+
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "update_amenity", mock_error)
-    
-    response = client.put(
-        f"/api/v1/amenities/{sample_amenity.amenity_id}",
-        json={"amenity_name": "Test"}
-    )
-    assert response.status_code == 500
+
+    with pytest.raises(Exception, match="Unexpected error"):
+        client.put(
+            f"/api/v1/amenities/{sample_amenity.amenity_id}",
+            json={"amenity_name": "Test"}
+        )
 
 
 def test_api_delete_amenity_success(client, sample_amenity):
@@ -620,20 +607,18 @@ def test_api_delete_amenity_success(client, sample_amenity):
     assert response.status_code == 204
 
 
-
 def test_api_delete_amenity_exception(client, sample_amenity, monkeypatch):
     """Test exception in DELETE amenity"""
+
     def mock_error(*args, **kwargs):
         raise Exception("Unexpected error")
-    
+
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "delete_amenity", mock_error)
-    
-    response = client.delete(f"/api/v1/amenities/{sample_amenity.amenity_id}")
-    assert response.status_code == 500
 
+    with pytest.raises(Exception, match="Unexpected error"):
+        client.delete(f"/api/v1/amenities/{sample_amenity.amenity_id}")
 
-# ==================== RoomBookedRanges tests (lines 321-336) ====================
 
 def test_api_room_booked_ranges_success(client, sample_room):
     """Test GET /api/v1/rooms/<id>/booked-ranges"""
@@ -661,11 +646,12 @@ def test_api_room_booked_ranges_invalid_date_format(client, sample_room):
 
 def test_api_room_booked_ranges_exception(client, sample_room, monkeypatch):
     """Test exception handling in booked ranges"""
+
     def mock_error(*args, **kwargs):
         raise Exception("Unexpected error")
-    
+
     import src.api.routes.rooms as rooms_module
     monkeypatch.setattr(rooms_module, "get_room_booked_ranges", mock_error)
-    
-    response = client.get(f"/api/v1/rooms/{sample_room.room_id}/booked-ranges")
-    assert response.status_code == 500
+
+    with pytest.raises(Exception, match="Unexpected error"):
+        client.get(f"/api/v1/rooms/{sample_room.room_id}/booked-ranges")

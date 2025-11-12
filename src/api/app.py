@@ -11,7 +11,7 @@ from src.api.auth import login_required_web, admin_required
 import os
 import traceback
 from dotenv import load_dotenv
-from src.api.db import create_tables
+from src.api.db import create_tables, db
 
 load_dotenv()
 
@@ -93,6 +93,10 @@ except Exception as e:
     logger.error(f"Error initializing API: {str(e)}")
     raise
 
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db.remove()
+
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
@@ -102,7 +106,7 @@ def not_found(error):
 def internal_error(error):
     logger.error("Internal server error")
     logger.error(traceback.format_exc())
-    print(f"💥 FULL TRACEBACK:\n{traceback.format_exc()}")
+    print(f"FULL TRACEBACK:\n{traceback.format_exc()}")
     return jsonify({'message': 'Internal server error'}), 500
 
 

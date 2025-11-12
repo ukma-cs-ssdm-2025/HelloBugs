@@ -89,7 +89,7 @@ def update_room_partial(session, room_id, data):
     try:
         room = session.query(Room).get(room_id)
         if not room:
-            return None
+            raise ValueError(f"Room with ID {room_id} not found")
 
         if 'room_number' in data and data['room_number'] != room.room_number:
             existing = get_room_by_number(session, data['room_number'])
@@ -152,7 +152,7 @@ def update_room_full(session, room_id, data):
     try:
         room = session.query(Room).get(room_id)
         if not room:
-            return None
+            raise ValueError(f"Room with ID {room_id} not found")
 
         if data.get('room_number') != room.room_number:
             existing = get_room_by_number(session, data.get('room_number'))
@@ -222,7 +222,7 @@ def delete_room(session, room_id):
     try:
         room = session.query(Room).get(room_id)
         if not room:
-            return False
+            raise ValueError(f"Room with ID {room_id} not found")
 
         session.query(RoomAmenity).filter_by(room_id=room_id).delete()
         session.delete(room)
@@ -244,7 +244,7 @@ def get_room_with_amenities(session, room_id):
     try:
         room = session.query(Room).get(room_id)
         if not room:
-            return None
+            raise ValueError(f"Room with ID {room_id} not found")
         return room
     except SQLAlchemyError as e:
         logger.error(f"Database error getting room with amenities {room_id}: {e}")

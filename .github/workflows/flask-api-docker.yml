@@ -45,7 +45,7 @@ jobs:
 
       - name: Run tests
         run: |
-          docker-compose -f docker-compose.test.yml run --rm app pytest --cov=src --cov-report=html --cov-report=term tests/ -v
+          docker-compose -f docker-compose.test.yml run --rm app pytest tests/ -v
 
 
       - name: Stop services

@@ -32,10 +32,7 @@ class BookingList(MethodView):
     @blp.alt_response(500, description="Internal server error")
     def get(self):
         """Get all bookings"""
-        try:
-            return get_all_bookings(db)
-        except Exception as e:
-            abort(500, message=str(e))
+        return get_all_bookings(db)
 
     @blp.arguments(BookingInSchema)
     @blp.response(201, BookingOutSchema, description="Booking created successfully.")
@@ -51,19 +48,16 @@ class BookingList(MethodView):
 
         try:
             booking = create_booking(db, new_booking)
-            db.commit()
+            #db.commit()
             return booking
         except ValueError as e:
-            db.rollback()
-            if "not available" in str(e).lower():
+            #db.rollback()
+            if "not available" in str(e).lower() or "already booked" in str(e).lower():
                 abort(409, message=str(e))
             elif "not found" in str(e).lower():
                 abort(404, message=str(e))
             else:
                 abort(400, message=str(e))
-        except Exception as e:
-            db.rollback()
-            abort(500, message=str(e))
 
 
 @blp.route("/user/<int:user_id>")
@@ -72,10 +66,7 @@ class UserBookings(MethodView):
     @blp.response(200, BookingOutSchema(many=True), description="User bookings")
     @blp.alt_response(500, description="Internal server error")
     def get(self, user_id):
-        try:
-            return get_user_bookings(db, user_id)
-        except Exception as e:
-            abort(500, message=str(e))
+        return get_user_bookings(db, user_id)
 
 
 @blp.route("/upcoming-checkins")
@@ -84,10 +75,7 @@ class UpcomingCheckins(MethodView):
     @blp.response(200, BookingOutSchema(many=True), description="Upcoming check-ins")
     @blp.alt_response(500, description="Internal server error")
     def get(self):
-        try:
-            return get_upcoming_checkins(db)
-        except Exception as e:
-            abort(500, message=str(e))
+        return get_upcoming_checkins(db)
 
 
 @blp.route("/<string:booking_code>")
@@ -122,9 +110,6 @@ class BookingResource(MethodView):
                 abort(409, message=str(e))
             else:
                 abort(400, message=str(e))
-        except Exception as e:
-            db.rollback()
-            abort(500, message=str(e))
 
     @blp.arguments(BookingInSchema)
     @blp.response(200, BookingOutSchema, description="Booking replaced successfully.")
@@ -147,9 +132,7 @@ class BookingResource(MethodView):
                 abort(409, message=str(e))
             else:
                 abort(400, message=str(e))
-        except Exception as e:
-            db.rollback()
-            abort(500, message=str(e))
+
 
     @blp.response(204, description="Booking cancelled successfully")
     @blp.alt_response(404, description="Booking not found")
@@ -162,4 +145,4 @@ class BookingResource(MethodView):
             return "", 204
         except Exception as e:
             db.rollback()
-            abort(500, message=str(e))
+            raise e

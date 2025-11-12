@@ -24,7 +24,7 @@ def test_user_registered(db_session):
         created_at=datetime.now()
     )
     db_session.add(user)
-    db_session.flush()
+    db_session.commit()
     return user
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def test_room(db_session):
         description="Cozy room"
     )
     db_session.add(room)
-    db_session.flush()
+    db_session.commit()
     return room
 
 
@@ -82,7 +82,7 @@ def test_create_booking_with_non_registered_user(db_session, test_room):
     assert booking.room_id == test_room.room_id
     assert booking.user.is_registered == False
     assert booking.user.password is None
-    assert booking.user.role is None
+    assert booking.user.role == UserRole.GUEST
     assert booking.status == BookingStatus.ACTIVE
 
 
@@ -156,7 +156,7 @@ def test_get_user_bookings_empty(db_session, test_user_registered):
         created_at=datetime.now()
     )
     db_session.add(new_user)
-    db_session.flush()
+    db_session.commit()
 
     user_bookings = get_user_bookings(db_session, new_user.user_id)
 
@@ -191,7 +191,7 @@ def test_update_booking_full(db_session, test_booking, test_room):
         description="Deluxe room"
     )
     db_session.add(another_room)
-    db_session.flush()
+    db_session.commit()
 
     update_data = {
         'room_id': another_room.room_id,
@@ -239,13 +239,10 @@ def test_update_cancelled_booking(db_session, test_booking):
 
 def test_update_booking_nonexistent(db_session):
     update_data = {'special_requests': 'Тест'}
-    result = update_booking_partial(db_session, 'NONEXISTENT123', update_data)
-
-    assert result is None
-
+    with pytest.raises(ValueError, match="Booking with ID NONEXISTENT123 not found"):
+        update_booking_partial(db_session, 'NONEXISTENT123', update_data)
 
 
 def test_cancel_nonexistent_booking(db_session):
-    result = cancel_booking(db_session, 'NONEXISTENT123')
-
-    assert result is False
+    with pytest.raises(ValueError, match="Booking with ID NONEXISTENT123 not found"):
+        cancel_booking(db_session, 'NONEXISTENT123')

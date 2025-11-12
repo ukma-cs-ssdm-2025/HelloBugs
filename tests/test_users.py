@@ -33,11 +33,11 @@ def existing_user(db_session):
     )
     db_session.add(user)
     db_session.commit()
+    db_session.refresh(user)
     return user
 
 def test_create_user_success(db_session, test_user_dict):
     user = create_user(db_session, test_user_dict)
-    db_session.commit()
 
     assert user is not None
     assert user.user_id is not None
@@ -88,7 +88,6 @@ def test_update_user_partial(db_session, existing_user):
     }
 
     updated_user = update_user_partial(db_session, existing_user.user_id, update_data)
-    db_session.commit()
 
     assert updated_user.first_name == "Updated"
     assert updated_user.last_name == "Name"
@@ -100,13 +99,11 @@ def test_update_user_password(db_session, existing_user):
     update_data = {"password": new_pwd}
 
     updated_user = update_user_partial(db_session, existing_user.user_id, update_data)
-    db_session.commit()
 
     assert check_password_hash(updated_user.password, new_pwd)
 
 def test_delete_user(db_session, existing_user):
     result = delete_user(db_session, existing_user.user_id)
-    db_session.commit()
 
     assert result is True
 
@@ -144,7 +141,6 @@ def test_create_user_guest_via_booking(db_session):
     }
 
     user = create_user(db_session, guest_data, via_booking=True)
-    db_session.commit()
 
     assert user is not None
     assert user.is_registered == False
