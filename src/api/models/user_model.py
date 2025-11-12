@@ -27,16 +27,14 @@ class User(Base):
 
     __table_args__ = (
         Index(
-            "ix_users_email_unique_account",
+            "ix_users_email_unique",
             "email",
-            unique=True,
-            postgresql_where=(role.isnot(None))
+            unique=True
         ),
         Index(
-            "ix_users_phone_unique_account",
+            "ix_users_phone_unique",
             "phone",
-            unique=True,
-            postgresql_where=(role.isnot(None))
+            unique=True
         ),
     )
 

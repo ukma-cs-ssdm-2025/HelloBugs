@@ -1,6 +1,6 @@
 from src.api.models.booking_model import Booking, BookingStatus
 from src.api.models.room_model import Room, RoomStatus
-from src.api.models.user_model import User
+from src.api.models.user_model import User, UserRole
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy import or_, not_
 from datetime import datetime, date, timedelta, timezone
@@ -36,12 +36,14 @@ def _resolve_user(session, user_id, email, data):
             if existing_user.is_registered:
                 raise ValueError("This email is already registered. Please log in to make a booking.")
             return existing_user.user_id
+
         new_guest = User(
             email=email,
             first_name=data.get('first_name'),
             last_name=data.get('last_name'),
             phone=data.get('phone'),
             is_registered=False,
+            role=UserRole.GUEST,
             created_at=datetime.now(timezone.utc)
         )
         session.add(new_guest)
@@ -49,11 +51,16 @@ def _resolve_user(session, user_id, email, data):
         return new_guest.user_id
     raise ValueError("Either user_id or email must be provided")
 
+
 def _get_room_or_error(session, room_id):
-    room = session.query(Room).get(room_id)
-    if not room:
-        raise ValueError("Room not found")
-    return room
+    try:
+        room = session.query(Room).get(room_id)
+        if not room:
+            raise ValueError("Room not found")
+        return room
+    except SQLAlchemyError as e:
+        logger.error(f"Database error getting room {room_id}: {e}")
+        raise Exception(f"Database error: {e}")
 
 def check_room_availability(session, room_id, check_in, check_out, exclude_booking_code=None):
     try:
@@ -155,8 +162,8 @@ def create_booking(session, data):
 
     except IntegrityError as e:
         logger.error(f"Integrity error creating booking: {e}")
-        if "email" in str(e).lower():
-            raise ValueError("This email is already registered. Please log in or use a different email.")
+        if "email" in str(e).lower() or "phone" in str(e).lower():
+            raise ValueError("This email or phone is already registered. Please log in or use a different email.")
         elif "booking_code" in str(e).lower():
             raise ValueError("System error - please try again")
         else:
