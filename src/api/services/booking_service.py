@@ -66,7 +66,7 @@ def check_room_availability(session, room_id, check_in, check_out, exclude_booki
     try:
         room = session.query(Room).with_for_update().get(room_id)
         if not room or room.status != RoomStatus.AVAILABLE:
-            return False, "Room is not available"
+            raise ValueError(f"Room with ID {room_id} is not available")
 
         overlapping_query = session.query(Booking).filter(
             Booking.room_id == room_id,
@@ -85,20 +85,20 @@ def check_room_availability(session, room_id, check_in, check_out, exclude_booki
 
     except SQLAlchemyError as e:
         logger.error(f"Database error checking room availability: {e}")
-        return False, "Database error"
+        raise
 
 def calculate_total_price(session, room_id, check_in, check_out):
     try:
         room = session.query(Room).get(room_id)
         if not room:
-            return 0
+            raise ValueError(f"Room with ID {room_id} not found")
 
         nights = (check_out - check_in).days
         return float(room.base_price) * nights
 
     except Exception as e:
         logger.error(f"Error calculating total price: {e}")
-        return 0
+        raise
 
 def get_all_bookings(session):
     try:
@@ -194,7 +194,7 @@ def update_booking_partial(session, booking_code, data):
     try:
         booking = session.query(Booking).get(booking_code)
         if not booking:
-            return None
+            raise ValueError(f"Booking with ID {booking_code} not found")
 
         if booking.status in [BookingStatus.COMPLETED, BookingStatus.CANCELLED]:
             allowed_fields = {'status'}
@@ -227,7 +227,7 @@ def update_booking_full(session, booking_code, data):
     try:
         booking = session.query(Booking).get(booking_code)
         if not booking:
-            return None
+            raise ValueError(f"Booking with ID {booking_code} not found")
 
         if booking.status in [BookingStatus.COMPLETED, BookingStatus.CANCELLED]:
             raise ValueError("Cannot modify completed or cancelled bookings")
@@ -259,7 +259,7 @@ def cancel_booking(session, booking_code):
     try:
         booking = session.query(Booking).get(booking_code)
         if not booking:
-            return False
+            raise ValueError(f"Booking with ID {booking_code} not found")
 
         if booking.status == BookingStatus.CANCELLED:
             return True

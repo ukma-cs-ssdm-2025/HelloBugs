@@ -133,8 +133,8 @@ def test_delete_room(db_session, existing_room):
 
 
 def test_update_room_partial_not_found(db_session):
-    result = update_room_partial(db_session, 999999, {"base_price": 2000.0})
-    assert result is None
+    with pytest.raises(ValueError, match="Room with ID 999999 not found"):
+        update_room_partial(db_session, 999999, {"base_price": 2000.0})
 
 
 def test_update_room_partial_change_room_number(db_session, existing_room):
@@ -215,8 +215,8 @@ def test_update_room_partial_generic_exception(db_session, existing_room):
 
 
 def test_update_room_full_not_found(db_session):
-    result = update_room_full(db_session, 999999, {"room_number": "Test"})
-    assert result is None
+    with pytest.raises(ValueError, match="Room with ID 999999 not found"):
+        update_room_full(db_session, 999999, {"room_number": "Test"})
 
 
 def test_update_room_full_invalid_room_type(db_session, existing_room):
@@ -269,8 +269,8 @@ def test_update_room_full_sqlalchemy_error(db_session, existing_room):
 
 
 def test_delete_room_not_found(db_session):
-    result = delete_room(db_session, 999999)
-    assert result is False
+    with pytest.raises(ValueError, match="Room with ID 999999 not found"):
+        delete_room(db_session, 999999)
 
 
 def test_delete_room_sqlalchemy_error(db_session, existing_room):
@@ -292,8 +292,8 @@ def test_get_room_with_amenities(db_session, existing_room):
 
 
 def test_get_room_with_amenities_not_found(db_session):
-    room = get_room_with_amenities(db_session, 999999)
-    assert room is None
+    with pytest.raises(ValueError, match="Room with ID 999999 not found"):
+        get_room_with_amenities(db_session, 999999)
 
 
 def test_get_room_with_amenities_sqlalchemy_error(db_session):

@@ -239,13 +239,10 @@ def test_update_cancelled_booking(db_session, test_booking):
 
 def test_update_booking_nonexistent(db_session):
     update_data = {'special_requests': 'Тест'}
-    result = update_booking_partial(db_session, 'NONEXISTENT123', update_data)
-
-    assert result is None
-
+    with pytest.raises(ValueError, match="Booking with ID NONEXISTENT123 not found"):
+        update_booking_partial(db_session, 'NONEXISTENT123', update_data)
 
 
 def test_cancel_nonexistent_booking(db_session):
-    result = cancel_booking(db_session, 'NONEXISTENT123')
-
-    assert result is False
+    with pytest.raises(ValueError, match="Booking with ID NONEXISTENT123 not found"):
+        cancel_booking(db_session, 'NONEXISTENT123')

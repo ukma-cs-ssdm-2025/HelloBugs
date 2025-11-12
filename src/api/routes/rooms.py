@@ -141,12 +141,14 @@ class RoomResource(MethodView):
         """Partially update room fields"""
         try:
             room = update_room_partial(db, room_id, patch_data)
-            if not room:
-                abort(404, message=f"Room with ID {room_id} not found")
             return room
         except ValueError as e:
             db.rollback()
-            abort(409, message=str(e))
+            error_msg = str(e)
+            if "not found" in error_msg.lower():
+                abort(404, message=error_msg)
+            else:
+                abort(409, message=error_msg)
 
     @blp.arguments(RoomInSchema)
     @blp.response(200, RoomOutSchema, description="Room replaced successfully")
@@ -157,22 +159,30 @@ class RoomResource(MethodView):
         """Replace a room completely"""
         try:
             room = update_room_full(db, room_id, updated_room)
-            if not room:
-                abort(404, message=f"Room with ID {room_id} not found")
             return room
         except ValueError as e:
             db.rollback()
-            abort(409, message=str(e))
+            error_msg = str(e)
+            if "not found" in error_msg.lower():
+                abort(404, message=error_msg)
+            else:
+                abort(409, message=error_msg)
 
     @blp.response(204, description="Room deleted successfully")
     @blp.alt_response(404, description="Room not found")
     @blp.alt_response(400, description="Invalid request")
     def delete(self, room_id):
         """Delete a room"""
-        success = delete_room(db, room_id)
-        if not success:
-            abort(404, message=f"Room with ID {room_id} not found")
-        return "", 204
+        try:
+            delete_room(db, room_id)
+            return '', 204
+        except ValueError as e:
+            db.rollback()
+            error_msg = str(e)
+            if "not found" in error_msg.lower():
+                abort(404, message=error_msg)
+            else:
+                abort(409, message=error_msg)
 
 
 @blp.route("/<int:room_id>/availability")
