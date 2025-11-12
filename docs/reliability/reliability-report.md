@@ -143,3 +143,14 @@ def generate_booking_code():
 ```
 
 **Застосований патерн:** Secure Random Generation
+
+### Проблема №11
+До:
+
+![11 Before](screenshots/11before.png)
+
+Після:
+
+![11 After](screenshots/11after.png)
+
+**Застосований патерн:** Data Integrity Management
