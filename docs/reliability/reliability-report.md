@@ -28,3 +28,83 @@
 
 ## 3. Перед/Після фрагменти коду, фікс проблем
 
+### Проблема №1: Відсутні health-check і таймаути БД
+
+**Before:**
+```python
+# db.py
+engine = create_engine(DATABASE_URL)
+```
+
+**After:**
+```python
+# db.py
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+    pool_recycle=3600,
+        pool_size=5,
+    max_overflow=10
+    )
+```
+
+**Застосований патерн:** Connection Pool Management + Timeout Pattern
+
+### Проблема №6: Витік внутрішніх деталей у 500-відповідях
+
+**Before:**
+```python
+# bookings.py, users.py, rooms.py
+except Exception as e:
+    abort(500, message=str(e))
+```
+
+**After:**
+```python
+except Exception as e:
+    abort(500, message="Internal server error")
+```
+
+**Застосований патерн:** Fail-Safe Error Handling
+
+---
+
+### Проблема №7: Відсутність перевірки JSON у вхідних запитах
+
+**Before:**
+```python
+    data = request.get_json()
+```
+
+**After:**
+```python
+    data = request.get_json(silent=True)
+    if data is None:
+        abort(400, description='Invalid or missing JSON')
+```
+
+**Застосований патерн:** Input Validation + Fail-Fast
+
+---
+
+### Проблема №10: Небезпечний генератор booking-code
+
+**Before:**
+```python
+def generate_booking_code():
+    timestamp = int(time.time() * 1000) % 1000000
+    random_part = random.randint(10000, 99999)
+    return f"BK{timestamp}{random_part}"
+```
+
+**After:**
+```python
+import secrets
+
+def generate_booking_code():
+    timestamp = int(time.time() * 1000) % 1000000
+    random_part = secrets.randbelow(90000) + 10000
+    return f"BK{timestamp}{random_part}"
+```
+
+**Застосований патерн:** Secure Random Generation
