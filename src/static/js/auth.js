@@ -62,9 +62,7 @@ class AuthManager {
             </a>
             <ul class="dropdown-menu">
                 <li><a href="/profile" class="dropdown-item">Мій профіль</a></li>
-                <li><a href="/bookings" class="dropdown-item">Мої бронювання</a></li>
                 ${this.isAdmin() ? '<li><a href="/admin" class="dropdown-item">Адмін панель</a></li>' : ''}
-                ${this.isAdmin() ? '<li><a href="/users" class="dropdown-item">Користувачі</a></li>' : ''}
                 <li><a href="#" class="dropdown-item" onclick="event.preventDefault(); authManager.logout()">Вийти</a></li>
             </ul>
         `;
