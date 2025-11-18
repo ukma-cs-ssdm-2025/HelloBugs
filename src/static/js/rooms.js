@@ -77,7 +77,9 @@ function displayRooms(rooms) {
              </div>
         ` : '';
 
-        const bookingButton = isGuest
+        // Показуємо кнопку бронювання для гостей та STAFF (не для ADMIN)
+        const showBookingButton = isGuest || (isStaffOrAdmin && !isAdmin);
+        const bookingButton = showBookingButton
             ? `<button class="btn btn-primary" onclick="bookRoom(${room.id})" ${room.status !== 'AVAILABLE' ? 'disabled' : ''}>
                    ${room.status === 'AVAILABLE' ? 'Забронювати' : 'Недоступний'}
                </button>`
