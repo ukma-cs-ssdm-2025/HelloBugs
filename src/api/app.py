@@ -67,7 +67,7 @@ def set_security_headers(response):
 
 env = os.getenv('RAILWAY_ENVIRONMENT', 'development')
 if env == 'development':
-    CORS(app, origins=['http://localhost:3000'])
+    CORS(app, origins=['http://localhost:3000', 'http://127.0.0.1:3000'], supports_credentials=True)
     logger.info("CORS configured for development")
 else:
     CORS(app, origins=[
