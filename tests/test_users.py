@@ -1,9 +1,13 @@
 import pytest
 from datetime import datetime
-from src.api.services.user_service import (create_user, get_all_users, get_user_by_id,
-                                           get_user_by_email, update_user_partial, delete_user)
+from src.api.services.user_service import (
+    create_user, get_all_users, get_user_by_id,
+    get_user_by_email, update_user_partial, delete_user,
+    search_users, update_user_full
+)
 from src.api.models.user_model import User, UserRole
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 import secrets
 import uuid
 
@@ -145,3 +149,255 @@ def test_create_user_guest_via_booking(db_session):
     assert user is not None
     assert user.is_registered == False
     assert user.password is None
+
+
+def test_create_user_missing_email(db_session):
+    invalid_data = {
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501112233",
+        "password": secrets.token_urlsafe(12),
+        "role": "GUEST"
+    }
+
+    with pytest.raises(ValueError, match="Email is required and must be a string"):
+        create_user(db_session, invalid_data)
+
+def test_create_user_invalid_email_type(db_session):
+    invalid_data = {
+        "email": 12345,  
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501112233",
+        "password": secrets.token_urlsafe(12),
+        "role": "GUEST"
+    }
+
+    with pytest.raises(ValueError, match="Email is required and must be a string"):
+        create_user(db_session, invalid_data)
+
+def test_create_user_role_as_dict(db_session):
+    user_data = {
+        "email": f"user_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501112233",
+        "password": secrets.token_urlsafe(12),
+        "role": {"value": "GUEST"}
+    }
+
+    user = create_user(db_session, user_data)
+    assert user.role == UserRole.GUEST
+
+def test_create_user_integrity_error(db_session, existing_user, monkeypatch):
+    user_data = {
+        "email": f"new_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": existing_user.phone,  
+        "password": secrets.token_urlsafe(12),
+        "role": "GUEST"
+    }
+
+    with pytest.raises(ValueError, match="User with this email or phone already exists"):
+        create_user(db_session, user_data)
+
+def test_search_users_by_role(db_session, existing_user):
+    users = search_users(db_session, role="GUEST")
+    assert isinstance(users, list)
+    assert len(users) > 0
+    assert all(user.role == UserRole.GUEST for user in users)
+
+def test_search_users_by_invalid_role(db_session):
+    users = search_users(db_session, role="INVALID_ROLE")
+    assert users == []
+
+def test_search_users_by_last_name(db_session, existing_user):
+    users = search_users(db_session, last_name="User")
+    assert isinstance(users, list)
+    assert len(users) > 0
+    assert any(user.user_id == existing_user.user_id for user in users)
+
+def test_search_users_by_role_and_last_name(db_session, existing_user):
+    users = search_users(db_session, role="GUEST", last_name="User")
+    assert isinstance(users, list)
+    assert len(users) > 0
+
+def test_update_user_partial_not_found(db_session):
+    with pytest.raises(ValueError, match="User with ID 999999 not found"):
+        update_user_partial(db_session, 999999, {"first_name": "Test"})
+
+def test_update_user_partial_skip_protected_fields(db_session, existing_user):
+    original_id = existing_user.user_id
+    original_created_at = existing_user.created_at
+    
+    update_data = {
+        "user_id": 99999,
+        "id": 88888,
+        "created_at": datetime.now(),
+        "first_name": "NewName"
+    }
+
+    updated_user = update_user_partial(db_session, existing_user.user_id, update_data)
+    
+    assert updated_user.user_id == original_id
+    assert updated_user.created_at == original_created_at
+    assert updated_user.first_name == "NewName"
+
+def test_update_user_partial_empty_password(db_session, existing_user):
+    original_password = existing_user.password
+    
+    update_data = {"password": "   "}
+    updated_user = update_user_partial(db_session, existing_user.user_id, update_data)
+    
+    assert updated_user.password == original_password
+
+def test_update_user_partial_role_as_dict(db_session, existing_user):
+    update_data = {"role": {"value": "ADMIN"}}
+    updated_user = update_user_partial(db_session, existing_user.user_id, update_data)
+    
+    assert updated_user.role == UserRole.ADMIN
+
+def test_update_user_partial_invalid_role(db_session, existing_user):
+    update_data = {"role": "INVALID_ROLE"}
+    
+    with pytest.raises(ValueError, match="Invalid role: INVALID_ROLE"):
+        update_user_partial(db_session, existing_user.user_id, update_data)
+
+def test_update_user_partial_integrity_error(db_session, existing_user):
+    second_user = User(
+        email=f"second_{uuid.uuid4().hex[:8]}@example.com",
+        first_name="Second",
+        last_name="User",
+        phone="+380509998877",
+        is_registered=True,
+        password=generate_password_hash(secrets.token_urlsafe(12)),
+        role=UserRole.GUEST,
+        created_at=datetime.now()
+    )
+    db_session.add(second_user)
+    db_session.commit()
+
+    update_data = {"email": second_user.email}
+    
+    with pytest.raises(ValueError, match="User with this email or phone already exists"):
+        update_user_partial(db_session, existing_user.user_id, update_data)
+
+def test_update_user_full_success(db_session, existing_user):
+    update_data = {
+        "email": f"updated_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "UpdatedFirst",
+        "last_name": "UpdatedLast",
+        "phone": "+380501234567",
+        "role": "ADMIN"
+    }
+
+    updated_user = update_user_full(db_session, existing_user.user_id, update_data)
+    
+    assert updated_user.email == update_data["email"]
+    assert updated_user.first_name == update_data["first_name"]
+    assert updated_user.last_name == update_data["last_name"]
+    assert updated_user.phone == update_data["phone"]
+    assert updated_user.role == UserRole.ADMIN
+
+def test_update_user_full_not_found(db_session):
+    update_data = {
+        "email": "test@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "role": "GUEST"
+    }
+
+    with pytest.raises(ValueError, match="User with ID 999999 not found"):
+        update_user_full(db_session, 999999, update_data)
+
+def test_update_user_full_missing_fields(db_session, existing_user):
+    incomplete_data = {
+        "email": "test@example.com",
+        "first_name": "Test"
+    }
+
+    with pytest.raises(ValueError, match="Missing required fields for full update"):
+        update_user_full(db_session, existing_user.user_id, incomplete_data)
+
+def test_update_user_full_role_as_dict(db_session, existing_user):
+    update_data = {
+        "email": f"updated_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "role": {"value": "ADMIN"}
+    }
+
+    updated_user = update_user_full(db_session, existing_user.user_id, update_data)
+    assert updated_user.role == UserRole.ADMIN
+
+def test_update_user_full_invalid_role(db_session, existing_user):
+    update_data = {
+        "email": "test@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "role": "INVALID"
+    }
+
+    with pytest.raises(ValueError, match="Invalid role: INVALID"):
+        update_user_full(db_session, existing_user.user_id, update_data)
+
+def test_update_user_full_with_password(db_session, existing_user):
+    new_pwd = secrets.token_urlsafe(12)
+    update_data = {
+        "email": f"updated_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "role": "GUEST",
+        "password": new_pwd
+    }
+
+    updated_user = update_user_full(db_session, existing_user.user_id, update_data)
+    assert check_password_hash(updated_user.password, new_pwd)
+
+def test_update_user_full_empty_password(db_session, existing_user):
+    original_password = existing_user.password
+    update_data = {
+        "email": f"updated_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "role": "GUEST",
+        "password": "   "
+    }
+
+    updated_user = update_user_full(db_session, existing_user.user_id, update_data)
+    assert updated_user.password == original_password
+
+def test_update_user_full_integrity_error(db_session, existing_user):
+    second_user = User(
+        email=f"second_{uuid.uuid4().hex[:8]}@example.com",
+        first_name="Second",
+        last_name="User",
+        phone="+380509998877",
+        is_registered=True,
+        password=generate_password_hash(secrets.token_urlsafe(12)),
+        role=UserRole.GUEST,
+        created_at=datetime.now()
+    )
+    db_session.add(second_user)
+    db_session.commit()
+
+    update_data = {
+        "email": second_user.email,
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "role": "GUEST"
+    }
+
+    with pytest.raises(ValueError, match="User with this email or phone already exists"):
+        update_user_full(db_session, existing_user.user_id, update_data)
+
+def test_delete_user_not_found(db_session):
+    with pytest.raises(ValueError, match="User with ID 999999 not found"):
+        delete_user(db_session, 999999)
