@@ -149,15 +149,26 @@
   /* Action buttons styling */
   .users-table td:last-child {
     white-space: nowrap;
+    min-width: 260px;
   }
   .users-table .btn {
-    min-width: 120px;
-    padding: 8px 16px;
-    margin: 4px;
+    min-width: 110px;
+    padding: 6px 12px;
+    margin: 2px;
     display: inline-block;
+    font-size: 14px;
   }
   .users-table .btn-edit {
-    margin-right: 8px;
+    margin-right: 6px;
+  }
+  @media (max-width: 768px) {
+    .users-table .btn {
+      min-width: 100%;
+      margin: 4px 0;
+    }
+    .users-table td:last-child {
+      white-space: normal;
+    }
   }
 </style>
 {% endblock %}
