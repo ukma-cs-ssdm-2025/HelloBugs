@@ -45,8 +45,12 @@ function updateProfileUI(user) {
         roleElement.textContent = roleValue;
 
         const adminLink = document.getElementById('adminLink');
-        if (adminLink && roleValue === 'ADMIN') {
-            adminLink.style.display = 'inline-flex';
+        if (adminLink) {
+            if (roleValue === 'ADMIN') {
+                adminLink.style.display = 'inline-flex';
+            } else {
+                adminLink.style.display = 'none';
+            }
         }
     }
 
