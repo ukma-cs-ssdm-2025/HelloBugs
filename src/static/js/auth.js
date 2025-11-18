@@ -252,7 +252,8 @@ showStaffElements() {
     const staffElements = document.querySelectorAll('.staff-only');
     const adminOnlyElements = document.querySelectorAll('.admin-only');
     
-    if (this.isStaffOrAdmin()) {
+    // admin-only елементи показуємо тільки для ADMIN (не для STAFF)
+    if (this.isAdmin()) {
         adminOnlyElements.forEach(element => {
             element.style.display = 'block';
         });
@@ -262,7 +263,8 @@ showStaffElements() {
         });
     }
     
-    if (this.isStaff()) {
+    // staff-only елементи показуємо для STAFF та ADMIN
+    if (this.isStaffOrAdmin()) {
         staffElements.forEach(element => {
             element.style.display = 'block';
         });
