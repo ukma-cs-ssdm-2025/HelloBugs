@@ -247,7 +247,16 @@ document.getElementById('editContactForm').addEventListener('submit', async func
     if (response.ok) {
       alert('Контактну інформацію успішно оновлено!');
       closeEditModal();
-      loadContactInfo();
+      await loadContactInfo();
+      
+      // Оновлюємо контакти в header та footer на всіх сторінках
+      console.log('Викликаємо window.reloadGlobalContacts...');
+      if (typeof window.reloadGlobalContacts === 'function') {
+        await window.reloadGlobalContacts();
+        console.log('Header та footer оновлено!');
+      } else {
+        console.error('window.reloadGlobalContacts не знайдено!');
+      }
     }
   } catch (error) {
     alert('Помилка оновлення контактів: ' + error.message);
