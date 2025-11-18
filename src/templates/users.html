@@ -145,6 +145,19 @@
   .users-table-container { margin-top: 8px; }
   .users-table .loading { text-align: center; }
   .role-badge { padding: 4px 8px; border-radius: 12px; background: #eef; }
-  .btn.btn-edit { margin-right: 6px; }
+  
+  /* Action buttons styling */
+  .users-table td:last-child {
+    white-space: nowrap;
+  }
+  .users-table .btn {
+    min-width: 120px;
+    padding: 8px 16px;
+    margin: 4px;
+    display: inline-block;
+  }
+  .users-table .btn-edit {
+    margin-right: 8px;
+  }
 </style>
 {% endblock %}
