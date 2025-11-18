@@ -2,6 +2,7 @@
 {% block title %}Контакти - Готель Хрещатик{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <section class="page-header">
   <div class="container">
     <h1 class="page-title">КОНТАКТИ</h1>
@@ -11,12 +12,20 @@
 
 <section class="contacts-section">
   <div class="container contacts-grid">
-    <div class="contact-card">
-      <h3>Готель Хрещатик</h3>
-      <div class="contact-row"><span>Адреса:</span><span>м. Київ, вул. Хрещатик, 1</span></div>
-      <div class="contact-row"><span>Телефон:</span><a href="tel:+380441234567">+380956666666</a></div>
-      <div class="contact-row"><span>Email:</span><a href="mailto:info@hotel.com">info@hotel.com</a></div>
-      <div class="contact-row"><span>Графік:</span><span>Цілодобово</span></div>
+    <div class="contact-card" id="contactInfo">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+        <h3 id="hotelName" style="margin:0">Завантаження...</h3>
+        <button id="editContactBtn" class="btn btn-edit admin-only" style="display:none">
+          <i class="fas fa-edit"></i> Редагувати
+        </button>
+      </div>
+      <div class="contact-row"><span>Адреса:</span><span id="address">...</span></div>
+      <div class="contact-row"><span>Телефон:</span><a id="phone" href="">...</a></div>
+      <div class="contact-row"><span>Email:</span><a id="email" href="">...</a></div>
+      <div class="contact-row"><span>Графік:</span><span id="schedule">...</span></div>
+      <div class="contact-row" id="descriptionRow" style="display:none">
+        <span>Опис:</span><span id="description"></span>
+      </div>
     </div>
 
     <div class="contact-card">
@@ -32,6 +41,46 @@
   </div>
 </section>
 
+<!-- Модальне вікно для редагування контактів -->
+<div id="editContactModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Редагувати контактну інформацію</h2>
+      <button type="button" class="close-btn" onclick="closeEditModal()">&times;</button>
+    </div>
+    <form id="editContactForm" class="contact-form">
+      <div class="form-group">
+        <label for="edit_hotel_name">Назва готелю</label>
+        <input type="text" id="edit_hotel_name" name="hotel_name" required>
+      </div>
+      <div class="form-group">
+        <label for="edit_address">Адреса</label>
+        <input type="text" id="edit_address" name="address" required>
+      </div>
+      <div class="form-group">
+        <label for="edit_phone">Телефон</label>
+        <input type="tel" id="edit_phone" name="phone" required>
+      </div>
+      <div class="form-group">
+        <label for="edit_email">Email</label>
+        <input type="email" id="edit_email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="edit_schedule">Графік роботи</label>
+        <input type="text" id="edit_schedule" name="schedule" required>
+      </div>
+      <div class="form-group">
+        <label for="edit_description">Опис (необов'язково)</label>
+        <textarea id="edit_description" name="description" rows="3"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Скасувати</button>
+        <button type="submit" class="btn btn-primary">Зберегти</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <style>
 .contacts-section{padding:60px 0;background:#f8f9fa}
 .contacts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
@@ -41,9 +90,171 @@
 .contact-form{display:flex;flex-direction:column;gap:12px}
 .contact-form input,.contact-form textarea{width:100%;padding:12px 14px;border:1px solid #dee2e6;border-radius:8px;background:#fff}
 .success-message{margin-top:8px;color:#2e7d32}
+
+.btn-edit{
+  background:#B8860B;
+  color:#fff;
+  border:none;
+  padding:8px 16px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:background 0.3s;
+}
+.btn-edit:hover{background:#9a7209}
+
+.modal{
+  display:none;
+  position:fixed;
+  z-index:1000;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  align-items:center;
+  justify-content:center;
+}
+.modal-content{
+  background:#fff;
+  border-radius:12px;
+  padding:0;
+  max-width:600px;
+  width:90%;
+  max-height:90vh;
+  overflow-y:auto;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
+}
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px 24px;
+  border-bottom:1px solid #e9ecef;
+}
+.modal-header h2{margin:0;font-size:20px;color:#2c3e50}
+.close-btn{
+  background:none;
+  border:none;
+  font-size:28px;
+  cursor:pointer;
+  color:#6c757d;
+  padding:0;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:color 0.3s;
+}
+.close-btn:hover{color:#000}
+.modal-content form{padding:24px}
+.form-group{margin-bottom:16px}
+.form-group label{
+  display:block;
+  margin-bottom:6px;
+  font-weight:500;
+  color:#495057;
+  font-size:14px;
+}
+.form-group input,
+.form-group textarea{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid #ced4da;
+  border-radius:6px;
+  font-size:14px;
+  transition:border-color 0.3s;
+}
+.form-group input:focus,
+.form-group textarea:focus{
+  outline:none;
+  border-color:#B8860B;
+}
+.form-actions{
+  display:flex;
+  gap:12px;
+  justify-content:flex-end;
+  margin-top:24px;
+  padding-top:16px;
+  border-top:1px solid #e9ecef;
+}
 </style>
 
 <script>
+let currentContactData = null;
+
+// Завантаження контактної інформації
+async function loadContactInfo() {
+  try {
+    const response = await fetch('/api/v1/contacts/');
+    const data = await response.json();
+    currentContactData = data;
+    
+    document.getElementById('hotelName').textContent = data.hotel_name;
+    document.getElementById('address').textContent = data.address;
+    document.getElementById('phone').textContent = data.phone;
+    document.getElementById('phone').href = `tel:${data.phone}`;
+    document.getElementById('email').textContent = data.email;
+    document.getElementById('email').href = `mailto:${data.email}`;
+    document.getElementById('schedule').textContent = data.schedule;
+    
+    if (data.description) {
+      document.getElementById('description').textContent = data.description;
+      document.getElementById('descriptionRow').style.display = 'flex';
+    }
+  } catch (error) {
+    console.error('Помилка завантаження контактів:', error);
+  }
+}
+
+// Відкрити модальне вікно редагування
+function openEditModal() {
+  if (!currentContactData) return;
+  
+  document.getElementById('edit_hotel_name').value = currentContactData.hotel_name;
+  document.getElementById('edit_address').value = currentContactData.address;
+  document.getElementById('edit_phone').value = currentContactData.phone;
+  document.getElementById('edit_email').value = currentContactData.email;
+  document.getElementById('edit_schedule').value = currentContactData.schedule;
+  document.getElementById('edit_description').value = currentContactData.description || '';
+  
+  document.getElementById('editContactModal').style.display = 'flex';
+}
+
+// Закрити модальне вікно
+function closeEditModal() {
+  document.getElementById('editContactModal').style.display = 'none';
+}
+
+// Зберегти зміни
+document.getElementById('editContactForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData.entries());
+  
+  try {
+    const response = await window.authManager.makeAuthenticatedRequest('/api/v1/contacts/', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    if (response.ok) {
+      alert('Контактну інформацію успішно оновлено!');
+      closeEditModal();
+      loadContactInfo();
+    }
+  } catch (error) {
+    alert('Помилка оновлення контактів: ' + error.message);
+  }
+});
+
+// Форма зворотного зв'язку
 document.getElementById('contactForm').addEventListener('submit', function(e){
   e.preventDefault();
   var ok = document.getElementById('contact_ok');
@@ -51,5 +262,11 @@ document.getElementById('contactForm').addEventListener('submit', function(e){
   setTimeout(function(){ ok.style.display = 'none'; }, 3000);
   this.reset();
 });
+
+// Кнопка редагування
+document.getElementById('editContactBtn').addEventListener('click', openEditModal);
+
+// Завантажити контакти при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', loadContactInfo);
 </script>
 {% endblock %}

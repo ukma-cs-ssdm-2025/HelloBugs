@@ -7,6 +7,7 @@ from src.api.routes.rooms import blp as rooms_blp
 from src.api.routes.rooms import amenities_blp
 from src.api.routes.bookings import blp as bookings_blp
 from src.api.routes.auth_routes import blp as auth_blp
+from src.api.routes.contacts import blp as contacts_blp
 from src.api.auth import login_required_web, admin_required
 import os
 import traceback
@@ -86,6 +87,7 @@ try:
     api.register_blueprint(amenities_blp)
     api.register_blueprint(bookings_blp)
     api.register_blueprint(auth_blp)
+    api.register_blueprint(contacts_blp)
 
     logger.info("API routes registered successfully")
 
