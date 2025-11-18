@@ -1,4 +1,4 @@
-## DORA-розрахунки
+# DORA-розрахунки
 
 | Метрика                  | Формула                                 | Наш результат             | Категорія |
 |--------------------------|-----------------------------------------|---------------------------|----------|
@@ -8,9 +8,50 @@
 | **Time to Restore**      | mean(time to fix failed build)          | (189 + 283 + 67) / 3 = **179.67 minutes (~3h)** | **High** |
 
 
+## 1. Deployment Frequency - Частота успішннх деплоїв за останні 4 тижні
+
+```mermaid
+   xychart-beta
+    title "Deployment Frequency per Week"
+    x-axis [Week-1, Week-2, Week-3, Week-4]
+    y-axis "Deployments" 0 --> 30
+    line [12, 27, 19, 5]
+```
+
+## 2. Change Failure Rate - Успішність деплоїв
+
+```mermaid
+pie showData
+    title Change Failure Rate
+    "Failed" : 99
+    "Successful" : 214
+```
 
 
-## Improvement Backlog
+## 3. Lead Time - Час від коміту до деплою (останні успішні)
+
+```mermaid
+xychart-beta
+    title "Lead Time (minutes)"
+    x-axis [Run-1, Run-2, Run-3, Run-4, Run-6, Run-7, Run-9]
+    y-axis "Minutes" 0 --> 6
+    line [3.54, 4.8, 4.1, 4.03, 4.16, 4.5, 5.47]
+```
+
+
+## 4. Time to Restore - Середній час від провалу до відновлення (останні невдалі)
+```mermaid
+   xychart-beta
+    title "Time to Restore (minutes)"
+    x-axis [Run-1, Run-2, Run-3]
+    y-axis "Minutes" 0 --> 300
+    line [189, 283, 67]
+
+```
+
+
+
+# Improvement Backlog
 
 
 | Метрика             | Проблема                                                   | Першопричина                                                                                                                                                                                                                                | Дії для покращення                                                                                                                                                                                                                                                                                                                                                                                      | Відповідальний                                      |

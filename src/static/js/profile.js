@@ -43,11 +43,6 @@ function updateProfileUI(user) {
     if (roleElement && user.role) {
         const roleValue = typeof user.role === 'string' ? user.role : user.role.value;
         roleElement.textContent = roleValue;
-
-        const adminLink = document.getElementById('adminLink');
-        if (adminLink && roleValue === 'ADMIN') {
-            adminLink.style.display = 'inline-flex';
-        }
     }
 
     const firstNameInput = document.querySelector('input[name="first_name"]');
