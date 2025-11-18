@@ -100,8 +100,36 @@ def calculate_total_price(session, room_id, check_in, check_out):
         logger.error(f"Error calculating total price: {e}")
         raise
 
+def update_expired_bookings_status(session):
+    """Автоматично оновлює статус бронювань на COMPLETED після check_out_date"""
+    try:
+        today = date.today()
+        expired_bookings = session.query(Booking).filter(
+            Booking.status == BookingStatus.ACTIVE,
+            Booking.check_out_date < today
+        ).all()
+        
+        count = 0
+        for booking in expired_bookings:
+            booking.status = BookingStatus.COMPLETED
+            booking.updated_at = datetime.now(timezone.utc)
+            count += 1
+        
+        if count > 0:
+            session.commit()
+            logger.info(f"Updated {count} expired bookings to COMPLETED status")
+        
+        return count
+    except SQLAlchemyError as e:
+        session.rollback()
+        logger.error(f"Error updating expired bookings: {e}")
+        raise Exception(f"Database error: {e}")
+
 def get_all_bookings(session):
     try:
+        # Автоматично оновлюємо статус застарілих бронювань
+        update_expired_bookings_status(session)
+        
         bookings = session.query(Booking).all()
         return bookings
     except SQLAlchemyError as e:
@@ -118,6 +146,9 @@ def get_booking_by_code(session, booking_code):
 
 def get_user_bookings(session, user_id):
     try:
+        # Автоматично оновлюємо статус застарілих бронювань
+        update_expired_bookings_status(session)
+        
         bookings = session.query(Booking).filter_by(user_id=user_id).all()
         return bookings
     except SQLAlchemyError as e:
