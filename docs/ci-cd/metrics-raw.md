@@ -1,3 +1,5 @@
+## Pipeline Runs
+
 | Run # | Commit SHA | Status | Start → End (min) | Deployed? | Notes |
 |:----:|-------------|:-------:|:------------------:|:----------:|:------|
 | 1 | 226c7c9 |  ✅ | 3,54 | ✅ | add one more test (data integrity) 
@@ -10,3 +12,24 @@
 | 8 |a1a86ee | ❌ | 2,44 | ❌ | [REFACTOR] hide internal error details in 500 responses in routes |
 | 9 | a08502c | ✅  | 5,47 | ✅ | [REFACTOR] 'end' is modified in isRangeFree loop in bookings_create.js. |
 | 10 | 56dbc3b | ❌ | 3,2 | ❌ | fix atrerror with authorization |
+
+---
+## Aggregated Summary
+
+### For full `develop` branch history:
+- Successful: **193**
+- Failed: **99**
+- Cancelled: **21**
+- Total completed: **313**
+
+### Based on last 10 runs:
+- Total runs: **10**
+- Successful: **7**
+- Failed: **3**
+- Deployment success rate: **7/10**
+- Deployment failure rate: **3/10**
+
+### Pipeline duration (last 10 runs):
+- Average: **3.836 min**
+- Fastest: **2.12 min** (Run #5)
+- Slowest: **5.47 min** (Run #9)
