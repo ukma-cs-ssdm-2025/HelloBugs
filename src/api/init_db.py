@@ -17,6 +17,7 @@ def init_database():
         from src.api.models.user_model import User
         from src.api.models.room_model import Room, Amenity, RoomAmenity
         from src.api.models.booking_model import Booking
+        from src.api.models.contact_model import Contact
         print("Models imported successfully")
 
         print("Creating tables...")
