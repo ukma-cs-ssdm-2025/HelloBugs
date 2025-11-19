@@ -101,10 +101,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         const altUrl = url.endsWith('/') ? url.slice(0,-1) : (url + '/');
         res = await fetch(altUrl, { headers: baseHeaders });
       }
-      if(!res.ok) return [];
+      if(!res.ok) {
+        console.error(`Failed to fetch ${url}: ${res.status}`);
+        return [];
+      }
       const data = await res.json();
       return Array.isArray(data) ? data : [];
-    }catch(_){ return []; }
+    }catch(err){ 
+      console.error(`Error fetching ${url}:`, err);
+      return []; 
+    }
   }
 
   function inPeriod(d, from, to){
@@ -115,30 +121,34 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   async function loadStats(){
-    // Load lists
-    const [users, rooms, bookings] = await Promise.all([
-      fetchList('/api/v1/users'),
-      fetchList('/api/v1/rooms'),
-      fetchList('/api/v1/bookings')
+    const results = await Promise.allSettled([
+      fetchList('/api/v1/users/'),
+      fetchList('/api/v1/rooms/'),
+      fetchList('/api/v1/bookings/')
     ]);
 
-    usersTotalEl.textContent = users.length;
-    roomsTotalEl.textContent = rooms.length;
-    bookingsTotalEl.textContent = bookings.length;
+    const users = results[0].status === 'fulfilled' ? results[0].value : [];
+    const rooms = results[1].status === 'fulfilled' ? results[1].value : [];
+    const bookings = results[2].status === 'fulfilled' ? results[2].value : [];
+
+    usersTotalEl.textContent = users.length || 0;
+    roomsTotalEl.textContent = rooms.length || 0;
+    bookingsTotalEl.textContent = bookings.length || 0;
 
     const from = new Date(fromInput.value);
     const to = new Date(toInput.value);
+    
     if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to < from){
-      usersPeriodEl.textContent = '—';
-      bookingsPeriodEl.textContent = '—';
+      usersPeriodEl.textContent = '0';
+      bookingsPeriodEl.textContent = '0';
       return;
     }
 
     const usersNew = users.filter(u => inPeriod(u.created_at, from, to)).length;
     const bookingsInPeriod = bookings.filter(b => inPeriod(b.created_at, from, to)).length;
 
-    usersPeriodEl.textContent = usersNew;
-    bookingsPeriodEl.textContent = bookingsInPeriod;
+    usersPeriodEl.textContent = usersNew || 0;
+    bookingsPeriodEl.textContent = bookingsInPeriod || 0;
   }
 
   await loadStats();

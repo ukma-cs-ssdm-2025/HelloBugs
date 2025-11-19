@@ -46,6 +46,7 @@ function displayRooms(rooms) {
         return;
     }
     
+    const isAdmin = authManager.isAuthenticated() && authManager.user.role === 'ADMIN';
     const isStaffOrAdmin = authManager.isAuthenticated() && 
         (authManager.user.role === 'ADMIN' || authManager.user.role === 'STAFF');
 
@@ -69,14 +70,16 @@ function displayRooms(rooms) {
             ? '<span class="status-badge available">Доступний</span>'
             : '<span class="status-badge occupied">Зайнятий</span>';
 
-        const adminButtons = isStaffOrAdmin ? `
+        const adminButtons = isAdmin ? `
             <div class="admin-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
                 <button class="btn btn-edit btn-lg" onclick="editRoom(${room.id})">Редагувати</button>
                 <button class="btn btn-delete btn-lg" onclick="deleteRoom(${room.id})">Видалити</button>
              </div>
         ` : '';
 
-        const bookingButton = isGuest
+        // Показуємо кнопку бронювання для гостей та STAFF (не для ADMIN)
+        const showBookingButton = isGuest || (isStaffOrAdmin && !isAdmin);
+        const bookingButton = showBookingButton
             ? `<button class="btn btn-primary" onclick="bookRoom(${room.id})" ${room.status !== 'AVAILABLE' ? 'disabled' : ''}>
                    ${room.status === 'AVAILABLE' ? 'Забронювати' : 'Недоступний'}
                </button>`

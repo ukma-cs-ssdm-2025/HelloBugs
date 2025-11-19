@@ -28,6 +28,7 @@ from src.api.services.amenity_service import (
 )
 from src.api.db import db
 from src.api.models.room_model import Room, RoomType, RoomStatus
+from src.api.auth import admin_required, token_required
 from src.api.models.booking_model import Booking, BookingStatus
 
 logger = logging.getLogger(__name__)
@@ -110,6 +111,8 @@ class RoomList(MethodView):
     @blp.response(201, RoomOutSchema, description="Room created successfully")
     @blp.alt_response(400, description="Invalid room data")
     @blp.alt_response(409, description="Room with this number already exists")
+    @token_required
+    @admin_required
     def post(self, new_room):
         """Create a new room"""
         try:
@@ -137,6 +140,8 @@ class RoomResource(MethodView):
     @blp.alt_response(400, description="Invalid room data")
     @blp.alt_response(404, description="Room not found")
     @blp.alt_response(409, description="Room number conflict")
+    @token_required
+    @admin_required
     def patch(self, patch_data, room_id):
         """Partially update room fields"""
         try:
@@ -155,6 +160,8 @@ class RoomResource(MethodView):
     @blp.alt_response(404, description="Room not found")
     @blp.alt_response(400, description="Invalid room data")
     @blp.alt_response(409, description="Room number conflict")
+    @token_required
+    @admin_required
     def put(self, updated_room, room_id):
         """Replace a room completely"""
         try:
@@ -171,6 +178,8 @@ class RoomResource(MethodView):
     @blp.response(204, description="Room deleted successfully")
     @blp.alt_response(404, description="Room not found")
     @blp.alt_response(400, description="Invalid request")
+    @token_required
+    @admin_required
     def delete(self, room_id):
         """Delete a room"""
         try:

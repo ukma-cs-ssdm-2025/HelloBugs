@@ -351,6 +351,54 @@ def sample_amenity(db_session):
     return amenity
 
 
+# ==================== ФІКСТУРИ ДЛЯ АВТОРИЗАЦІЇ ====================
+
+@pytest.fixture
+def admin_token(client, db_session):
+    """Create admin user and return JWT token"""
+    from src.api.models.user_model import User, UserRole
+    import jwt
+    from datetime import datetime, timedelta
+    import os
+    
+    # Створюємо адмін-користувача
+    admin = User(
+        email=f"admin_{uuid.uuid4().hex[:6]}@test.com",
+        first_name="Admin",
+        last_name="User",
+        role=UserRole.ADMIN,
+        phone="+380123456789",
+        is_registered=True
+    )
+    # Встановлюємо пароль через метод set_password
+    admin.set_password("adminpass")
+    
+    db_session.add(admin)
+    db_session.commit()
+    
+    # Отримуємо SECRET_KEY з fallback значенням для тестів
+    secret_key = os.getenv('SECRET_KEY') or 'test-secret-key-for-testing'
+    
+    # Генеруємо JWT токен з is_admin=True
+    token = jwt.encode({
+        'user_id': admin.user_id,
+        'role': UserRole.ADMIN.value,
+        'is_admin': True,  # КРИТИЧНО: декоратор admin_required перевіряє це поле
+        'exp': datetime.utcnow() + timedelta(days=1)
+    }, secret_key, algorithm='HS256')
+    
+    return token
+
+
+@pytest.fixture
+def auth_headers(admin_token):
+    """Return headers with authorization token"""
+    return {
+        'Authorization': f'Bearer {admin_token}',
+        'Content-Type': 'application/json'
+    }
+
+
 # ==================== RoomList GET tests (lines 57-110) ====================
 
 def test_api_get_rooms_no_filters(client, sample_room):
@@ -436,28 +484,42 @@ def test_api_get_room_by_id_not_found(client):
     assert response.status_code == 404
 
 
-def test_api_patch_room_success(client, sample_room):
+def test_api_patch_room_success(client, sample_room, auth_headers):
     """Test PATCH /api/v1/rooms/<id> success"""
     update_data = {"base_price": 1800.0}
-    response = client.patch(f"/api/v1/rooms/{sample_room.room_id}", json=update_data)
+    response = client.patch(
+        f"/api/v1/rooms/{sample_room.room_id}", 
+        json=update_data,
+        headers=auth_headers
+    )
     assert response.status_code == 200
 
 
-def test_api_patch_room_not_found(client):
+def test_api_patch_room_not_found(client, auth_headers):
     """Test PATCH non-existent room"""
-    response = client.patch("/api/v1/rooms/999999", json={"base_price": 2000.0})
+    response = client.patch(
+        "/api/v1/rooms/999999", 
+        json={"base_price": 2000.0},
+        headers=auth_headers
+    )
     assert response.status_code == 404
 
 
-def test_api_delete_room_success(client, sample_room):
+def test_api_delete_room_success(client, sample_room, auth_headers):
     """Test DELETE /api/v1/rooms/<id> success"""
-    response = client.delete(f"/api/v1/rooms/{sample_room.room_id}")
+    response = client.delete(
+        f"/api/v1/rooms/{sample_room.room_id}",
+        headers=auth_headers
+    )
     assert response.status_code == 204
 
 
-def test_api_delete_room_not_found(client):
+def test_api_delete_room_not_found(client, auth_headers):
     """Test DELETE non-existent room"""
-    response = client.delete("/api/v1/rooms/999999")
+    response = client.delete(
+        "/api/v1/rooms/999999",
+        headers=auth_headers
+    )
     assert response.status_code == 404
 
 

@@ -17,7 +17,7 @@
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                         <path d="M8 0C4.69 0 2 2.69 2 6c0 4.5 6 10 6 10s6-5.5 6-10c0-3.31-2.69-6-6-6zm0 8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="#B8963E"/>
                     </svg>
-                    <span>м. Київ, Хрещатик, 5</span>
+                    <span id="headerAddress">м. Київ, Хрещатик, 5</span>
                 </div>
                 <div class="header-logo">
                     <a href="/">
@@ -29,7 +29,7 @@
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path d="M3.5 1.5A2.5 2.5 0 011 4v8a2.5 2.5 0 002.5 2.5h9A2.5 2.5 0 0014.5 12V4a2.5 2.5 0 00-2.5-2.5h-9zM2 4a1.5 1.5 0 011.5-1.5h9A1.5 1.5 0 0114 4v.217l-5.928 4.428a.5.5 0 01-.594 0L2 4.217V4z" fill="#B8963E"/>
                         </svg>
-                        <span>+380 95 666 66 66</span>
+                        <span id="headerPhone">+380 95 666 66 66</span>
                     </div>
                 </div>
             </div>
@@ -65,17 +65,17 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3>Готель Хрещатик</h3>
-                    <p>м. Київ, Хрещатик, 5</p>
+                    <h3 id="footerHotelName">Готель Хрещатик</h3>
+                    <p id="footerAddress">м. Київ, Хрещатик, 5</p>
                 </div>
                 <div class="footer-section">
                     <h3>Контакти</h3>
-                    <p>Телефон: +38 095 666 66 66</p>
-                    <p>Email: info@hotel_chreshatyk.com</p>
+                    <p>Телефон: <span id="footerPhone">+38 095 666 66 66</span></p>
+                    <p>Email: <span id="footerEmail">info@hotel_chreshatyk.com</span></p>
                 </div>
                 <div class="footer-section">
                     <h3>Режим роботи</h3>
-                    <p>Цілодобово</p>
+                    <p id="footerSchedule">Цілодобово</p>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -88,7 +88,46 @@
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
     
     <script>
+        // Завантаження контактної інформації для header та footer
+        async function loadGlobalContactInfo() {
+            try {
+                const response = await fetch('/api/v1/contacts/');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Оновлюємо header
+                    const headerAddress = document.getElementById('headerAddress');
+                    const headerPhone = document.getElementById('headerPhone');
+                    if (headerAddress) headerAddress.textContent = data.address;
+                    if (headerPhone) headerPhone.textContent = data.phone;
+                    
+                    // Оновлюємо footer
+                    const footerHotelName = document.getElementById('footerHotelName');
+                    const footerAddress = document.getElementById('footerAddress');
+                    const footerPhone = document.getElementById('footerPhone');
+                    const footerEmail = document.getElementById('footerEmail');
+                    const footerSchedule = document.getElementById('footerSchedule');
+                    
+                    if (footerHotelName) footerHotelName.textContent = data.hotel_name;
+                    if (footerAddress) footerAddress.textContent = data.address;
+                    if (footerPhone) footerPhone.textContent = data.phone;
+                    if (footerEmail) footerEmail.textContent = data.email;
+                    if (footerSchedule) footerSchedule.textContent = data.schedule;
+                    
+                    console.log('Контакти оновлено:', data);
+                }
+            } catch (error) {
+                console.error('Помилка завантаження контактів:', error);
+            }
+        }
+        
+        // Експортуємо функцію глобально (до DOMContentLoaded)
+        window.reloadGlobalContacts = loadGlobalContactInfo;
+
         document.addEventListener('DOMContentLoaded', async () => {
+            // Завантажуємо контактну інформацію
+            loadGlobalContactInfo();
+            
             try {
                 // Перевіряємо, чи є токен
                 const token = localStorage.getItem('access_token');
