@@ -376,13 +376,16 @@ def admin_token(client, db_session):
     db_session.add(admin)
     db_session.commit()
     
+    # Отримуємо SECRET_KEY з fallback значенням для тестів
+    secret_key = os.getenv('SECRET_KEY') or 'test-secret-key-for-testing'
+    
     # Генеруємо JWT токен з is_admin=True
     token = jwt.encode({
         'user_id': admin.user_id,
         'role': UserRole.ADMIN.value,
         'is_admin': True,  # КРИТИЧНО: декоратор admin_required перевіряє це поле
         'exp': datetime.utcnow() + timedelta(days=1)
-    }, os.getenv('SECRET_KEY'), algorithm='HS256')
+    }, secret_key, algorithm='HS256')
     
     return token
 
