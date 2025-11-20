@@ -8,6 +8,7 @@ from src.api.routes.rooms import amenities_blp
 from src.api.routes.bookings import blp as bookings_blp
 from src.api.routes.auth_routes import blp as auth_blp
 from src.api.routes.contacts import blp as contacts_blp
+from src.api.routes.reviews import blp as reviews_blp
 from src.api.auth import login_required_web, admin_required
 import os
 import traceback
@@ -88,6 +89,7 @@ try:
     api.register_blueprint(bookings_blp)
     api.register_blueprint(auth_blp)
     api.register_blueprint(contacts_blp)
+    api.register_blueprint(reviews_blp)
 
     logger.info("API routes registered successfully")
 
@@ -183,6 +185,16 @@ def users_page():
 def contacts_page():
     """Сторінка контактів"""
     return render_template('contacts.html')
+
+@app.route('/reviews')
+def reviews_page():
+    """Сторінка відгуків"""
+    return render_template('reviews.html')
+
+@app.route('/reviews/create')
+def reviews_create():
+    """Форма створення відгуку"""
+    return render_template('review_create.html')
 
 
 if __name__ == "__main__":
