@@ -37,6 +37,14 @@ async function loadReviews() {
             });
             
             document.getElementById('total-reviews').textContent = reviews.length;
+
+            // обчислення середнього за рейтингом
+            const sum = reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+            const avg = reviews.length ? (sum / reviews.length) : 0;
+            const avgEl = document.getElementById('average-rating');
+            if (avgEl) {
+                avgEl.textContent = avg.toFixed(1);
+            }
         }
     } catch (error) {
         console.error('Помилка:', error);
@@ -50,7 +58,10 @@ async function loadAverageRating() {
         
         if (response.ok) {
             const data = await response.json();
-            document.getElementById('average-rating').textContent = data.average_rating.toFixed(1);
+            const value = Number(data && data.average_rating);
+            if (!Number.isNaN(value)) {
+                document.getElementById('average-rating').textContent = value.toFixed(1);
+            }
         }
     } catch (error) {
         console.error('Помилка завантаження середнього рейтингу:', error);
