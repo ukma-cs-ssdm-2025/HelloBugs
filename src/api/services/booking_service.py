@@ -7,6 +7,7 @@ from datetime import datetime, date, timedelta, timezone
 import logging
 import time
 import secrets
+from src.api.services.notification_service import send_email
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +204,26 @@ def create_booking(session, data):
         )
 
         session.add(new_booking)
-        session.commit()  
+        session.commit()
+
+        # поки так
+        try:
+            user = session.query(User).get(user_id)
+            room = session.query(Room).get(room_id)
+            days = (new_booking.check_out_date - new_booking.check_in_date).days
+            total_price_value = float(room.base_price) * days
+
+            send_email(
+                subject=f"Бронювання {new_booking.booking_code} підтверджено",
+                recipient=user.email,
+                template='email/booking_confirmation.html',
+                user=user,
+                booking=new_booking,
+                room=room,
+                total_price = total_price_value
+            )
+        except Exception as e:
+            logger.error(f"Error sending booking email: {e}")
         
         return new_booking
 

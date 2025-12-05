@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Підтвердження бронювання #{{ booking.booking_code }}</h2>
+    <p>Шановний(а) {{ user.first_name }}, {{ user.last_name }}</p>
+    <p>Ваше бронювання підтверджено!</p>
+
+    <ul>
+        <li><strong>Номер:</strong> {{ room.number }} ({{ room.type }})</li>
+        <li><strong>Заїзд:</strong> {{ booking.check_in_date }}</li>
+        <li><strong>Виїзд:</strong> {{ booking.check_out_date }}</li>
+        <li><strong>Всього до сплати:</strong> {{ booking.total_price }} грн</li>
+    </ul>
+
+    <p>Чекаємо на вас!</p>
+</body>
+</html>

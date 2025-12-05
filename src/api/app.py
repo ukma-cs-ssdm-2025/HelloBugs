@@ -14,6 +14,7 @@ import os
 import traceback
 from dotenv import load_dotenv
 from src.api.db import create_tables, db
+from src.api.services.notification_service import mail
 
 load_dotenv()
 
@@ -45,6 +46,8 @@ app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-
 SECRET_KEY = os.getenv('SECRET_KEY')
 app.config["JWT_SECRET_KEY"] = SECRET_KEY
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
+
+mail.init_app(app)
 
 
 # Security headers
