@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Створити відгук - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">ЗАЛИШИТИ ВІДГУК</h1>
+        <p class="page-subtitle">Поділіться своїм досвідом перебування в нашому готелі</p>
+    </div>
+</section>
+
+<section class="create-review-section">
+    <div class="container">
+        <div class="form-container">
+            <form id="create-review-form">
+                <div class="form-group">
+                    <label for="room-select">Номер:*</label>
+                    <select id="room-select" name="room_id" required>
+                        <option value="">Оберіть номер</option>
+                    </select>
+                    <small>Оберіть номер, про який хочете залишити відгук</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="rating">Оцініть ваше перебування:*</label>
+                    <div class="star-rating" id="star-rating">
+                        <span class="star" data-rating="1">★</span>
+                        <span class="star" data-rating="2">★</span>
+                        <span class="star" data-rating="3">★</span>
+                        <span class="star" data-rating="4">★</span>
+                        <span class="star" data-rating="5">★</span>
+                    </div>
+                    <input type="hidden" id="rating" name="rating" required>
+                    <span class="rating-text" id="rating-text"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="comment">Ваш коментар:</label>
+                    <textarea 
+                        id="comment" 
+                        name="comment" 
+                        rows="6" 
+                        maxlength="1000"
+                        placeholder="Розкажіть про ваш досвід перебування в готелі..."
+                    ></textarea>
+                    <small class="char-counter">
+                        <span id="char-count">0</span>/1000 символів
+                    </small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Опублікувати відгук</button>
+                    <a href="/reviews" class="btn btn-secondary">Скасувати</a>
+                </div>
+            </form>
+
+            <div class="info-box">
+                <h3>Правила залишення відгуків</h3>
+                <ul>
+                    <li>Відгук має бути чесним та об'єктивним</li>
+                    <li>Уникайте ненормативної лексики</li>
+                    <li>Ви можете залишати необмежену кількість відгуків</li>
+                    <li>Відгук можна редагувати або видалити після створення</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/review_create.js') }}"></script>
+{% endblock %}

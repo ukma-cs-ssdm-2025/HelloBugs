@@ -2299,6 +2299,258 @@ border-color: #B8963E;
     to {opacity: 1; transform: translateY(0);}
 }
 
+/* Стилі для відгуків */
+.reviews-section {
+    padding: 60px 0;
+    background-color: var(--gray-light);
+}
+
+.reviews-stats {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    margin-top: 30px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 48px;
+    font-weight: 600;
+    color: var(--gold);
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.stat-label {
+    display: block;
+    font-size: 14px;
+    color: var(--gray);
+    margin-top: 5px;
+}
+
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
+}
+
+.review-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.review-author {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.author-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.author-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.author-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dark-blue);
+    margin: 0;
+}
+
+.review-date {
+    font-size: 13px;
+    color: var(--gray);
+}
+
+.review-room {
+    display: block;
+    font-size: 12px;
+    color: var(--gold);
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+.review-rating {
+    color: var(--gold);
+    font-size: 20px;
+    letter-spacing: 2px;
+}
+
+.review-comment {
+    color: var(--navy);
+    line-height: 1.6;
+    margin: 15px 0;
+    font-size: 15px;
+}
+
+.review-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+    color: var(--gray);
+}
+
+.btn-icon:hover {
+    background-color: var(--gray-light);
+    color: var(--gold);
+}
+
+.btn-icon svg {
+    stroke-width: 2;
+}
+
+/* Форма створення відгуку */
+.create-review-section {
+    padding: 60px 0;
+}
+
+.form-container {
+    max-width: 700px;
+    margin: 0 auto;
+    display: grid;
+    gap: 30px;
+}
+
+.star-rating {
+    display: flex;
+    gap: 10px;
+    font-size: 36px;
+    cursor: pointer;
+}
+
+.star-rating .star {
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.star-rating .star.active,
+.star-rating .star.hover {
+    color: var(--gold);
+}
+
+.rating-text {
+    display: block;
+    margin-top: 10px;
+    font-size: 16px;
+    color: var(--gold);
+    font-weight: 600;
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 13px;
+    color: var(--gray);
+}
+
+.info-box {
+    background: var(--gray-light);
+    border-left: 4px solid var(--gold);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.info-box h3 {
+    margin-top: 0;
+    color: var(--dark-blue);
+    font-size: 18px;
+}
+
+.info-box ul {
+    margin: 15px 0 0 0;
+    padding-left: 20px;
+}
+
+.info-box li {
+    margin-bottom: 8px;
+    color: var(--navy);
+    line-height: 1.5;
+}
+
+/* Dropdown menu стилі */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--white);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    min-width: 220px;
+    padding: 10px 0;
+    z-index: 1000;
+    margin-top: 5px;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu li {
+    list-style: none;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 10px 20px;
+    color: var(--navy);
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.dropdown-menu a:hover {
+    background-color: var(--gray-light);
+    color: var(--gold);
+}
+
+.dropdown {
+    position: relative;
+}
+
 /* Pagination for bookings */
 .bookings-pagination {
     display: flex;

@@ -36,15 +36,21 @@
 
             <nav class="nav">
                 <ul class="nav-list">
+                    <li class="nav-item"><a href="/rooms" class="nav-link">♦ НОМЕРИ</a></li>
                     <li class="nav-item dropdown">
-                        <a href="/about" class="nav-link">♦ ПРО ГОТЕЛЬ</a>
+                        <a href="/bookings" class="nav-link">♦ БРОНЮВАННЯ</a>
                         <ul class="dropdown-menu">
-                            <li><a href="/about/reviews">♦ Відгуки</a></li>
-                            <li><a href="/about/rules">♦ Правила проживання</a></li>
+                            <li><a href="/bookings">♦ Переглянути бронювання</a></li>
+                            <li><a href="/booking/create">♦ Створити бронювання</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item"><a href="/rooms" class="nav-link">♦ НОМЕРИ</a></li>
-                    <li class="nav-item"><a href="/bookings" class="nav-link">♦ БРОНЮВАННЯ</a></li>
+                    <li class="nav-item dropdown">
+                        <a href="/reviews" class="nav-link">♦ ВІДГУКИ</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/reviews">♦ Переглянути відгуки</a></li>
+                            <li class="auth-only" style="display: none;"><a href="/reviews/create">♦ Створити відгук</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item admin-only" style="display: none;">
                         <a href="/users" class="nav-link">♦ КОРИСТУВАЧІ</a>
                     </li>
@@ -142,6 +148,12 @@
 
                 if (response.ok) {
                     const user = await response.json();
+                    
+                    // Показуємо елементи для авторизованих користувачів
+                    const authOnlyElements = document.querySelectorAll('.auth-only');
+                    authOnlyElements.forEach(element => {
+                        element.style.display = 'block';
+                    });
                     
                     // Показуємо кнопку "Користувачі" тільки для адміністраторів
                     if (user.role === 'ADMIN') {
