@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.reset();
     });
 
-    globalThis.addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.style.display = 'none';
             form.reset();
