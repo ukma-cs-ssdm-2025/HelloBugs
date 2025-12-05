@@ -31,6 +31,8 @@ async function loadBookings(filterStatus = bookingsState.status) {
     bookingsState.page = 1;
 
     try {
+        container.innerHTML = '<div class="loading">Завантаження бронювань...</div>';
+        
         const response = await fetch('/api/v1/bookings/');
         if (!response.ok) throw new Error('Помилка завантаження');
 
@@ -43,7 +45,11 @@ async function loadBookings(filterStatus = bookingsState.status) {
         if (!isStaffOrAdmin) {
             bookings = bookings.filter(b => b.user_id === authManager.user.id);
         }
+        
         bookingsState.all = bookings;
+        bookingsState.filtered = [];
+        bookingsState.page = 1;
+
         applyFiltersAndRender();
     } catch (error) {
         console.error('Error loading bookings:', error);
@@ -147,13 +153,14 @@ function applyFiltersAndRender() {
     const emptyState = document.getElementById('empty-state');
     const pagination = document.getElementById('bookings-pagination');
 
-    let filtered = bookingsState.all;
+    let filtered = [...bookingsState.all];
+    
     if (bookingsState.status !== 'all') {
         filtered = filtered.filter(b => b.status === bookingsState.status);
     }
 
     bookingsState.filtered = filtered;
-
+    
     if (!filtered || filtered.length === 0) {
         if (container) container.innerHTML = '';
         renderEmptyState(emptyState, bookingsState.status, bookingsState.isStaffOrAdmin);
@@ -169,16 +176,22 @@ function applyFiltersAndRender() {
 }
 
 function renderPagedBookings(container, pagination) {
-    const totalPages = Math.max(1, Math.ceil(bookingsState.filtered.length / bookingsState.pageSize));
+    if (!container) return;
+    
+    const totalItems = bookingsState.filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / bookingsState.pageSize));
+    
     if (bookingsState.page > totalPages) {
-        bookingsState.page = totalPages;
+        bookingsState.page = Math.max(1, totalPages);
     }
 
     const start = (bookingsState.page - 1) * bookingsState.pageSize;
-    const pageItems = bookingsState.filtered.slice(start, start + bookingsState.pageSize);
-    if (container) {
-        container.innerHTML = pageItems.map(createBookingCard).join('');
-    }
+    const end = Math.min(start + bookingsState.pageSize, totalItems);
+    
+    const pageItems = bookingsState.filtered.slice(start, end);
+    
+    container.innerHTML = pageItems.map(createBookingCard).join('');
+    
     renderPagination(pagination, totalPages);
 }
 
