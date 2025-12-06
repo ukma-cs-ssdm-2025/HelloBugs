@@ -15,6 +15,7 @@ from src.api.models.room_model import Room, RoomStatus, RoomType
 from src.api.models.user_model import User, UserRole
 from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import SQLAlchemyError
+from unittest.mock import MagicMock, patch
 import secrets
 import uuid
 
@@ -862,3 +863,319 @@ def test_update_booking_full_completed(db_session, test_booking):
     
     with pytest.raises(ValueError, match="Cannot modify completed or cancelled bookings"):
         update_booking_full(db_session, test_booking.booking_code, update_data)
+
+def test_get_all_bookings_route(client, db_session, test_booking):
+    """Тест GET /api/v1/bookings/ - успішне отримання всіх бронювань"""
+    resp = client.get("/api/v1/bookings/")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+
+
+def test_create_booking_room_not_available_error(client, monkeypatch):
+    """Тест POST /api/v1/bookings/ - кімната недоступна (409)"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    def mock_create_booking(db, data):
+        raise ValueError("Room is not available for selected dates")
+    
+    monkeypatch.setattr(booking_routes_module, "create_booking", mock_create_booking)
+    
+    booking_data = {
+        "room_id": 1,
+        "check_in_date": str(date.today() + timedelta(days=1)),
+        "check_out_date": str(date.today() + timedelta(days=3)),
+        "email": "test@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567"
+    }
+    
+    resp = client.post("/api/v1/bookings/", json=booking_data)
+    assert resp.status_code == 409
+
+
+def test_create_booking_room_not_found_error(client, monkeypatch):
+    """Тест POST /api/v1/bookings/ - кімната не знайдена (404)"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    def mock_create_booking(db, data):
+        raise ValueError("Room not found")
+    
+    monkeypatch.setattr(booking_routes_module, "create_booking", mock_create_booking)
+    
+    booking_data = {
+        "room_id": 999,
+        "check_in_date": str(date.today() + timedelta(days=1)),
+        "check_out_date": str(date.today() + timedelta(days=3)),
+        "email": "test@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567"
+    }
+    
+    resp = client.post("/api/v1/bookings/", json=booking_data)
+    assert resp.status_code == 404
+
+
+def test_create_booking_generic_value_error(client, monkeypatch):
+    """Тест POST /api/v1/bookings/ - інша помилка валідації (400)"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    def mock_create_booking(db, data):
+        raise ValueError("Invalid booking data")
+    
+    monkeypatch.setattr(booking_routes_module, "create_booking", mock_create_booking)
+    
+    booking_data = {
+        "room_id": 1,
+        "check_in_date": str(date.today() + timedelta(days=1)),
+        "check_out_date": str(date.today() + timedelta(days=3)),
+        "email": "test@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567"
+    }
+    
+    resp = client.post("/api/v1/bookings/", json=booking_data)
+    assert resp.status_code == 400
+
+
+# Тести для рядка 69 (get user bookings)
+def test_get_user_bookings_route(client, db_session, test_user_registered, test_booking):
+    """Тест GET /api/v1/bookings/user/<user_id>"""
+    resp = client.get(f"/api/v1/bookings/user/{test_user_registered.user_id}")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+
+
+# Тести для рядка 78 (get upcoming checkins)
+def test_get_upcoming_checkins_route(client, db_session):
+    """Тест GET /api/v1/bookings/upcoming-checkins"""
+    resp = client.get("/api/v1/bookings/upcoming-checkins")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data, list)
+
+
+def test_get_booking_by_code_not_found(client, monkeypatch):
+    """Тест GET /api/v1/bookings/<code> - бронювання не знайдено"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    def mock_get_booking(db, code):
+        return None
+    
+    monkeypatch.setattr(booking_routes_module, "get_booking_by_code", mock_get_booking)
+    
+    resp = client.get("/api/v1/bookings/NONEXISTENT")
+    assert resp.status_code == 404
+
+
+def test_get_booking_by_code_success(client, db_session, test_booking):
+    """Тест GET /api/v1/bookings/<code> - успішно"""
+    resp = client.get(f"/api/v1/bookings/{test_booking.booking_code}")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['booking_code'] == test_booking.booking_code
+
+
+def test_patch_booking_not_found(client, monkeypatch):
+    """Тест PATCH /api/v1/bookings/<code> - бронювання не знайдено"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    def mock_update_partial(db, code, data):
+        return None
+    
+    monkeypatch.setattr(booking_routes_module, "update_booking_partial", mock_update_partial)
+    
+    resp = client.patch("/api/v1/bookings/NONEXISTENT", json={"special_requests": "Test"})
+    assert resp.status_code == 404
+
+
+def test_patch_booking_cannot_modify_error(client, monkeypatch):
+    """Тест PATCH /api/v1/bookings/<code> - не можна модифікувати (403)"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    mock_db = MagicMock()
+    
+    def mock_update_partial(db, code, data):
+        raise ValueError("Cannot modify completed booking")
+    
+    monkeypatch.setattr(booking_routes_module, "update_booking_partial", mock_update_partial)
+    monkeypatch.setattr(booking_routes_module, "db", mock_db)
+    
+    resp = client.patch("/api/v1/bookings/TEST123", json={"special_requests": "Test"})
+    assert resp.status_code == 403
+
+
+def test_patch_booking_not_available_error(client, monkeypatch):
+    """Тест PATCH /api/v1/bookings/<code> - кімната не доступна (409)"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    mock_db = MagicMock()
+    
+    def mock_update_partial(db, code, data):
+        raise ValueError("Room not available for new dates")
+    
+    monkeypatch.setattr(booking_routes_module, "update_booking_partial", mock_update_partial)
+    monkeypatch.setattr(booking_routes_module, "db", mock_db)
+    
+    resp = client.patch("/api/v1/bookings/TEST123", json={"check_in_date": str(date.today() + timedelta(days=5))})
+    assert resp.status_code == 409
+
+
+def test_patch_booking_generic_value_error(client, monkeypatch):
+    """Тест PATCH /api/v1/bookings/<code> - інша помилка валідації (400)"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    mock_db = MagicMock()
+    
+    def mock_update_partial(db, code, data):
+        raise ValueError("Invalid data provided")
+    
+    monkeypatch.setattr(booking_routes_module, "update_booking_partial", mock_update_partial)
+    monkeypatch.setattr(booking_routes_module, "db", mock_db)
+    
+    resp = client.patch("/api/v1/bookings/TEST123", json={"invalid_field": "test"})
+    assert resp.status_code == 400
+
+
+def test_put_booking_not_found(client, monkeypatch):
+    """Тест PUT /api/v1/bookings/<code> - бронювання не знайдено"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    def mock_update_full(db, code, data):
+        return None
+    
+    monkeypatch.setattr(booking_routes_module, "update_booking_full", mock_update_full)
+    
+    booking_data = {
+        "room_id": 1,
+        "check_in_date": str(date.today() + timedelta(days=1)),
+        "check_out_date": str(date.today() + timedelta(days=3)),
+        "user_id": 1
+    }
+    
+    resp = client.put("/api/v1/bookings/NONEXISTENT", json=booking_data)
+    assert resp.status_code == 404
+
+
+def test_put_booking_cannot_modify_error(client, monkeypatch):
+    """Тест PUT /api/v1/bookings/<code> - не можна модифікувати (403)"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    mock_db = MagicMock()
+    
+    def mock_update_full(db, code, data):
+        raise ValueError("Cannot modify cancelled booking")
+    
+    monkeypatch.setattr(booking_routes_module, "update_booking_full", mock_update_full)
+    monkeypatch.setattr(booking_routes_module, "db", mock_db)
+    
+    booking_data = {
+        "room_id": 1,
+        "check_in_date": str(date.today() + timedelta(days=1)),
+        "check_out_date": str(date.today() + timedelta(days=3)),
+        "user_id": 1
+    }
+    
+    resp = client.put("/api/v1/bookings/TEST123", json=booking_data)
+    assert resp.status_code == 403
+
+
+def test_put_booking_not_available_error(client, monkeypatch):
+    """Тест PUT /api/v1/bookings/<code> - кімната не доступна (409)"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    mock_db = MagicMock()
+    
+    def mock_update_full(db, code, data):
+        raise ValueError("Room not available for these dates")
+    
+    monkeypatch.setattr(booking_routes_module, "update_booking_full", mock_update_full)
+    monkeypatch.setattr(booking_routes_module, "db", mock_db)
+    
+    booking_data = {
+        "room_id": 1,
+        "check_in_date": str(date.today() + timedelta(days=1)),
+        "check_out_date": str(date.today() + timedelta(days=3)),
+        "user_id": 1
+    }
+    
+    resp = client.put("/api/v1/bookings/TEST123", json=booking_data)
+    assert resp.status_code == 409
+
+
+def test_put_booking_generic_value_error(client, monkeypatch):
+    """Тест PUT /api/v1/bookings/<code> - інша помилка валідації (400)"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    mock_db = MagicMock()
+    
+    def mock_update_full(db, code, data):
+        raise ValueError("Invalid booking data")
+    
+    monkeypatch.setattr(booking_routes_module, "update_booking_full", mock_update_full)
+    monkeypatch.setattr(booking_routes_module, "db", mock_db)
+    
+    booking_data = {
+        "room_id": 1,
+        "check_in_date": str(date.today() + timedelta(days=1)),
+        "check_out_date": str(date.today() + timedelta(days=3)),
+        "user_id": 1
+    }
+    
+    resp = client.put("/api/v1/bookings/TEST123", json=booking_data)
+    assert resp.status_code == 400
+
+
+def test_delete_booking_not_found(client, monkeypatch):
+    """Тест DELETE /api/v1/bookings/<code> - бронювання не знайдено"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    def mock_cancel_booking(db, code):
+        return False
+    
+    monkeypatch.setattr(booking_routes_module, "cancel_booking", mock_cancel_booking)
+    
+    resp = client.delete("/api/v1/bookings/NONEXISTENT")
+    assert resp.status_code == 404
+
+
+def test_delete_booking_success(client, db_session, test_booking):
+    """Тест DELETE /api/v1/bookings/<code> - успішне скасування"""
+    resp = client.delete(f"/api/v1/bookings/{test_booking.booking_code}")
+    assert resp.status_code == 204
+
+def test_delete_booking_exception(client, monkeypatch):
+    """Тест DELETE /api/v1/bookings/<code> - виняток при скасуванні"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    mock_db = MagicMock()
+    
+    def mock_cancel_booking(db, code):
+        raise Exception("Database error")
+    
+    monkeypatch.setattr(booking_routes_module, "cancel_booking", mock_cancel_booking)
+    monkeypatch.setattr(booking_routes_module, "db", mock_db)
+    
+    with pytest.raises(Exception, match="Database error"):
+        resp = client.delete("/api/v1/bookings/TEST123")
+
+
+def test_delete_booking_success_commits(client, monkeypatch):
+    """Тест DELETE /api/v1/bookings/<code> - успішне скасування з commit"""
+    import src.api.routes.bookings as booking_routes_module
+    
+    mock_db = MagicMock()
+    
+    def mock_cancel_booking(db, code):
+        return True
+    
+    monkeypatch.setattr(booking_routes_module, "cancel_booking", mock_cancel_booking)
+    monkeypatch.setattr(booking_routes_module, "db", mock_db)
+    
+    resp = client.delete("/api/v1/bookings/TEST123")
+    assert resp.status_code == 204
+    mock_db.commit.assert_called_once()
