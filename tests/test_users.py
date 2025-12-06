@@ -653,3 +653,79 @@ def test_delete_user_database_error(db_session, existing_user, monkeypatch):
     
     with pytest.raises(Exception, match="Database error deleting user"):
         delete_user(db_session, existing_user.user_id)
+
+
+def test_create_user_password_hashing(db_session):
+    pwd = secrets.token_urlsafe(12)
+    user_data = {
+        "email": f"user_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501112233",
+        "password": pwd,
+        "role": "GUEST"
+    }
+    user = create_user(db_session, user_data, via_booking=False)
+    assert check_password_hash(user.password, pwd)
+
+def test_create_user_via_booking_sets_unregistered(db_session):
+    user_data = {
+        "email": f"user_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Booking",
+        "last_name": "Guest",
+        "phone": "+380501122334",
+        "role": "GUEST"
+    }
+    user = create_user(db_session, user_data, via_booking=True)
+    assert user.is_registered is False
+    assert user.password is None
+
+def test_create_user_role_as_string_and_dict(db_session):
+    for role_input in ["ADMIN", {"value": "ADMIN"}]:
+        user_data = {
+            "email": f"user_{uuid.uuid4().hex[:8]}@example.com",
+            "first_name": "RoleTest",
+            "last_name": "User",
+            "phone": f"+38050{secrets.randbelow(9999999):07d}",  # унікальний телефон
+            "password": secrets.token_urlsafe(12),
+            "role": role_input
+        }
+        user = create_user(db_session, user_data)
+        assert user.role.name == "ADMIN"
+
+def test_create_user_integrity_error_email_conflict(db_session, monkeypatch):
+    def mock_commit():
+        raise IntegrityError("statement", "params", "orig")
+    monkeypatch.setattr(db_session, "commit", mock_commit)
+
+    user_data = {
+        "email": f"user_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Integrity",
+        "last_name": "Error",
+        "phone": "+380501144556",
+        "password": secrets.token_urlsafe(12),
+        "role": "GUEST"
+    }
+    with pytest.raises(ValueError, match="User with this email or phone already exists"):
+        create_user(db_session, user_data)
+
+def test_search_users_role_and_last_name_empty_strings(db_session, existing_user):
+    result = search_users(db_session, role="   ", last_name="   ")
+    assert result == []
+
+def test_search_users_role_empty_last_name_valid(db_session, existing_user):
+    # strip пробіли та None для ролі
+    result = search_users(
+        db_session,
+        role=None,
+        last_name=existing_user.last_name.strip()
+    )
+    assert any(user.user_id == existing_user.user_id for user in result)
+
+def test_search_users_role_valid_last_name_empty(db_session, existing_user):
+    result = search_users(
+        db_session,
+        role="GUEST",
+        last_name=None  # пусте прізвище
+    )
+    assert any(user.user_id == existing_user.user_id for user in result)
