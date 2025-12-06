@@ -407,3 +407,309 @@ def test_put_contact_info_all_fields(client, monkeypatch):
     assert data['email'] == "new@hotel.com"
     assert data['schedule'] == "24/7"
     assert data['description'] == "New description"
+
+import pytest
+from unittest.mock import MagicMock, patch, create_autospec
+from sqlalchemy.exc import SQLAlchemyError
+
+
+def test_get_contact_info_existing_contact():
+    from src.api.services.contact_service import get_contact_info, Contact
+    
+    mock_contact = MagicMock(spec=Contact)
+    mock_contact.id = 1
+    mock_contact.hotel_name = "Existing Hotel"
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = mock_contact
+    
+    result = get_contact_info(mock_session)
+    
+    assert result == mock_contact
+    assert not mock_session.add.called  # Не повинно додавати новий запис
+    assert not mock_session.commit.called  # Не повинно робити коміт
+
+
+def test_get_contact_info_sqlalchemy_error():
+    from src.api.services.contact_service import get_contact_info
+    
+    mock_session = MagicMock()
+    mock_session.query.side_effect = SQLAlchemyError("Database connection failed")
+    
+    with pytest.raises(Exception) as exc_info:
+        get_contact_info(mock_session)
+    
+    assert "Database error" in str(exc_info.value)
+
+
+def test_get_contact_info_commit_error(monkeypatch):
+    from src.api.services.contact_service import get_contact_info, Contact
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = None
+    mock_session.commit.side_effect = SQLAlchemyError("Commit failed")
+    
+    with pytest.raises(Exception) as exc_info:
+        get_contact_info(mock_session)
+    
+    assert "Database error" in str(exc_info.value)
+
+
+def test_get_contact_info_refresh_error(monkeypatch):
+    from src.api.services.contact_service import get_contact_info, Contact
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = None
+    mock_session.refresh.side_effect = SQLAlchemyError("Refresh failed")
+    
+    with pytest.raises(Exception) as exc_info:
+        get_contact_info(mock_session)
+    
+    assert "Database error" in str(exc_info.value)
+
+
+
+def test_update_contact_info_update_existing():
+    from src.api.services.contact_service import update_contact_info, Contact
+    
+    mock_contact = MagicMock(spec=Contact)
+    mock_contact.hotel_name = "Old Hotel"
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = mock_contact
+    
+    data = {'hotel_name': 'Updated Hotel'}
+    result = update_contact_info(mock_session, data)
+    
+    assert mock_contact.hotel_name == 'Updated Hotel'
+    assert mock_session.commit.called
+    assert mock_session.refresh.called
+
+
+def test_update_contact_info_partial_update():
+    from src.api.services.contact_service import update_contact_info, Contact
+    
+    mock_contact = MagicMock(spec=Contact)
+    mock_contact.hotel_name = "Old Hotel"
+    mock_contact.address = "Old Address"
+    mock_contact.phone = "+380441234567"
+    mock_contact.email = "old@email.com"
+    mock_contact.schedule = "Old Schedule"
+    mock_contact.description = "Old Description"
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = mock_contact
+    
+    # Оновлюємо тільки деякі поля
+    data = {
+        'hotel_name': 'New Hotel',
+        'phone': '+380991234567',
+        'description': 'New Description'
+    }
+    
+    result = update_contact_info(mock_session, data)
+    
+    # Перевіряємо оновлені поля
+    assert mock_contact.hotel_name == 'New Hotel'
+    assert mock_contact.phone == '+380991234567'
+    assert mock_contact.description == 'New Description'
+    
+    # Перевіряємо що інші поля не змінилися
+    assert mock_contact.address == "Old Address"
+    assert mock_contact.email == "old@email.com"
+    assert mock_contact.schedule == "Old Schedule"
+
+
+def test_update_contact_info_update_all_fields():
+    from src.api.services.contact_service import update_contact_info, Contact
+    
+    mock_contact = MagicMock(spec=Contact)
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = mock_contact
+    
+    data = {
+        'hotel_name': 'Grand Hotel',
+        'address': '123 Main Street',
+        'phone': '+380441234567',
+        'email': 'info@grandhotel.com',
+        'schedule': '24/7',
+        'description': 'Luxury hotel'
+    }
+    
+    result = update_contact_info(mock_session, data)
+    
+    assert mock_contact.hotel_name == 'Grand Hotel'
+    assert mock_contact.address == '123 Main Street'
+    assert mock_contact.phone == '+380441234567'
+    assert mock_contact.email == 'info@grandhotel.com'
+    assert mock_contact.schedule == '24/7'
+    assert mock_contact.description == 'Luxury hotel'
+
+
+def test_update_contact_info_no_fields():
+    from src.api.services.contact_service import update_contact_info, Contact
+    
+    mock_contact = MagicMock(spec=Contact)
+    original_hotel_name = "Original Hotel"
+    mock_contact.hotel_name = original_hotel_name
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = mock_contact
+    
+    data = {}  # Порожній словник
+    
+    result = update_contact_info(mock_session, data)
+    
+    # Жодне поле не повинно змінитися
+    assert mock_contact.hotel_name == original_hotel_name
+    assert mock_session.commit.called  # Коміт все одно викликається
+
+
+def test_update_contact_info_sqlalchemy_error():
+    from src.api.services.contact_service import update_contact_info, Contact
+    
+    mock_contact = MagicMock(spec=Contact)
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = mock_contact
+    mock_session.commit.side_effect = SQLAlchemyError("Update failed")
+    
+    with pytest.raises(Exception) as exc_info:
+        update_contact_info(mock_session, {'hotel_name': 'New Hotel'})
+    
+    assert "Database error" in str(exc_info.value)
+    assert mock_session.rollback.called  # Перевіряємо що rollback був викликаний
+
+
+def test_update_contact_info_rollback_on_error():
+    from src.api.services.contact_service import update_contact_info, Contact
+    
+    mock_contact = MagicMock(spec=Contact)
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = mock_contact
+    mock_session.commit.side_effect = SQLAlchemyError("Update failed")
+    
+    try:
+        update_contact_info(mock_session, {'hotel_name': 'New Hotel'})
+    except Exception:
+        pass
+    
+    assert mock_session.rollback.called
+
+
+def test_update_contact_info_query_error():
+    from src.api.services.contact_service import update_contact_info
+    
+    mock_session = MagicMock()
+    mock_session.query.side_effect = SQLAlchemyError("Query failed")
+    
+    with pytest.raises(Exception) as exc_info:
+        update_contact_info(mock_session, {'hotel_name': 'New Hotel'})
+    
+    assert "Database error" in str(exc_info.value)
+    assert mock_session.rollback.called
+
+
+def test_get_contact_info_logger_error(monkeypatch):
+    from src.api.services.contact_service import get_contact_info
+    
+    mock_session = MagicMock()
+    mock_session.query.side_effect = SQLAlchemyError("Test error")
+    
+    # Мокуємо логер для перевірки виклику
+    mock_logger = MagicMock()
+    monkeypatch.setattr("src.api.services.contact_service.logger", mock_logger)
+    
+    with pytest.raises(Exception):
+        get_contact_info(mock_session)
+    
+    # Перевіряємо що logger.error був викликаний
+    mock_logger.error.assert_called_once()
+    assert "Database error fetching contact info" in mock_logger.error.call_args[0][0]
+
+
+def test_update_contact_info_logger_error(monkeypatch):
+    from src.api.services.contact_service import update_contact_info, Contact
+    
+    mock_contact = MagicMock(spec=Contact)
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = mock_contact
+    mock_session.commit.side_effect = SQLAlchemyError("Update failed")
+    
+    # Мокуємо логер для перевірки виклику
+    mock_logger = MagicMock()
+    monkeypatch.setattr("src.api.services.contact_service.logger", mock_logger)
+    
+    with pytest.raises(Exception):
+        update_contact_info(mock_session, {'hotel_name': 'New Hotel'})
+    
+    # Перевіряємо що logger.error був викликаний
+    mock_logger.error.assert_called_once()
+    assert "Database error updating contact info" in mock_logger.error.call_args[0][0]
+
+
+def test_contact_model_import():
+    from src.api.services.contact_service import Contact
+    assert Contact is not None
+
+
+def test_sqlalchemy_error_import():
+    from src.api.services.contact_service import SQLAlchemyError
+    from sqlalchemy.exc import SQLAlchemyError as SAError
+    assert SQLAlchemyError == SAError
+
+
+def test_logging_import():
+    import logging
+    from src.api.services.contact_service import logger
+    assert logger is not None
+    assert logger.name == "src.api.services.contact_service"
+
+
+def test_get_contact_info_docstring():
+    from src.api.services.contact_service import get_contact_info
+    docstring = get_contact_info.__doc__
+    assert docstring is not None
+    assert "Отримати контактну інформацію" in docstring
+    assert "завжди повертає один запис" in docstring
+
+
+def test_update_contact_info_docstring():
+    """Тест рядка 30: перевірка docstring функції update_contact_info"""
+    from src.api.services.contact_service import update_contact_info
+    docstring = update_contact_info.__doc__
+    assert docstring is not None
+    assert "Оновити контактну інформацію" in docstring
+    assert "тільки для адміна" in docstring
+
+
+def test_get_contact_info_default_contact_creation():
+    from src.api.services.contact_service import get_contact_info, Contact
+    
+    mock_session = MagicMock()
+    mock_session.query.return_value.first.return_value = None
+    
+    # Захоплюємо аргументи при виклику Contact конструктора
+    captured_args = {}
+    
+    def capture_contact_call(*args, **kwargs):
+        contact_instance = MagicMock()
+        # Зберігаємо передані аргументи
+        captured_args.update(kwargs)
+        for i, arg in enumerate(args):
+            captured_args[f'arg_{i}'] = arg
+        return contact_instance
+    
+    with patch('src.api.services.contact_service.Contact', side_effect=capture_contact_call):
+        result = get_contact_info(mock_session)
+    
+    # Перевіряємо що Contact був створений з правильними значеннями за замовчуванням
+    assert captured_args.get('hotel_name') == "Готель Хрещатик"
+    assert captured_args.get('address') == "м. Київ, вул. Хрещатик, 5"
+    assert captured_args.get('phone') == "+380956666666"
+    assert captured_args.get('email') == "info@hotel.com"
+    assert captured_args.get('schedule') == "Цілодобово"
+    assert captured_args.get('description') == "Ласкаво просимо до готелю Хрещатик"
