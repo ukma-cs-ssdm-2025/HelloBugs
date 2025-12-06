@@ -686,6 +686,160 @@ def test_api_get_all_users(client):
     assert isinstance(response.json, list)
 
 
+def test_api_create_user_success(client):
+    """Test POST /api/v1/users/ - створення користувача"""
+    user_data = {
+        "email": f"newuser_{secrets.token_hex(4)}@example.com",
+        "first_name": "New",
+        "last_name": "User",
+        "phone": f"+38050{secrets.randbelow(9999999):07d}",
+        "password": secrets.token_urlsafe(12),
+        "role": "GUEST"
+    }
+    
+    response = client.post("/api/v1/users/", json=user_data)
+    assert response.status_code == 201
+    assert response.json["email"] == user_data["email"]
+
+
+def test_api_create_user_invalid_data(client):
+    """Test POST /api/v1/users/ - помилка валідації"""
+    invalid_data = {
+        "email": "invalid",
+        "first_name": "Test"
+        # відсутні обов'язкові поля
+    }
+    
+    response = client.post("/api/v1/users/", json=invalid_data)
+    assert response.status_code in [400, 422]  # Bad Request або Unprocessable Entity
+
+
+def test_api_create_user_duplicate_email(client, sample_user):
+    """Test POST /api/v1/users/ - дублікат email"""
+    duplicate_data = {
+        "email": sample_user.email,
+        "first_name": "Duplicate",
+        "last_name": "User",
+        "phone": f"+38050{secrets.randbelow(9999999):07d}",
+        "password": secrets.token_urlsafe(12),
+        "role": "GUEST"
+    }
+    
+    response = client.post("/api/v1/users/", json=duplicate_data)
+    assert response.status_code == 400
+    assert "message" in response.json
+
+
+def test_api_get_user_by_id(client, sample_user):
+    """Test GET /api/v1/users/<id>"""
+    response = client.get(f"/api/v1/users/{sample_user.user_id}")
+    assert response.status_code == 200
+    user_id = response.json.get("user_id") or response.json.get("id")
+    assert user_id == sample_user.user_id
+
+
+def test_api_patch_user_success(client, sample_user):
+    """Test PATCH /api/v1/users/<id> - часткове оновлення"""
+    update_data = {
+        "first_name": "Updated",
+        "last_name": "Name"
+    }
+    
+    response = client.patch(f"/api/v1/users/{sample_user.user_id}", json=update_data)
+    assert response.status_code == 200
+    assert response.json["first_name"] == "Updated"
+    assert response.json["last_name"] == "Name"
+
+
+def test_api_patch_user_not_found(client):
+    """Test PATCH /api/v1/users/<id> - користувач не знайдений"""
+    update_data = {"first_name": "Test"}
+    
+    response = client.patch("/api/v1/users/999999", json=update_data)
+    # ValueError обробляється як 400
+    assert response.status_code == 400
+
+
+def test_api_patch_user_invalid_data(client, sample_user):
+    """Test PATCH /api/v1/users/<id> - невалідні дані"""
+    invalid_data = {"role": "INVALID_ROLE"}
+    
+    response = client.patch(f"/api/v1/users/{sample_user.user_id}", json=invalid_data)
+    # Схема валідації повертає 422 або ValueError повертає 400
+    assert response.status_code in [400, 422]
+
+
+def test_api_put_user_success(client, sample_user):
+    """Test PUT /api/v1/users/<id> - повне оновлення"""
+    update_data = {
+        "email": f"updated_{secrets.token_hex(4)}@example.com",
+        "first_name": "Completely",
+        "last_name": "Updated",
+        "phone": f"+38050{secrets.randbelow(9999999):07d}",
+        "password": secrets.token_urlsafe(12),  # Додаємо password
+        "role": "ADMIN"
+    }
+    
+    response = client.put(f"/api/v1/users/{sample_user.user_id}", json=update_data)
+    assert response.status_code == 200
+    assert response.json["first_name"] == "Completely"
+    assert response.json["last_name"] == "Updated"
+
+
+def test_api_put_user_not_found(client):
+    """Test PUT /api/v1/users/<id> - користувач не знайдений"""
+    update_data = {
+        "email": "test@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "password": secrets.token_urlsafe(12),  # Додаємо password
+        "role": "GUEST"
+    }
+    
+    response = client.put("/api/v1/users/999999", json=update_data)
+    # ValueError обробляється як 400
+    assert response.status_code == 400
+
+
+def test_api_put_user_invalid_data(client, sample_user):
+    """Test PUT /api/v1/users/<id> - невалідні дані"""
+    invalid_data = {
+        "email": "test@example.com",
+        "first_name": "Test"
+        # відсутні обов'язкові поля
+    }
+    
+    response = client.put(f"/api/v1/users/{sample_user.user_id}", json=invalid_data)
+    assert response.status_code in [400, 422]
+
+
+def test_api_delete_user_success(client):
+    """Test DELETE /api/v1/users/<id>"""
+    # Створюємо користувача для видалення
+    with client.application.app_context():
+        user_data = {
+            "email": f"todelete_{secrets.token_hex(4)}@example.com",
+            "first_name": "To",
+            "last_name": "Delete",
+            "phone": f"+38050{secrets.randbelow(9999999):07d}",
+            "password": secrets.token_urlsafe(12),
+            "role": "GUEST"
+        }
+        user = create_user(db, user_data)
+        user_id = user.user_id
+    
+    response = client.delete(f"/api/v1/users/{user_id}")
+    assert response.status_code == 204
+
+
+def test_api_delete_user_not_found(client):
+    """Test DELETE /api/v1/users/<id> - користувач не знайдений"""
+    response = client.delete("/api/v1/users/999999")
+    # ValueError обробляється як 400 (через try-except в route)
+    assert response.status_code == 400
+
+
 def test_api_search_users_role_last_name(client, sample_user):
     response = client.get(f"/api/v1/users/?role=GUEST&last_name={sample_user.last_name}")
     assert response.status_code == 200
