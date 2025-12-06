@@ -401,3 +401,128 @@ def test_update_user_full_integrity_error(db_session, existing_user):
 def test_delete_user_not_found(db_session):
     with pytest.raises(ValueError, match="User with ID 999999 not found"):
         delete_user(db_session, 999999)
+
+
+def test_search_users_with_empty_role_string(db_session, existing_user):
+    """Test search with empty role string (should return empty list)"""
+    users = search_users(db_session, role="   ", last_name=None)
+    assert isinstance(users, list)
+    assert users == []
+
+def test_search_users_with_empty_last_name_string(db_session, existing_user):
+    """Test search with empty last_name string (should return empty list)"""
+    users = search_users(db_session, role=None, last_name="   ")
+    assert isinstance(users, list)
+    assert users == []
+
+def test_search_users_with_both_empty_strings(db_session, existing_user):
+    """Test search with both parameters as empty strings (should return empty list)"""
+    users = search_users(db_session, role="   ", last_name="   ")
+    assert isinstance(users, list)
+    assert users == []
+
+def test_search_users_no_match_last_name(db_session, existing_user):
+    """Test search with last_name that doesn't match any user"""
+    users = search_users(db_session, last_name="NonExistentLastName12345")
+    assert users == []
+
+def test_create_user_database_error(db_session, test_user_dict, monkeypatch):
+    """Test create_user when database commit fails with SQLAlchemyError"""
+    def mock_commit():
+        raise SQLAlchemyError("Database error")
+    
+    monkeypatch.setattr(db_session, "commit", mock_commit)
+    
+    with pytest.raises(Exception, match="Database error creating user"):
+        create_user(db_session, test_user_dict)
+
+def test_update_user_partial_database_error(db_session, existing_user, monkeypatch):
+    """Test update_user_partial when database commit fails"""
+    def mock_commit():
+        raise SQLAlchemyError("Database error")
+    
+    monkeypatch.setattr(db_session, "commit", mock_commit)
+    
+    with pytest.raises(Exception, match="Database error updating user"):
+        update_user_partial(db_session, existing_user.user_id, {"first_name": "Test"})
+
+def test_update_user_full_database_error(db_session, existing_user, monkeypatch):
+    """Test update_user_full when database commit fails"""
+    def mock_commit():
+        raise SQLAlchemyError("Database error")
+    
+    monkeypatch.setattr(db_session, "commit", mock_commit)
+    
+    update_data = {
+        "email": f"updated_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "role": "GUEST"
+    }
+    
+    with pytest.raises(Exception, match="Database error updating user"):
+        update_user_full(db_session, existing_user.user_id, update_data)
+
+def test_delete_user_database_error(db_session, existing_user, monkeypatch):
+    """Test delete_user when database commit fails"""
+    def mock_commit():
+        raise SQLAlchemyError("Database error")
+    
+    monkeypatch.setattr(db_session, "commit", mock_commit)
+    
+    with pytest.raises(Exception, match="Database error deleting user"):
+        delete_user(db_session, existing_user.user_id)
+
+def test_create_user_integrity_error_without_email_match(db_session, existing_user, monkeypatch):
+    """Test IntegrityError handling in create_user (non-email constraint violation)"""
+    def mock_add(user):
+        pass
+    
+    def mock_commit():
+        raise IntegrityError("statement", "params", "orig")
+    
+    monkeypatch.setattr(db_session, "add", mock_add)
+    monkeypatch.setattr(db_session, "commit", mock_commit)
+    
+    user_data = {
+        "email": f"new_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "password": secrets.token_urlsafe(12),
+        "role": "GUEST"
+    }
+    
+    with pytest.raises(ValueError, match="User with this email or phone already exists"):
+        create_user(db_session, user_data)
+
+def test_update_user_partial_integrity_error_without_match(db_session, existing_user, monkeypatch):
+    """Test IntegrityError handling in update_user_partial (non-email/phone constraint)"""
+    def mock_commit():
+        raise IntegrityError("statement", "params", "orig")
+    
+    monkeypatch.setattr(db_session, "commit", mock_commit)
+    
+    update_data = {"first_name": "Test"}
+    
+    with pytest.raises(ValueError, match="User with this email or phone already exists"):
+        update_user_partial(db_session, existing_user.user_id, update_data)
+
+def test_update_user_full_integrity_error_without_match(db_session, existing_user, monkeypatch):
+    """Test IntegrityError handling in update_user_full (non-email/phone constraint)"""
+    def mock_commit():
+        raise IntegrityError("statement", "params", "orig")
+    
+    monkeypatch.setattr(db_session, "commit", mock_commit)
+    
+    update_data = {
+        "email": f"updated_{uuid.uuid4().hex[:8]}@example.com",
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": "+380501234567",
+        "role": "GUEST"
+    }
+    
+    with pytest.raises(ValueError, match="User with this email or phone already exists"):
+        update_user_full(db_session, existing_user.user_id, update_data)
