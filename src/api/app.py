@@ -2,6 +2,8 @@ from flask import Flask, render_template, jsonify
 from flask_smorest import Api
 from flask_cors import CORS
 from datetime import timedelta
+from dotenv import load_dotenv
+load_dotenv()
 from src.api.routes.users import blp as users_blp
 from src.api.routes.rooms import blp as rooms_blp
 from src.api.routes.rooms import amenities_blp
@@ -12,11 +14,8 @@ from src.api.routes.reviews import blp as reviews_blp
 from src.api.auth import login_required_web, admin_required
 import os
 import traceback
-from dotenv import load_dotenv
 from src.api.db import create_tables, db
 from src.api.services.notification_service import mail
-
-load_dotenv()
 
 import logging
 
