@@ -99,10 +99,17 @@ class NotificationService:
             part_html = MIMEText(html_body, 'html', 'utf-8')
             msg.attach(part_html)
 
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.send_message(msg)
+            logger.info(f"Connecting to SMTP server {self.smtp_host}:{self.smtp_port}...")
+
+            if self.smtp_port == 465:
+                with smtplib.SMTP_SSL(self.smtp_host, self.smtp_port) as server:
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.send_message(msg)
+            else:
+                with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                    server.starttls()
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.send_message(msg)
 
             logger.info(f"Email successfully sent to {to_email}")
             return True

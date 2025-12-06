@@ -222,10 +222,10 @@ def create_booking(session, data):
                     'total_price': f"{total_price:.2f}"
                 }
 
-                notification_service.notify_booking_created(
-                    user.email, user.phone, booking_data
-                )
-                logger.info(f"Email sent for {booking_code}")
+                if notification_service.notify_booking_created(user.email, user.phone, booking_data):
+                    logger.info(f"Email sent for {booking_code}")
+                else:
+                    logger.error(f"Email FAILED for {booking_code}")
         except Exception as e:
             logger.error(f"Email failed: {e}")
         
