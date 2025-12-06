@@ -1,3 +1,4 @@
+from src.api.services.notification_service import notification_service
 from src.api.models.booking_model import Booking, BookingStatus
 from src.api.models.room_model import Room, RoomStatus
 from src.api.models.user_model import User, UserRole
@@ -7,7 +8,6 @@ from datetime import datetime, date, timedelta, timezone
 import logging
 import time
 import secrets
-from src.api.services.notification_service import send_email
 
 logger = logging.getLogger(__name__)
 
@@ -206,24 +206,28 @@ def create_booking(session, data):
         session.add(new_booking)
         session.commit()
 
-        # поки так
         try:
             user = session.query(User).get(user_id)
-            room = session.query(Room).get(room_id)
-            days = (new_booking.check_out_date - new_booking.check_in_date).days
-            total_price_value = float(room.base_price) * days
+            if user:
+                nights = (check_out - check_in).days
+                total_price = float(room.base_price) * nights
 
-            send_email(
-                subject=f"Бронювання {new_booking.booking_code} підтверджено",
-                recipient=user.email,
-                template='email/booking_confirmation.html',
-                user=user,
-                booking=new_booking,
-                room=room,
-                total_price = total_price_value
-            )
+                booking_data = {
+                    'guest_name': f"{user.first_name} {user.last_name}",
+                    'booking_code': booking_code,
+                    'room_number': room.room_number,
+                    'check_in_date': check_in.strftime('%d.%m.%Y'),
+                    'check_out_date': check_out.strftime('%d.%m.%Y'),
+                    'nights': nights,
+                    'total_price': f"{total_price:.2f}"
+                }
+
+                notification_service.notify_booking_created(
+                    user.email, user.phone, booking_data
+                )
+                logger.info(f"Email sent for {booking_code}")
         except Exception as e:
-            logger.error(f"Error sending booking email: {e}")
+            logger.error(f"Email failed: {e}")
         
         return new_booking
 
@@ -317,6 +321,37 @@ def cancel_booking(session, booking_code):
 
         booking.status = BookingStatus.CANCELLED
         booking.updated_at = datetime.now(timezone.utc)
+
+        try:
+            user = session.query(User).get(booking.user_id)
+            room = session.query(Room).get(booking.room_id)
+
+            if user and room:
+                from src.api.services.refund_service import calculate_refund_amount
+                nights = (booking.check_out_date - booking.check_in_date).days
+                total_price = float(room.base_price) * nights
+
+                refund_amount = calculate_refund_amount(
+                    booking.check_in_date.isoformat(),
+                    date.today().isoformat(),
+                    total_price
+                )
+
+                booking_data = {
+                    'guest_name': f"{user.first_name} {user.last_name}",
+                    'booking_code': booking_code,
+                    'room_number': room.room_number,
+                    'check_in_date': booking.check_in_date.strftime('%d.%m.%Y'),
+                    'check_out_date': booking.check_out_date.strftime('%d.%m.%Y'),
+                    'refund_amount': f"{refund_amount:.2f}"
+                }
+
+                notification_service.notify_booking_cancelled(
+                    user.email, user.phone, booking_data
+                )
+        except Exception as e:
+            logger.error(f"Cancellation email failed: {e}")
+
         return True
 
     except Exception as e:

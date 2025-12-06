@@ -15,7 +15,8 @@ from src.api.auth import login_required_web, admin_required
 import os
 import traceback
 from src.api.db import create_tables, db
-from src.api.services.notification_service import mail
+from src.api.scheduler import init_scheduler, shutdown_scheduler
+import atexit
 
 import logging
 
@@ -46,8 +47,12 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 app.config["JWT_SECRET_KEY"] = SECRET_KEY
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 
-mail.init_app(app)
-
+try:
+      scheduler = init_scheduler()
+      logger.info("Scheduler initialized")
+      atexit.register(shutdown_scheduler)
+except Exception as e:
+      logger.error(f"Scheduler failed: {e}")
 
 # Security headers
 @app.after_request
