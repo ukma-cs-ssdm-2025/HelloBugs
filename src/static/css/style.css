@@ -156,7 +156,7 @@ h1, h2, h3, h4 {
     list-style: none;
     min-width: 200px;
     padding: 10px 0;
-    margin-top: 10px;
+    margin-top: 0;
     border-top: 2px solid var(--gold);
 }
 
@@ -170,16 +170,16 @@ h1, h2, h3, h4 {
 
 .dropdown-menu a {
     display: block;
-    padding: 12px 20px;
+    /* Фіксована ліва відстань, щоб ширина меню не змінювалася на hover */
+    padding: 12px 20px 12px 30px;
     color: var(--dark-blue);
     text-decoration: none;
     font-size: 14px;
-    transition: background-color 0.3s, padding-left 0.3s;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .dropdown-menu a:hover {
     background-color: var(--gray-light);
-    padding-left: 30px;
     color: var(--gold);
 }
 
