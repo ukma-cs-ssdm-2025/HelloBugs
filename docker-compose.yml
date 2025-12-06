@@ -6,10 +6,10 @@ services:
     env_file:
       - .env
     environment:
-      - FLASK_APP=src/api/app.py
-      - DATABASE_URL=postgresql://postgres:password123@db_local:5432/hotel_db
-      - PYTHONPATH=/app
-      - RAILWAY_ENVIRONMENT=development
+      FLASK_APP: src/api/app.py
+      DATABASE_URL: postgresql://postgres:password123@db_local:5432/hotel_db
+      PYTHONPATH: /app
+      RAILWAY_ENVIRONMENT: development
     depends_on:
       db_local:
         condition: service_healthy

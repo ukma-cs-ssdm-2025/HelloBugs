@@ -1,5 +1,5 @@
-from datetime import datetime, date, timedelta
-from typing import Optional, Dict, Any
+from datetime import date, timedelta
+from typing import Dict, Any
 import logging
 from enum import Enum
 import smtplib
@@ -79,16 +79,16 @@ class NotificationService:
                 <body>
                     <div class="container">
                         <div class="header">
-                            <h1>⭐ ГОТЕЛЬ ХРЕЩАТИК ⭐</h1>
+                            <h1> ГОТЕЛЬ "ХРЕЩАТИК" </h1>
                         </div>
                         <div class="content">
                             {body}
                         </div>
                         <div class="footer">
                             <div class="separator"></div>
-                            <p><strong>Готель Хрещатик</strong></p>
+                            <p><strong>Готель "Хрещатик"</strong></p>
                             <p>📍 м. Київ, вул. Хрещатик, 5</p>
-                            <p>📞 +380 95 666 66 66 | 📧 info@hotel.com</p>
+                            <p>📞 +380 95 666 66 66 | 📧 info@kh.hotel.com</p>
                             <p style="font-size: 12px; color: #999;">Це автоматичне повідомлення, не відповідайте на нього</p>
                         </div>
                     </div>
@@ -104,7 +104,7 @@ class NotificationService:
                 server.login(self.smtp_user, self.smtp_password)
                 server.send_message(msg)
 
-            logger.info(f"📧 Email successfully sent to {to_email}")
+            logger.info(f"Email successfully sent to {to_email}")
             return True
 
         except smtplib.SMTPAuthenticationError as e:
@@ -119,7 +119,7 @@ class NotificationService:
 
     def _get_booking_created_template(self, booking_data: Dict[str, Any]) -> Dict[str, str]:
         """Шаблон для створення бронювання"""
-        subject = " Підтвердження бронювання - Готель Хрещатик"
+        subject = " Підтвердження бронювання - Готель 'Хрещатик'"
 
         body = f"""
         <h2>Вітаємо, {booking_data['guest_name']}!</h2>
@@ -128,33 +128,33 @@ class NotificationService:
         <div class="details">
             <h2 style="margin-top: 0;"> Деталі бронювання</h2>
             <div class="info-row">
-                <span class="label">Код бронювання:</span>
+                <span class="label">Код бронювання: </span>
                 <span class="value highlight">{booking_data['booking_code']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Номер кімнати:</span>
+                <span class="label"> Номер кімнати: </span>
                 <span class="value">{booking_data['room_number']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Заїзд:</span>
+                <span class="label"> Заїзд: </span>
                 <span class="value">{booking_data['check_in_date']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Виїзд:</span>
+                <span class="label"> Виїзд: </span>
                 <span class="value">{booking_data['check_out_date']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Кількість ночей:</span>
+                <span class="label"> Кількість ночей: </span>
                 <span class="value">{booking_data['nights']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Вартість:</span>
+                <span class="label"> Вартість: </span>
                 <span class="value highlight">{booking_data['total_price']} грн</span>
             </div>
         </div>
 
         <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
-            <h3 style="margin-top: 0; color: #856404;">ℹ️ Важлива інформація</h3>
+            <h3 style="margin-top: 0; color: #856404;"> Важлива інформація</h3>
             <ul style="margin: 0; padding-left: 20px;">
                 <li>Заселення після 14:00</li>
                 <li>Виселення до 12:00</li>
@@ -165,7 +165,7 @@ class NotificationService:
 
         <p style="font-size: 16px; margin-top: 30px;">
             <strong>Дякуємо за вибір нашого готелю!</strong><br>
-            Чекаємо на вас з нетерпінням! ⭐
+            Чекаємо на вас з нетерпінням! :)
         </p>
         """
 
@@ -173,13 +173,13 @@ class NotificationService:
 
     def _get_booking_cancelled_template(self, booking_data: Dict[str, Any]) -> Dict[str, str]:
         """Шаблон для скасування бронювання"""
-        subject = "Скасування бронювання - Готель Хрещатик"
+        subject = "Скасування бронювання - Готель 'Хрещатик'"
 
         refund_html = ""
         if booking_data.get('refund_amount'):
             refund_html = f"""
             <div class="info-row">
-                <span class="label"> Сума повернення:</span>
+                <span class="label"> Сума повернення: </span>
                 <span class="value highlight">{booking_data['refund_amount']} грн</span>
             </div>
             <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0; border-radius: 4px;">
@@ -196,15 +196,15 @@ class NotificationService:
         <div class="details">
             <h2 style="margin-top: 0;"> Деталі скасованого бронювання</h2>
             <div class="info-row">
-                <span class="label">Код бронювання:</span>
+                <span class="label">Код бронювання: </span>
                 <span class="value">{booking_data['booking_code']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Номер кімнати:</span>
+                <span class="label"> Номер кімнати: </span>
                 <span class="value">{booking_data['room_number']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Період:</span>
+                <span class="label"> Період: </span>
                 <span class="value">{booking_data['check_in_date']} - {booking_data['check_out_date']}</span>
             </div>
             {refund_html}
@@ -212,7 +212,7 @@ class NotificationService:
 
         <p style="font-size: 16px; margin-top: 30px;">
             Сподіваємось побачити вас найближчим часом!<br>
-            Ми завжди раді гостям! 🏨
+            Ми завжди раді гостям!
         </p>
         """
 
@@ -220,34 +220,34 @@ class NotificationService:
 
     def _get_checkin_reminder_template(self, booking_data: Dict[str, Any]) -> Dict[str, str]:
         """Шаблон нагадування про заїзд"""
-        subject = "Нагадування про заїзд завтра - Готель Хрещатик"
+        subject = "Нагадування про заїзд завтра - Готель 'Хрещатик'"
 
         body = f"""
         <h2>Вітаємо, {booking_data['guest_name']}!</h2>
-        <p style="font-size: 18px; color: #2c3e50;"><strong>Нагадуємо, що завтра ваш заїзд до готелю! 🏨</strong></p>
+        <p style="font-size: 18px; color: #2c3e50;"><strong>Нагадуємо, що завтра ваш заїзд до готелю!</strong></p>
 
         <div class="details">
             <h2 style="margin-top: 0;"> Деталі бронювання</h2>
             <div class="info-row">
-                <span class="label">Код бронювання:</span>
+                <span class="label">Код бронювання: </span>
                 <span class="value highlight">{booking_data['booking_code']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Номер кімнати:</span>
+                <span class="label"> Номер кімнати: </span>
                 <span class="value">{booking_data['room_number']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Заїзд:</span>
+                <span class="label"> Заїзд: </span>
                 <span class="value">{booking_data['check_in_date']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Час заселення:</span>
+                <span class="label"> Час заселення: </span>
                 <span class="value">після 14:00</span>
             </div>
         </div>
 
         <div style="background: #e7f3ff; border-left: 4px solid #0066cc; padding: 15px; margin: 20px 0; border-radius: 4px;">
-            <h3 style="margin-top: 0; color: #004085;">📋 Що потрібно мати при заселенні:</h3>
+            <h3 style="margin-top: 0; color: #004085;"> Що потрібно мати при заселенні:</h3>
             <ul style="margin: 0; padding-left: 20px; color: #004085;">
                 <li><strong>Паспорт</strong> або ID-картка</li>
                 <li>Код бронювання: <strong>{booking_data['booking_code']}</strong></li>
@@ -262,7 +262,7 @@ class NotificationService:
 
         <p style="font-size: 16px; margin-top: 30px;">
             <strong>Чекаємо на вас!</strong><br>
-            До зустрічі завтра! 😊
+            До зустрічі завтра! :)
         </p>
         """
 
@@ -270,7 +270,7 @@ class NotificationService:
 
     def _get_checkout_reminder_template(self, booking_data: Dict[str, Any]) -> Dict[str, str]:
         """Шаблон нагадування про виїзд"""
-        subject = " Нагадування про виїзд завтра - Готель Хрещатик"
+        subject = " Нагадування про виїзд завтра - Готель 'Хрещатик'"
 
         body = f"""
         <h2>Вітаємо, {booking_data['guest_name']}!</h2>
@@ -279,25 +279,25 @@ class NotificationService:
         <div class="details">
             <h2 style="margin-top: 0;"> Деталі</h2>
             <div class="info-row">
-                <span class="label">Код бронювання:</span>
+                <span class="label">Код бронювання: </span>
                 <span class="value">{booking_data['booking_code']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Номер кімнати:</span>
+                <span class="label"> Номер кімнати: </span>
                 <span class="value">{booking_data['room_number']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Виїзд:</span>
+                <span class="label"> Виїзд: </span>
                 <span class="value">{booking_data['check_out_date']}</span>
             </div>
             <div class="info-row">
-                <span class="label"> Час виселення:</span>
+                <span class="label"> Час виселення: </span>
                 <span class="value">до 12:00</span>
             </div>
         </div>
 
         <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
-            <h3 style="margin-top: 0; color: #856404;">ℹ️ Корисна інформація:</h3>
+            <h3 style="margin-top: 0; color: #856404;"> Корисна інформація:</h3>
             <ul style="margin: 0; padding-left: 20px; color: #856404;">
                 <li>Пізній виїзд можливий за домовленістю (зверніться на рецепцію)</li>
                 <li>Зберігання багажу - безкоштовно</li>
@@ -306,10 +306,10 @@ class NotificationService:
         </div>
 
         <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 20px; margin: 20px 0; border-radius: 4px; text-align: center;">
-            <h3 style="margin-top: 0; color: #155724;">⭐ Дякуємо, що обрали наш готель! ⭐</h3>
+            <h3 style="margin-top: 0; color: #155724;"> Дякуємо, що обрали наш готель! </h3>
             <p style="margin: 0; color: #155724; font-size: 16px;">
                 Будемо раді бачити вас знову!<br>
-                Залишайте відгук про ваше перебування 😊
+                Не забудьте залишити відгук про ваші враження щодо наших номерів та обслуговування :)
             </p>
         </div>
         """
@@ -366,7 +366,7 @@ def send_daily_reminders(session):
     notification_service = NotificationService()
     tomorrow = date.today() + timedelta(days=1)
 
-    logger.info(f"🔔 Running daily reminders for {tomorrow}")
+    logger.info(f"Running daily reminders for {tomorrow}")
 
     checkin_bookings = session.query(Booking).filter(
         Booking.status == BookingStatus.ACTIVE,
