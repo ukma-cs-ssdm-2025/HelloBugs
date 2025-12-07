@@ -135,24 +135,35 @@ async function checkReviewOwnership(review) {
         
         if (response.ok) {
             const user = await response.json();
-            
-            if (user.user_id === review.user_id || user.role === 'ADMIN') {
-                const actionsDiv = document.getElementById(`review-actions-${review.review_id}`);
-                if (actionsDiv) {
-                    actionsDiv.style.display = 'flex';
-                    
-                    // Додаємо обробники подій
-                    const editBtn = actionsDiv.querySelector('.edit-review');
-                    const deleteBtn = actionsDiv.querySelector('.delete-review');
-                    
-                    if (editBtn) {
-                        editBtn.addEventListener('click', () => openEditModal(review));
-                    }
-                    
-                    if (deleteBtn) {
-                        deleteBtn.addEventListener('click', () => deleteReview(review.review_id));
-                    }
+            const isOwner = user.user_id === review.user_id;
+            const isAdmin = user.role === 'ADMIN';
+
+            const actionsDiv = document.getElementById(`review-actions-${review.review_id}`);
+            if (!actionsDiv) return;
+
+            const editBtn = actionsDiv.querySelector('.edit-review');
+            const deleteBtn = actionsDiv.querySelector('.delete-review');
+
+            if (editBtn) {
+                if (isOwner) {
+                    editBtn.style.display = 'inline-flex';
+                    editBtn.addEventListener('click', () => openEditModal(review));
+                } else {
+                    editBtn.style.display = 'none';
                 }
+            }
+
+            if (deleteBtn) {
+                if (isOwner || isAdmin) {
+                    deleteBtn.style.display = 'inline-flex';
+                    deleteBtn.addEventListener('click', () => deleteReview(review.review_id));
+                } else {
+                    deleteBtn.style.display = 'none';
+                }
+            }
+
+            if ((isOwner && editBtn) || (isOwner || isAdmin) && deleteBtn) {
+                actionsDiv.style.display = 'flex';
             }
         }
     } catch (error) {
