@@ -1,0 +1,31 @@
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+  status:
+    project:
+      default:
+        target: auto
+    patch:
+      default:
+        target: 0%
+        threshold: 2%
+
+ignore:
+  - "Labs/**/*"
+  - "docs/**/*"
+  - "src/**/migrations/**/*"
+  - "src/**/scheduler/**/*"
+  - "**/docker-compose*.yml"
+  - "Dockerfile"
+  - ".env*"
+  - "config/**/*"
+  - "settings/**/*"
+  - "**/*.md"
+  - "**/*.png"
+  - "**/*.jpg"
+  - "**/fixtures/**/*"
+  - "**/seed/**/*"
+  - "**/tests/data/**/*"
+  - "**/__pycache__/**/*"

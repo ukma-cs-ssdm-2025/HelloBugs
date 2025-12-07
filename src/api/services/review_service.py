@@ -11,7 +11,7 @@ def get_all_reviews(db):
 
 def get_review_by_id(db, review_id):
     """Get a specific review by ID"""
-    review = db.query(Review).get(review_id)
+    review = db.get(Review, review_id)
     return review
 
 
@@ -42,7 +42,7 @@ def create_review(db, review_data):
 
 def update_review(db, review_id, update_data):
     """Update an existing review"""
-    review = db.query(Review).get(review_id)
+    review = db.get(Review, review_id)
     if not review:
         raise ValueError(f"Review with ID {review_id} not found")
     
@@ -61,13 +61,11 @@ def update_review(db, review_id, update_data):
 
 def delete_review(db, review_id):
     """Delete a review"""
-    review = db.query(Review).get(review_id)
+    review = db.get(Review, review_id)
     if not review:
         raise ValueError(f"Review with ID {review_id} not found")
     
     db.delete(review)
-    db.commit()
-    
     return True
 
 

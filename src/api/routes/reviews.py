@@ -15,6 +15,8 @@ from src.api.services.review_service import (
     get_average_rating
 )
 from src.api.db import db
+from src.api.models.user_model import UserRole
+from werkzeug.exceptions import HTTPException
 
 blp = Blueprint(
     "Reviews",
@@ -101,8 +103,7 @@ class ReviewResource(MethodView):
             review = get_review_by_id(db, review_id)
             if not review:
                 abort(404, message=f"Review with ID {review_id} not found")
-            
-            if review['user_id'] != current_user.user_id and current_user.role != 'ADMIN':
+            if review.user_id != current_user.user_id:
                 abort(403, message="Ви не маєте прав для редагування цього відгуку")
             
             updated_review = update_review(db, review_id, patch_data)
@@ -124,10 +125,20 @@ class ReviewResource(MethodView):
             if not review:
                 abort(404, message=f"Review with ID {review_id} not found")
             
-            if review['user_id'] != current_user.user_id and current_user.role != 'ADMIN':
+            is_admin = getattr(current_user, 'role', None) == UserRole.ADMIN
+            if review.user_id != current_user.user_id and not is_admin:
                 abort(403, message="Ви не маєте прав для видалення цього відгуку")
             
             delete_review(db, review_id)
+            db.commit()
             return "", 204
         except ValueError as e:
+            db.rollback()
             abort(400, message=str(e))
+        except HTTPException:
+            raise
+        except Exception:
+            db.rollback()
+            import traceback
+            print("[DELETE /reviews] Unexpected error:\n" + traceback.format_exc())
+            abort(500, message="Internal server error")
