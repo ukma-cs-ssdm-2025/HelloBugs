@@ -88,8 +88,11 @@ class UserResource(MethodView):
     @blp.response(204, description="User deleted successfully")
     def delete(self, user_id):
         """Delete a user"""
-        success = delete_user(db, user_id)
-        if not success:
-            logger.info(f"User with ID {user_id} not found during GET request.")
-            abort(404, message="User not found")
-        return "", 204
+        try:
+            success = delete_user(db, user_id)
+            if not success:
+                logger.info(f"User with ID {user_id} not found during DELETE request.")
+                abort(404, message="User not found")
+            return "", 204
+        except ValueError as e:
+            abort(400, message=str(e))

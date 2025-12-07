@@ -1,0 +1,30 @@
+name: Production Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Staging"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy-to-prod:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          curl -fL --retry 3 https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+        run: |
+          railway up --service ${{ secrets.RAILWAY_SERVICE_NAME }}
+

@@ -54,7 +54,7 @@ class AuthManager {
         if (!navList) return;
 
         const userMenu = document.createElement('li');
-        userMenu.className = 'dropdown';
+        userMenu.className = 'dropdown user-menu-dropdown';
         userMenu.innerHTML = `
             <a href="#" class="nav-link dropdown-toggle">
                 ${this.user.first_name} ${this.user.last_name}
@@ -95,7 +95,7 @@ class AuthManager {
 
     removeUserMenu(navList) {
         if (!navList) return;
-        const userMenu = navList.querySelector('.dropdown');
+        const userMenu = navList.querySelector('.user-menu-dropdown');
         if (userMenu) userMenu.remove();
     }
 
