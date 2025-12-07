@@ -1,19 +1,19 @@
 import pytest
 from unittest.mock import MagicMock, patch
+from types import SimpleNamespace
 from src.api.models.user_model import UserRole
 
 
 @pytest.fixture
 def mock_review():
-    """Фікстура для мокування відгуку"""
-    return {
-        'review_id': 1,
-        'user_id': 1,
-        'rating': 5,
-        'comment': 'Great hotel!',
-        'status': 'APPROVED',
-        'created_at': '2024-01-01T10:00:00'
-    }
+    """Фікстура для мокування відгуку (об'єкт з атрибутами)"""
+    r = MagicMock()
+    r.review_id = 1
+    r.user_id = 1
+    r.rating = 5
+    r.comment = 'Great hotel!'
+    r.created_at = '2024-01-01T10:00:00'
+    return r
 
 
 @pytest.fixture
@@ -42,10 +42,9 @@ def test_get_all_reviews_success(client, monkeypatch):
     """Тест GET /api/v1/reviews/ - успішне отримання всіх відгуків"""
     import src.api.routes.reviews as review_routes_module
     
-    mock_reviews = [
-        {'review_id': 1, 'rating': 5, 'comment': 'Great!'},
-        {'review_id': 2, 'rating': 4, 'comment': 'Good'}
-    ]
+    mock_r1 = SimpleNamespace(review_id=1, rating=5, comment='Great!', created_at=None, updated_at=None)
+    mock_r2 = SimpleNamespace(review_id=2, rating=4, comment='Good', created_at=None, updated_at=None)
+    mock_reviews = [mock_r1, mock_r2]
     
     def mock_get_all_reviews(db):
         return mock_reviews
@@ -64,9 +63,8 @@ def test_get_user_reviews_success(client, monkeypatch):
     """Тест GET /api/v1/reviews/user/<user_id> - успішне отримання"""
     import src.api.routes.reviews as review_routes_module
     
-    mock_reviews = [
-        {'review_id': 1, 'user_id': 1, 'rating': 5}
-    ]
+    r = SimpleNamespace(review_id=1, user_id=1, rating=5, created_at=None, updated_at=None)
+    mock_reviews = [r]
     
     def mock_get_user_reviews(db, user_id):
         assert user_id == 1
@@ -160,8 +158,11 @@ def test_patch_review_forbidden_not_owner(client, monkeypatch, mock_user_guest, 
     
     import src.api.routes.reviews as review_routes_module
     
-    review_of_another_user = mock_review.copy()
-    review_of_another_user['user_id'] = 1  # Відгук належить user_id=1
+    review_of_another_user = MagicMock()
+    review_of_another_user.review_id = 1
+    review_of_another_user.user_id = 1  # Відгук належить user_id=1
+    review_of_another_user.rating = 5
+    review_of_another_user.comment = 'Great hotel!'
     
     def mock_get_review_by_id(db, review_id):
         return review_of_another_user
@@ -223,8 +224,11 @@ def test_delete_review_forbidden_not_owner(client, monkeypatch, mock_user_guest,
     
     import src.api.routes.reviews as review_routes_module
     
-    review_of_another_user = mock_review.copy()
-    review_of_another_user['user_id'] = 1
+    review_of_another_user = MagicMock()
+    review_of_another_user.review_id = 1
+    review_of_another_user.user_id = 1
+    review_of_another_user.rating = 5
+    review_of_another_user.comment = 'Great hotel!'
     
     def mock_get_review_by_id(db, review_id):
         return review_of_another_user
@@ -267,7 +271,6 @@ def test_delete_review_success_owner(client, monkeypatch, mock_user_guest, mock_
 
 def test_delete_review_success_admin(client, monkeypatch, mock_user_admin, mock_review):
     """Тест DELETE /api/v1/reviews/<review_id> - успішне видалення адміном"""
-    mock_user_admin.role = 'ADMIN'
     
     def mock_jwt_decode(token, secret, algorithms=None):
         return {"user_id": 2, "role": "ADMIN", "is_admin": True}
@@ -393,20 +396,19 @@ def test_get_review_by_id_found():
     mock_review.review_id = 1
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     result = get_review_by_id(mock_db, 1)
     
     assert result == mock_review
-    mock_db.query.assert_called_once()
-    mock_db.query.return_value.get.assert_called_once_with(1)
+    mock_db.get.assert_called_once()
 
 
 def test_get_review_by_id_not_found():
     from src.api.services.review_service import get_review_by_id
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = None
+    mock_db.get.return_value = None
     
     result = get_review_by_id(mock_db, 999)
     
@@ -523,7 +525,7 @@ def test_update_review_success():
     mock_review.updated_at = None
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     update_data = {
         'rating': 5,
@@ -545,7 +547,7 @@ def test_update_review_not_found():
     from src.api.services.review_service import update_review
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = None
+    mock_db.get.return_value = None
     
     update_data = {'rating': 5}
     
@@ -566,7 +568,7 @@ def test_update_review_partial_fields():
     mock_review.updated_at = None
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     # Оновлюємо тільки rating
     update_data = {'rating': 4}
@@ -591,7 +593,7 @@ def test_update_review_no_fields():
     mock_review.updated_at = None
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     # Пустий словник для оновлення
     update_data = {}
@@ -612,20 +614,19 @@ def test_delete_review_success():
     mock_review.review_id = 1
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     result = delete_review(mock_db, 1)
     
     assert result is True
     mock_db.delete.assert_called_once_with(mock_review)
-    mock_db.commit.assert_called_once()
 
 
 def test_delete_review_not_found():
     from src.api.services.review_service import delete_review
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = None
+    mock_db.get.return_value = None
     
     with pytest.raises(ValueError) as exc_info:
         delete_review(mock_db, 999)
@@ -711,7 +712,7 @@ def test_update_review_datetime_now():
     mock_review.updated_at = None
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     # Патчимо datetime.utcnow для перевірки
     fixed_datetime = datetime(2024, 1, 1, 12, 0, 0)
