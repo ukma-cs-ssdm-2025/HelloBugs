@@ -3,6 +3,7 @@ import importlib
 import pytest
 from sqlalchemy.orm import Session
 from src.api import db as db_module
+from unittest.mock import patch, MagicMock
 
 def test_default_database_url(monkeypatch):
     monkeypatch.delenv("DATABASE_URL", raising=False)
@@ -23,6 +24,9 @@ def test_get_db_closes_session():
         next(gen)
 
 def test_create_tables_executes():
-    db_module.create_tables()
+    mock_engine = MagicMock()
 
-    assert True
+    with patch.object(db_module, "engine", mock_engine):
+        db_module.create_tables()
+
+    mock_engine.assert_not_called()  
