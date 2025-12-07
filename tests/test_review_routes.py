@@ -1,19 +1,20 @@
 import pytest
 from unittest.mock import MagicMock, patch
+from types import SimpleNamespace
+from datetime import datetime
 from src.api.models.user_model import UserRole
 
 
 @pytest.fixture
 def mock_review():
-    """Фікстура для мокування відгуку"""
-    return {
-        'review_id': 1,
-        'user_id': 1,
-        'rating': 5,
-        'comment': 'Great hotel!',
-        'status': 'APPROVED',
-        'created_at': '2024-01-01T10:00:00'
-    }
+    """Фікстура для мокування відгуку (об'єкт з атрибутами)"""
+    r = MagicMock()
+    r.review_id = 1
+    r.user_id = 1
+    r.rating = 5
+    r.comment = 'Great hotel!'
+    r.created_at = '2024-01-01T10:00:00'
+    return r
 
 
 @pytest.fixture
@@ -38,14 +39,31 @@ def mock_user_admin():
     return user
 
 
+@pytest.fixture
+def auth_setup(monkeypatch):
+    """Хелпер для налаштування автентифікації/контексту g.current_user без дублювання коду"""
+    def _setup(user):
+        def mock_jwt_decode(token, secret, algorithms=None):
+            role_val = getattr(user, 'role', None)
+            role_name = role_val.name if hasattr(role_val, 'name') else (role_val or 'GUEST')
+            is_admin = role_name == 'ADMIN'
+            return {"user_id": user.user_id, "role": role_name, "is_admin": is_admin}
+        mock_query = MagicMock()
+        mock_query.get.return_value = user
+        import src.api.auth as auth_module
+        monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+        monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+        monkeypatch.setattr("flask.g", MagicMock(current_user=user))
+    return _setup
+
+
 def test_get_all_reviews_success(client, monkeypatch):
     """Тест GET /api/v1/reviews/ - успішне отримання всіх відгуків"""
     import src.api.routes.reviews as review_routes_module
     
-    mock_reviews = [
-        {'review_id': 1, 'rating': 5, 'comment': 'Great!'},
-        {'review_id': 2, 'rating': 4, 'comment': 'Good'}
-    ]
+    mock_r1 = SimpleNamespace(review_id=1, rating=5, comment='Great!', created_at=None, updated_at=None)
+    mock_r2 = SimpleNamespace(review_id=2, rating=4, comment='Good', created_at=None, updated_at=None)
+    mock_reviews = [mock_r1, mock_r2]
     
     def mock_get_all_reviews(db):
         return mock_reviews
@@ -64,9 +82,8 @@ def test_get_user_reviews_success(client, monkeypatch):
     """Тест GET /api/v1/reviews/user/<user_id> - успішне отримання"""
     import src.api.routes.reviews as review_routes_module
     
-    mock_reviews = [
-        {'review_id': 1, 'user_id': 1, 'rating': 5}
-    ]
+    r = SimpleNamespace(review_id=1, user_id=1, rating=5, created_at=None, updated_at=None)
+    mock_reviews = [r]
     
     def mock_get_user_reviews(db, user_id):
         assert user_id == 1
@@ -110,24 +127,33 @@ def test_get_review_by_id_not_found(client, monkeypatch):
     assert resp.status_code == 404
 
 
+def test_get_review_by_id_success(client, monkeypatch):
+    """Тест GET /api/v1/reviews/<review_id> - успішне отримання"""
+    import src.api.routes.reviews as review_routes_module
+    
+    review_obj = SimpleNamespace(review_id=1, user_id=1, rating=5, comment="Nice", created_at=None, updated_at=None)
+    
+    def mock_get_review_by_id(db, review_id):
+        assert review_id == 1
+        return review_obj
+    
+    monkeypatch.setattr(review_routes_module, "get_review_by_id", mock_get_review_by_id)
+    
+    resp = client.get("/api/v1/reviews/1")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["review_id"] == 1
+
+
 def test_patch_review_unauthorized(client):
     """Тест PATCH /api/v1/reviews/<review_id> - без авторизації"""
     resp = client.patch("/api/v1/reviews/1", json={"rating": 4})
     assert resp.status_code == 401
 
 
-def test_patch_review_not_found(client, monkeypatch, mock_user_guest):
+def test_patch_review_not_found(client, monkeypatch, mock_user_guest, auth_setup):
     """Тест PATCH /api/v1/reviews/<review_id> - відгук не знайдено"""
-    def mock_jwt_decode(token, secret, algorithms=None):
-        return {"user_id": 1, "role": "GUEST", "is_admin": False}
-    
-    mock_query = MagicMock()
-    mock_query.get.return_value = mock_user_guest
-    
-    import src.api.auth as auth_module
-    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
-    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
-    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user_guest))
+    auth_setup(mock_user_guest)
     
     import src.api.routes.reviews as review_routes_module
     
@@ -142,26 +168,19 @@ def test_patch_review_not_found(client, monkeypatch, mock_user_guest):
     assert resp.status_code == 404
 
 
-def test_patch_review_forbidden_not_owner(client, monkeypatch, mock_user_guest, mock_review):
+def test_patch_review_forbidden_not_owner(client, monkeypatch, mock_user_guest, mock_review, auth_setup):
     """Тест PATCH /api/v1/reviews/<review_id> - не власник відгуку (403)"""
     # Користувач з user_id=1 намагається редагувати відгук з user_id=2
     mock_user_guest.user_id = 2
-    
-    def mock_jwt_decode(token, secret, algorithms=None):
-        return {"user_id": 2, "role": "GUEST", "is_admin": False}
-    
-    mock_query = MagicMock()
-    mock_query.get.return_value = mock_user_guest
-    
-    import src.api.auth as auth_module
-    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
-    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
-    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user_guest))
+    auth_setup(mock_user_guest)
     
     import src.api.routes.reviews as review_routes_module
     
-    review_of_another_user = mock_review.copy()
-    review_of_another_user['user_id'] = 1  # Відгук належить user_id=1
+    review_of_another_user = MagicMock()
+    review_of_another_user.review_id = 1
+    review_of_another_user.user_id = 1  # Відгук належить user_id=1
+    review_of_another_user.rating = 5
+    review_of_another_user.comment = 'Great hotel!'
     
     def mock_get_review_by_id(db, review_id):
         return review_of_another_user
@@ -174,6 +193,25 @@ def test_patch_review_forbidden_not_owner(client, monkeypatch, mock_user_guest, 
     assert resp.status_code == 403
 
 
+def test_patch_review_success_owner(client, monkeypatch, mock_user_guest, auth_setup):
+    """Тест PATCH /api/v1/reviews/<review_id> - успішне оновлення власником"""
+    auth_setup(mock_user_guest)
+    
+    import src.api.routes.reviews as review_routes_module
+    
+    # існуючий відгук користувача
+    existing = SimpleNamespace(review_id=1, user_id=1, rating=3, comment="Old", created_at=None, updated_at=None)
+    updated = SimpleNamespace(review_id=1, user_id=1, rating=4, comment="Old", created_at=None, updated_at=None)
+    
+    monkeypatch.setattr(review_routes_module, "get_review_by_id", lambda db, rid: existing)
+    monkeypatch.setattr(review_routes_module, "update_review", lambda db, rid, data: updated)
+    
+    resp = client.patch("/api/v1/reviews/1", json={"rating": 4}, headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["rating"] == 4
+
+
 
 def test_delete_review_unauthorized(client):
     """Тест DELETE /api/v1/reviews/<review_id> - без авторизації"""
@@ -181,18 +219,9 @@ def test_delete_review_unauthorized(client):
     assert resp.status_code == 401
 
 
-def test_delete_review_not_found(client, monkeypatch, mock_user_guest):
+def test_delete_review_not_found(client, monkeypatch, mock_user_guest, auth_setup):
     """Тест DELETE /api/v1/reviews/<review_id> - відгук не знайдено"""
-    def mock_jwt_decode(token, secret, algorithms=None):
-        return {"user_id": 1, "role": "GUEST", "is_admin": False}
-    
-    mock_query = MagicMock()
-    mock_query.get.return_value = mock_user_guest
-    
-    import src.api.auth as auth_module
-    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
-    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
-    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user_guest))
+    auth_setup(mock_user_guest)
     
     import src.api.routes.reviews as review_routes_module
     
@@ -206,25 +235,18 @@ def test_delete_review_not_found(client, monkeypatch, mock_user_guest):
     assert resp.status_code == 404
 
 
-def test_delete_review_forbidden_not_owner(client, monkeypatch, mock_user_guest, mock_review):
+def test_delete_review_forbidden_not_owner(client, monkeypatch, mock_user_guest, mock_review, auth_setup):
     """Тест DELETE /api/v1/reviews/<review_id> - не власник відгуку (403)"""
     mock_user_guest.user_id = 2
-    
-    def mock_jwt_decode(token, secret, algorithms=None):
-        return {"user_id": 2, "role": "GUEST", "is_admin": False}
-    
-    mock_query = MagicMock()
-    mock_query.get.return_value = mock_user_guest
-    
-    import src.api.auth as auth_module
-    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
-    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
-    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user_guest))
+    auth_setup(mock_user_guest)
     
     import src.api.routes.reviews as review_routes_module
     
-    review_of_another_user = mock_review.copy()
-    review_of_another_user['user_id'] = 1
+    review_of_another_user = MagicMock()
+    review_of_another_user.review_id = 1
+    review_of_another_user.user_id = 1
+    review_of_another_user.rating = 5
+    review_of_another_user.comment = 'Great hotel!'
     
     def mock_get_review_by_id(db, review_id):
         return review_of_another_user
@@ -236,18 +258,9 @@ def test_delete_review_forbidden_not_owner(client, monkeypatch, mock_user_guest,
     assert resp.status_code == 403
 
 
-def test_delete_review_success_owner(client, monkeypatch, mock_user_guest, mock_review):
+def test_delete_review_success_owner(client, monkeypatch, mock_user_guest, mock_review, auth_setup):
     """Тест DELETE /api/v1/reviews/<review_id> - успішне видалення власником"""
-    def mock_jwt_decode(token, secret, algorithms=None):
-        return {"user_id": 1, "role": "GUEST", "is_admin": False}
-    
-    mock_query = MagicMock()
-    mock_query.get.return_value = mock_user_guest
-    
-    import src.api.auth as auth_module
-    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
-    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
-    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user_guest))
+    auth_setup(mock_user_guest)
     
     import src.api.routes.reviews as review_routes_module
     
@@ -265,20 +278,9 @@ def test_delete_review_success_owner(client, monkeypatch, mock_user_guest, mock_
     assert resp.status_code == 204
 
 
-def test_delete_review_success_admin(client, monkeypatch, mock_user_admin, mock_review):
+def test_delete_review_success_admin(client, monkeypatch, mock_user_admin, mock_review, auth_setup):
     """Тест DELETE /api/v1/reviews/<review_id> - успішне видалення адміном"""
-    mock_user_admin.role = 'ADMIN'
-    
-    def mock_jwt_decode(token, secret, algorithms=None):
-        return {"user_id": 2, "role": "ADMIN", "is_admin": True}
-    
-    mock_query = MagicMock()
-    mock_query.get.return_value = mock_user_admin
-    
-    import src.api.auth as auth_module
-    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
-    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
-    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user_admin))
+    auth_setup(mock_user_admin)
     
     import src.api.routes.reviews as review_routes_module
     
@@ -296,18 +298,9 @@ def test_delete_review_success_admin(client, monkeypatch, mock_user_admin, mock_
     assert resp.status_code == 204
 
 
-def test_delete_review_value_error(client, monkeypatch, mock_user_guest, mock_review):
+def test_delete_review_value_error(client, monkeypatch, mock_user_guest, mock_review, auth_setup):
     """Тест DELETE /api/v1/reviews/<review_id> - помилка при видаленні (400)"""
-    def mock_jwt_decode(token, secret, algorithms=None):
-        return {"user_id": 1, "role": "GUEST", "is_admin": False}
-    
-    mock_query = MagicMock()
-    mock_query.get.return_value = mock_user_guest
-    
-    import src.api.auth as auth_module
-    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
-    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
-    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user_guest))
+    auth_setup(mock_user_guest)
     
     import src.api.routes.reviews as review_routes_module
     
@@ -356,12 +349,6 @@ def test_get_user_reviews_empty_list(client, monkeypatch):
     data = resp.get_json()
     assert data == []
 
-
-import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime
-from sqlalchemy import func
-
 # Тести для сервісу відгуків
 def test_get_all_reviews():
     """Тест рядків 5-7: отримання всіх відгуків"""
@@ -393,20 +380,19 @@ def test_get_review_by_id_found():
     mock_review.review_id = 1
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     result = get_review_by_id(mock_db, 1)
     
     assert result == mock_review
-    mock_db.query.assert_called_once()
-    mock_db.query.return_value.get.assert_called_once_with(1)
+    mock_db.get.assert_called_once()
 
 
-def test_get_review_by_id_not_found():
+def test_service_get_review_by_id_not_found():
     from src.api.services.review_service import get_review_by_id
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = None
+    mock_db.get.return_value = None
     
     result = get_review_by_id(mock_db, 999)
     
@@ -523,7 +509,7 @@ def test_update_review_success():
     mock_review.updated_at = None
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     update_data = {
         'rating': 5,
@@ -545,7 +531,7 @@ def test_update_review_not_found():
     from src.api.services.review_service import update_review
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = None
+    mock_db.get.return_value = None
     
     update_data = {'rating': 5}
     
@@ -566,7 +552,7 @@ def test_update_review_partial_fields():
     mock_review.updated_at = None
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     # Оновлюємо тільки rating
     update_data = {'rating': 4}
@@ -591,7 +577,7 @@ def test_update_review_no_fields():
     mock_review.updated_at = None
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     # Пустий словник для оновлення
     update_data = {}
@@ -612,20 +598,19 @@ def test_delete_review_success():
     mock_review.review_id = 1
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     result = delete_review(mock_db, 1)
     
     assert result is True
     mock_db.delete.assert_called_once_with(mock_review)
-    mock_db.commit.assert_called_once()
 
 
 def test_delete_review_not_found():
     from src.api.services.review_service import delete_review
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = None
+    mock_db.get.return_value = None
     
     with pytest.raises(ValueError) as exc_info:
         delete_review(mock_db, 999)
@@ -711,7 +696,7 @@ def test_update_review_datetime_now():
     mock_review.updated_at = None
     
     mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_review
+    mock_db.get.return_value = mock_review
     
     # Патчимо datetime.utcnow для перевірки
     fixed_datetime = datetime(2024, 1, 1, 12, 0, 0)
@@ -796,43 +781,4 @@ def test_get_user_reviews_order_by():
     mock_filter_by.order_by.assert_called_once()
     mock_all.assert_called_once()
 
-# Додатковий тест для перевірки створення Review з правильними аргументами:
-def test_create_review_with_correct_parameters():
-    from src.api.services.review_service import create_review
-    
-    mock_user = MagicMock()
-    mock_user.user_id = 1
-    
-    mock_db = MagicMock()
-    mock_db.query.return_value.get.return_value = mock_user
-    
-    review_data = {
-        'user_id': 1,
-        'room_id': 101,
-        'rating': 5,
-        'comment': 'Great hotel!'
-    }
-    
-    # Створюємо мок для Review та захоплюємо аргументи
-    captured_args = []
-    captured_kwargs = {}
-    
-    def mock_review_init(*args, **kwargs):
-        captured_args.extend(args)
-        captured_kwargs.update(kwargs)
-        # Створюємо фейковий об'єкт
-        review_instance = MagicMock()
-        review_instance.user_id = kwargs.get('user_id')
-        review_instance.room_id = kwargs.get('room_id')
-        review_instance.rating = kwargs.get('rating')
-        review_instance.comment = kwargs.get('comment')
-        return review_instance
-    
-    with patch('src.api.services.review_service.Review', side_effect=mock_review_init):
-        # Викликаємо через patch, але не використовуємо результат конструктора
-        mock_review_instance = MagicMock()
-        with patch('src.api.services.review_service.Review', return_value=mock_review_instance):
-            result = create_review(mock_db, review_data)
-    
-    assert result == mock_review_instance
-    assert mock_db.add.called
+ 

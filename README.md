@@ -1,6 +1,7 @@
 # HelloBugs
 [![CI Test](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml/badge.svg?branch=main)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/ci_test.yml)
 [![CI/CD Staging](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml/badge.svg)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/flask-api-docker.yml)
+[![Production Deploy](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/production.yml/badge.svg)](https://github.com/ukma-cs-ssdm-2025/HelloBugs/actions/workflows/production.yml)
 [![coverage](https://codecov.io/github/ukma-cs-ssdm-2025/hellobugs/graph/badge.svg?token=JLC4ED2WR6)](https://codecov.io/github/ukma-cs-ssdm-2025/hellobugs)
 
 
