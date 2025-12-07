@@ -273,3 +273,474 @@ def test_refresh_echoes_role(client, monkeypatch):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data.get("role") == "STAFF"
+
+
+def test_register_invalid_email_format(client):
+    resp = client.post("/api/v1/auth/register", json={
+        "email": "notanemail",  # без @
+        "password": "pass1234",
+        "first_name": "Alice",
+        "last_name": "Tester",
+        "phone": "+380661234567",
+    })
+    assert resp.status_code == 400
+    assert "Invalid email format" in resp.get_json()["message"]
+
+
+def test_register_password_too_short(client):
+    resp = client.post("/api/v1/auth/register", json={
+        "email": "test@example.com",
+        "password": "12345",  # менше 6 символів
+        "first_name": "Alice",
+        "last_name": "Tester",
+        "phone": "+380661234567",
+    })
+    assert resp.status_code == 400
+    assert "Password must be at least 6 characters" in resp.get_json()["message"]
+
+
+def test_register_upgrades_guest_user(client, monkeypatch):
+    email = _unique_email()
+    
+    mock_guest = MagicMock()
+    mock_guest.user_id = 100
+    mock_guest.email = email
+    mock_guest.is_registered = False
+    mock_guest.role = UserRole.GUEST
+    
+    mock_upgraded = MagicMock()
+    mock_upgraded.user_id = 100
+    mock_upgraded.email = email
+    mock_upgraded.is_registered = True
+    mock_upgraded.to_dict = lambda: {"user_id": 100, "email": email}
+    mock_upgraded.generate_auth_token_for_user = lambda: "upgraded_token"
+    
+    def mock_get_user_by_email(db, email):
+        return mock_guest
+    
+    def mock_update_user_partial(db, user_id, user_data):
+        return mock_upgraded
+    
+    def mock_generate_token(user):
+        return "upgraded_token"
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    monkeypatch.setattr(auth_routes_module, "get_user_by_email", mock_get_user_by_email)
+    monkeypatch.setattr(auth_routes_module, "update_user_partial", mock_update_user_partial)
+    monkeypatch.setattr(auth_routes_module, "generate_auth_token_for_user", mock_generate_token)
+    
+    resp = client.post("/api/v1/auth/register", json={
+        "email": email,
+        "password": "pass1234",
+        "first_name": "Alice",
+        "last_name": "Tester",
+        "phone": "+380661234567",
+    })
+    assert resp.status_code == 201
+    assert "token" in resp.get_json()
+
+
+def test_register_integrity_error(client, monkeypatch):
+    email = _unique_email()
+    
+    def mock_get_user_by_email(db, email):
+        return None
+    
+    def mock_create_user(db, user_data, via_booking):
+        from sqlalchemy.exc import IntegrityError
+        raise IntegrityError("duplicate key", None, None)
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    monkeypatch.setattr(auth_routes_module, "get_user_by_email", mock_get_user_by_email)
+    monkeypatch.setattr(auth_routes_module, "create_user", mock_create_user)
+    
+    resp = client.post("/api/v1/auth/register", json={
+        "email": email,
+        "password": "pass1234",
+        "first_name": "Alice",
+        "last_name": "Tester",
+        "phone": "+380661234567",
+    })
+    assert resp.status_code == 409
+    assert "already exists" in resp.get_json()["message"]
+
+
+def test_register_value_error(client, monkeypatch):
+    email = _unique_email()
+    
+    def mock_get_user_by_email(db, email):
+        return None
+    
+    def mock_create_user(db, user_data, via_booking):
+        raise ValueError("Invalid data")
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    monkeypatch.setattr(auth_routes_module, "get_user_by_email", mock_get_user_by_email)
+    monkeypatch.setattr(auth_routes_module, "create_user", mock_create_user)
+    
+    resp = client.post("/api/v1/auth/register", json={
+        "email": email,
+        "password": "pass1234",
+        "first_name": "Alice",
+        "last_name": "Tester",
+        "phone": "+380661234567",
+    })
+    assert resp.status_code == 400
+    assert "Invalid data" in resp.get_json()["message"]
+
+
+def test_register_sqlalchemy_error(client, monkeypatch):
+    email = _unique_email()
+    
+    def mock_get_user_by_email(db, email):
+        return None
+    
+    def mock_create_user(db, user_data, via_booking):
+        from sqlalchemy.exc import SQLAlchemyError
+        raise SQLAlchemyError("Database error")
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    monkeypatch.setattr(auth_routes_module, "get_user_by_email", mock_get_user_by_email)
+    monkeypatch.setattr(auth_routes_module, "create_user", mock_create_user)
+    
+    resp = client.post("/api/v1/auth/register", json={
+        "email": email,
+        "password": "pass1234",
+        "first_name": "Alice",
+        "last_name": "Tester",
+        "phone": "+380661234567",
+    })
+    assert resp.status_code == 500
+    assert "Database error" in resp.get_json()["message"]
+
+
+def test_register_unexpected_error(client, monkeypatch):
+    email = _unique_email()
+    
+    def mock_get_user_by_email(db, email):
+        return None
+    
+    def mock_create_user(db, user_data, via_booking):
+        raise Exception("Unexpected error")
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    monkeypatch.setattr(auth_routes_module, "get_user_by_email", mock_get_user_by_email)
+    monkeypatch.setattr(auth_routes_module, "create_user", mock_create_user)
+    
+    resp = client.post("/api/v1/auth/register", json={
+        "email": email,
+        "password": "pass1234",
+        "first_name": "Alice",
+        "last_name": "Tester",
+        "phone": "+380661234567",
+    })
+    assert resp.status_code == 500
+    assert "unexpected error" in resp.get_json()["message"].lower()
+
+def test_create_admin_unauthorized(client):
+    resp = client.post("/api/v1/auth/create-admin")
+    assert resp.status_code == 401
+
+
+def test_create_admin_forbidden_non_admin(client, monkeypatch):
+    mock_user = MagicMock()
+    mock_user.is_admin = False
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "GUEST", "is_admin": False}
+    
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_user
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user))
+    
+    resp = client.post("/api/v1/auth/create-admin", headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 403
+
+
+def test_create_admin_missing_json(client, monkeypatch):
+    mock_user = MagicMock()
+    mock_user.is_admin = True
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "ADMIN", "is_admin": True}
+    
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_user
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user))
+    
+    resp = client.post("/api/v1/auth/create-admin", headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 400
+
+
+def test_create_admin_missing_fields(client, monkeypatch):
+    mock_user = MagicMock()
+    mock_user.is_admin = True
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "ADMIN", "is_admin": True}
+    
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_user
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user))
+    
+    resp = client.post("/api/v1/auth/create-admin", 
+                      json={"email": "admin@example.com"},
+                      headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 400
+
+
+def test_create_admin_email_exists(client, monkeypatch):
+    mock_admin = MagicMock()
+    mock_admin.is_admin = True
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "ADMIN", "is_admin": True}
+    
+    mock_existing_user = MagicMock()
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_admin
+    mock_query.filter_by.return_value.first.return_value = mock_existing_user
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_admin))
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    mock_db = MagicMock()
+    mock_db.query.return_value.filter_by.return_value.first.return_value = mock_existing_user
+    monkeypatch.setattr(auth_routes_module, "db", mock_db)
+    
+    resp = client.post("/api/v1/auth/create-admin", 
+                      json={
+                          "email": "existing@example.com",
+                          "password": "pass1234",
+                          "first_name": "Admin",
+                          "last_name": "User",
+                          "phone": "+380661234567"
+                      },
+                      headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 400
+
+
+def test_create_admin_success(client, monkeypatch):
+    mock_admin = MagicMock()
+    mock_admin.is_admin = True
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "ADMIN", "is_admin": True}
+    
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_admin
+    mock_query.filter_by.return_value.first.return_value = None
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_admin))
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    mock_db = MagicMock()
+    mock_db.query.return_value.filter_by.return_value.first.return_value = None
+    monkeypatch.setattr(auth_routes_module, "db", mock_db)
+    
+    resp = client.post("/api/v1/auth/create-admin", 
+                      json={
+                          "email": "newadmin@example.com",
+                          "password": "pass1234",
+                          "first_name": "New",
+                          "last_name": "Admin",
+                          "phone": "+380661234567"
+                      },
+                      headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 201
+
+
+def test_create_admin_database_error(client, monkeypatch):
+    mock_admin = MagicMock()
+    mock_admin.is_admin = True
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "ADMIN", "is_admin": True}
+    
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_admin
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_admin))
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    mock_db = MagicMock()
+    mock_db.query.return_value.filter_by.return_value.first.return_value = None
+    mock_db.add.side_effect = Exception("Database error")
+    monkeypatch.setattr(auth_routes_module, "db", mock_db)
+    
+    resp = client.post("/api/v1/auth/create-admin", 
+                      json={
+                          "email": "newadmin@example.com",
+                          "password": "pass1234",
+                          "first_name": "New",
+                          "last_name": "Admin",
+                          "phone": "+380661234567"
+                      },
+                      headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 500
+
+
+def test_create_staff_unauthorized(client):
+    resp = client.post("/api/v1/auth/create-staff")
+    assert resp.status_code == 401
+
+
+def test_create_staff_forbidden_non_admin(client, monkeypatch):
+    mock_user = MagicMock()
+    mock_user.is_admin = False
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "GUEST", "is_admin": False}
+    
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_user
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_user))
+    
+    resp = client.post("/api/v1/auth/create-staff", 
+                      json={},
+                      headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 403
+
+
+def test_create_staff_missing_fields(client, monkeypatch):
+    mock_admin = MagicMock()
+    mock_admin.is_admin = True
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "ADMIN", "is_admin": True}
+    
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_admin
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_admin))
+    
+    resp = client.post("/api/v1/auth/create-staff", 
+                      json={"email": "staff@example.com"},
+                      headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 400
+
+
+def test_create_staff_email_exists(client, monkeypatch):
+    mock_admin = MagicMock()
+    mock_admin.is_admin = True
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "ADMIN", "is_admin": True}
+    
+    mock_existing_user = MagicMock()
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_admin
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_admin))
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    mock_db = MagicMock()
+    mock_db.query.return_value.filter_by.return_value.first.return_value = mock_existing_user
+    monkeypatch.setattr(auth_routes_module, "db", mock_db)
+    
+    resp = client.post("/api/v1/auth/create-staff", 
+                      json={
+                          "email": "existing@example.com",
+                          "password": "pass1234",
+                          "first_name": "Staff",
+                          "last_name": "User",
+                          "phone": "+380661234567"
+                      },
+                      headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 400
+
+
+def test_create_staff_success(client, monkeypatch):
+    mock_admin = MagicMock()
+    mock_admin.is_admin = True
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "ADMIN", "is_admin": True}
+    
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_admin
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_admin))
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    mock_db = MagicMock()
+    mock_db.query.return_value.filter_by.return_value.first.return_value = None
+    monkeypatch.setattr(auth_routes_module, "db", mock_db)
+    
+    resp = client.post("/api/v1/auth/create-staff", 
+                      json={
+                          "email": "newstaff@example.com",
+                          "password": "pass1234",
+                          "first_name": "New",
+                          "last_name": "Staff",
+                          "phone": "+380661234567"
+                      },
+                      headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 201
+
+
+def test_create_staff_database_error(client, monkeypatch):
+    mock_admin = MagicMock()
+    mock_admin.is_admin = True
+    
+    def mock_jwt_decode(token, secret, algorithms=None):
+        return {"user_id": 1, "role": "ADMIN", "is_admin": True}
+    
+    mock_query = MagicMock()
+    mock_query.get.return_value = mock_admin
+    
+    import src.api.auth as auth_module
+    monkeypatch.setattr(auth_module.jwt, "decode", mock_jwt_decode)
+    monkeypatch.setattr(auth_module, "db", MagicMock(query=lambda x: mock_query))
+    monkeypatch.setattr("flask.g", MagicMock(current_user=mock_admin))
+    
+    import src.api.routes.auth_routes as auth_routes_module
+    mock_db = MagicMock()
+    mock_db.query.return_value.filter_by.return_value.first.return_value = None
+    mock_db.add.side_effect = Exception("Database error")
+    monkeypatch.setattr(auth_routes_module, "db", mock_db)
+    
+    resp = client.post("/api/v1/auth/create-staff", 
+                      json={
+                          "email": "newstaff@example.com",
+                          "password": "pass1234",
+                          "first_name": "New",
+                          "last_name": "Staff",
+                          "phone": "+380661234567"
+                      },
+                      headers={"Authorization": "Bearer token"})
+    assert resp.status_code == 500

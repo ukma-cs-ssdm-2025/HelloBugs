@@ -1,6 +1,17 @@
-async function loadBookings(filterStatus = 'all') {
+const BOOKINGS_PAGE_SIZE = 5;
+const bookingsState = {
+    all: [],
+    filtered: [],
+    status: 'all',
+    page: 1,
+    pageSize: BOOKINGS_PAGE_SIZE,
+    isStaffOrAdmin: false
+};
+
+async function loadBookings(filterStatus = bookingsState.status) {
     const container = document.getElementById('bookings-container');
     const emptyState = document.getElementById('empty-state');
+    const pagination = document.getElementById('bookings-pagination');
     const bookingsSection = document.querySelector('.bookings-section'); 
 
     if (!authManager.isAuthenticated()) {
@@ -16,44 +27,37 @@ async function loadBookings(filterStatus = 'all') {
         bookingsSection.style.display = 'block';
     }
 
+    bookingsState.status = filterStatus || 'all';
+    bookingsState.page = 1;
+
     try {
+        container.innerHTML = '<div class="loading">Завантаження бронювань...</div>';
+        
         const response = await fetch('/api/v1/bookings/');
         if (!response.ok) throw new Error('Помилка завантаження');
 
         let bookings = await response.json();
+        bookings = Array.isArray(bookings) ? bookings : [];
 
         const isStaffOrAdmin = authManager.user.role === 'ADMIN' || authManager.user.role === 'STAFF';
+        bookingsState.isStaffOrAdmin = isStaffOrAdmin;
 
         if (!isStaffOrAdmin) {
             bookings = bookings.filter(b => b.user_id === authManager.user.id);
         }
+        
+        bookingsState.all = bookings;
+        bookingsState.filtered = [];
+        bookingsState.page = 1;
 
-        if (filterStatus !== 'all') {
-            bookings = bookings.filter(b => b.status === filterStatus);
-        }
-
-        if (bookings.length === 0) {
-            container.innerHTML = '';
-            emptyState.style.display = 'block';
-            emptyState.innerHTML = `
-                <div class="empty-state">
-                    <h3>Бронювання не знайдені</h3>
-                    <p>${filterStatus !== 'all' ? `Немає бронювань зі статусом "${filterStatus}"` : 'У вас ще немає бронювань'}</p>
-                    ${!isStaffOrAdmin ? `
-                        <button class="btn btn-primary" onclick="document.getElementById('create-booking-btn').click()">
-                            Створити перше бронювання
-                        </button>
-                    ` : ''}
-                </div>
-            `;
-            return;
-        }
-
-        emptyState.style.display = 'none';
-        container.innerHTML = bookings.map(booking => createBookingCard(booking)).join('');
+        applyFiltersAndRender();
     } catch (error) {
         console.error('Error loading bookings:', error);
         container.innerHTML = '<p class="error-message">Помилка завантаження бронювань. Спробуйте пізніше.</p>';
+        if (pagination) {
+            pagination.style.display = 'none';
+            pagination.innerHTML = '';
+        }
     }
 }
 
@@ -140,6 +144,108 @@ function createBookingCard(booking) {
                     </button>
                 `}
             </div>
+        </div>
+    `;
+}
+
+function applyFiltersAndRender() {
+    const container = document.getElementById('bookings-container');
+    const emptyState = document.getElementById('empty-state');
+    const pagination = document.getElementById('bookings-pagination');
+
+    let filtered = [...bookingsState.all];
+    
+    if (bookingsState.status !== 'all') {
+        filtered = filtered.filter(b => b.status === bookingsState.status);
+    }
+
+    bookingsState.filtered = filtered;
+    
+    if (!filtered || filtered.length === 0) {
+        if (container) container.innerHTML = '';
+        renderEmptyState(emptyState, bookingsState.status, bookingsState.isStaffOrAdmin);
+        hidePagination(pagination);
+        return;
+    }
+
+    if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+
+    renderPagedBookings(container, pagination);
+}
+
+function renderPagedBookings(container, pagination) {
+    if (!container) return;
+    
+    const totalItems = bookingsState.filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / bookingsState.pageSize));
+    
+    if (bookingsState.page > totalPages) {
+        bookingsState.page = Math.max(1, totalPages);
+    }
+
+    const start = (bookingsState.page - 1) * bookingsState.pageSize;
+    const end = Math.min(start + bookingsState.pageSize, totalItems);
+    
+    const pageItems = bookingsState.filtered.slice(start, end);
+    
+    container.innerHTML = pageItems.map(createBookingCard).join('');
+    
+    renderPagination(pagination, totalPages);
+}
+
+function renderPagination(paginationEl, totalPages) {
+    if (!paginationEl) return;
+
+    if (totalPages <= 1) {
+        hidePagination(paginationEl);
+        return;
+    }
+
+    paginationEl.style.display = 'flex';
+    const current = bookingsState.page;
+
+    paginationEl.innerHTML = `
+        <button class="page-btn" data-page="${current - 1}" ${current === 1 ? 'disabled' : ''}>Попередня</button>
+        <span class="page-info">Сторінка ${current} з ${totalPages}</span>
+        <button class="page-btn" data-page="${current + 1}" ${current >= totalPages ? 'disabled' : ''}>Наступна</button>
+    `;
+
+    paginationEl.querySelectorAll('button[data-page]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetPage = Number(e.currentTarget.dataset.page);
+            setPage(targetPage);
+        });
+    });
+}
+
+function setPage(targetPage) {
+    const totalPages = Math.max(1, Math.ceil(bookingsState.filtered.length / bookingsState.pageSize));
+    bookingsState.page = Math.min(Math.max(1, targetPage), totalPages);
+    const container = document.getElementById('bookings-container');
+    const pagination = document.getElementById('bookings-pagination');
+    renderPagedBookings(container, pagination);
+}
+
+function hidePagination(paginationEl) {
+    if (!paginationEl) return;
+    paginationEl.style.display = 'none';
+    paginationEl.innerHTML = '';
+}
+
+function renderEmptyState(emptyState, filterStatus, isStaffOrAdmin) {
+    if (!emptyState) return;
+    emptyState.style.display = 'block';
+    emptyState.innerHTML = `
+        <div class="empty-state">
+            <h3>Бронювання не знайдені</h3>
+            <p>${filterStatus !== 'all' ? `Немає бронювань зі статусом "${filterStatus}"` : 'У вас ще немає бронювань'}</p>
+            ${!isStaffOrAdmin ? `
+                <button class="btn btn-primary" onclick="document.getElementById('create-booking-btn').click()">
+                    Створити перше бронювання
+                </button>
+            ` : ''}
         </div>
     `;
 }
@@ -250,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.reset();
     });
 
-    globalThis.addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.style.display = 'none';
             form.reset();
@@ -425,5 +531,7 @@ globalThis.openEditBooking = function(booking) {
 function filterByStatus(status, e) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     e.target.classList.add('active');
-    loadBookings(status);
+    bookingsState.status = status;
+    bookingsState.page = 1;
+    applyFiltersAndRender();
 }

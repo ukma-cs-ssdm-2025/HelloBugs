@@ -4,6 +4,13 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'default-dev-secret-key-4-everyone')
     DATABASE_URL = os.environ.get('DATABASE_URL')
 
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') == 'True'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
+
     if not DATABASE_URL:
         DATABASE_URL = 'postgresql://postgres:password123@db_local:5433/hotel_db'
 
