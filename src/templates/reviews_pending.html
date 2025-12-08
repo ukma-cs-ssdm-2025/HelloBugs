@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Модерація відгуків - Готель Хрещатик{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1 class="page-title">Відгуки на модерації</h1>
+        <p class="page-subtitle">Перевіряйте, що відгук належить гостю з бронюванням цього номера</p>
+    </div>
+</section>
+
+<section class="reviews-section">
+    <div class="container">
+        <div id="pending-reviews" class="reviews-grid">
+            <div class="loading">Завантаження...</div>
+        </div>
+        <div id="no-pending" style="display:none" class="empty-state">
+            <h3>Немає відгуків, що очікують підтвердження</h3>
+        </div>
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/reviews_pending.js') }}"></script>
+{% endblock %}

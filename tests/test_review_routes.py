@@ -61,8 +61,8 @@ def test_get_all_reviews_success(client, monkeypatch):
     """Тест GET /api/v1/reviews/ - успішне отримання всіх відгуків"""
     import src.api.routes.reviews as review_routes_module
     
-    mock_r1 = SimpleNamespace(review_id=1, rating=5, comment='Great!', created_at=None, updated_at=None)
-    mock_r2 = SimpleNamespace(review_id=2, rating=4, comment='Good', created_at=None, updated_at=None)
+    mock_r1 = SimpleNamespace(review_id=1, rating=5, comment='Great!', created_at=None, updated_at=None, is_approved=True)
+    mock_r2 = SimpleNamespace(review_id=2, rating=4, comment='Good', created_at=None, updated_at=None, is_approved=True)
     mock_reviews = [mock_r1, mock_r2]
     
     def mock_get_all_reviews(db):
@@ -131,7 +131,7 @@ def test_get_review_by_id_success(client, monkeypatch):
     """Тест GET /api/v1/reviews/<review_id> - успішне отримання"""
     import src.api.routes.reviews as review_routes_module
     
-    review_obj = SimpleNamespace(review_id=1, user_id=1, rating=5, comment="Nice", created_at=None, updated_at=None)
+    review_obj = SimpleNamespace(review_id=1, user_id=1, rating=5, comment="Nice", created_at=None, updated_at=None, is_approved=True)
     
     def mock_get_review_by_id(db, review_id):
         assert review_id == 1
@@ -143,6 +143,26 @@ def test_get_review_by_id_success(client, monkeypatch):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["review_id"] == 1
+
+
+def test_get_review_by_id_pending_hidden(client, monkeypatch):
+    """Тест GET /api/v1/reviews/<review_id> - незатверджений відгук прихований"""
+    import src.api.routes.reviews as review_routes_module
+    
+    pending_review = SimpleNamespace(
+        review_id=1,
+        user_id=1,
+        rating=5,
+        comment="Hidden",
+        created_at=None,
+        updated_at=None,
+        is_approved=False
+    )
+    
+    monkeypatch.setattr(review_routes_module, "get_review_by_id", lambda db, rid: pending_review)
+    
+    resp = client.get("/api/v1/reviews/1")
+    assert resp.status_code == 404
 
 
 def test_patch_review_unauthorized(client):
@@ -358,8 +378,11 @@ def test_get_all_reviews():
     mock_review2 = MagicMock()
     mock_reviews = [mock_review1, mock_review2]
     
+    mock_filtered = MagicMock()
+    mock_filtered.order_by.return_value.all.return_value = mock_reviews
+
     mock_query = MagicMock()
-    mock_query.order_by.return_value.all.return_value = mock_reviews
+    mock_query.filter.return_value = mock_filtered
     
     mock_db = MagicMock()
     mock_db.query.return_value = mock_query
@@ -369,8 +392,9 @@ def test_get_all_reviews():
     
     assert result == mock_reviews
     mock_db.query.assert_called_once()
-    mock_query.order_by.assert_called_once()
-    mock_query.order_by.return_value.all.assert_called_once()
+    mock_query.filter.assert_called_once()
+    mock_filtered.order_by.assert_called_once()
+    mock_filtered.order_by.return_value.all.assert_called_once()
 
 
 def test_get_review_by_id_found():
@@ -406,8 +430,11 @@ def test_get_user_reviews():
     mock_review2 = MagicMock()
     mock_reviews = [mock_review1, mock_review2]
     
+    mock_filtered = MagicMock()
+    mock_filtered.order_by.return_value.all.return_value = mock_reviews
+
     mock_filter_by = MagicMock()
-    mock_filter_by.order_by.return_value.all.return_value = mock_reviews
+    mock_filter_by.filter.return_value = mock_filtered
     
     mock_query = MagicMock()
     mock_query.filter_by.return_value = mock_filter_by
@@ -419,8 +446,9 @@ def test_get_user_reviews():
     
     assert result == mock_reviews
     mock_query.filter_by.assert_called_once_with(user_id=1)
-    mock_filter_by.order_by.assert_called_once()
-    mock_filter_by.order_by.return_value.all.assert_called_once()
+    mock_filter_by.filter.assert_called_once()
+    mock_filtered.order_by.assert_called_once()
+    mock_filtered.order_by.return_value.all.assert_called_once()
 
 
 def test_create_review_success():
@@ -624,8 +652,11 @@ def test_get_average_rating_with_reviews():
     mock_scalar = MagicMock()
     mock_scalar.return_value = 4.5
     
+    mock_filtered = MagicMock()
+    mock_filtered.scalar = mock_scalar
+
     mock_query = MagicMock()
-    mock_query.scalar = mock_scalar
+    mock_query.filter.return_value = mock_filtered
     
     mock_db = MagicMock()
     mock_db.query.return_value = mock_query
@@ -633,6 +664,7 @@ def test_get_average_rating_with_reviews():
     result = get_average_rating(mock_db)
     
     assert result == 4.5
+    mock_query.filter.assert_called_once()
     mock_scalar.assert_called_once()
 
 
@@ -720,8 +752,11 @@ def test_func_import_in_get_average_rating():
     mock_scalar = MagicMock()
     mock_scalar.return_value = 4.5
     
+    mock_filtered = MagicMock()
+    mock_filtered.scalar = mock_scalar
+
     mock_query = MagicMock()
-    mock_query.scalar = mock_scalar
+    mock_query.filter.return_value = mock_filtered
     
     mock_db = MagicMock()
     mock_db.query.return_value = mock_query
@@ -730,6 +765,7 @@ def test_func_import_in_get_average_rating():
     result = review_service.get_average_rating(mock_db)
     
     assert result == 4.5
+    mock_query.filter.assert_called_once()
     mock_scalar.assert_called_once()
 
 
@@ -741,8 +777,11 @@ def test_get_all_reviews_order_by():
     mock_order_by = MagicMock()
     mock_order_by.all.return_value = mock_reviews
     
+    mock_filtered = MagicMock()
+    mock_filtered.order_by.return_value = mock_order_by
+
     mock_query = MagicMock()
-    mock_query.order_by.return_value = mock_order_by
+    mock_query.filter.return_value = mock_filtered
     
     mock_db = MagicMock()
     mock_db.query.return_value = mock_query
@@ -750,8 +789,9 @@ def test_get_all_reviews_order_by():
     result = get_all_reviews(mock_db)
     
     # Перевіряємо що order_by викликано з правильним аргументом
-    mock_query.order_by.assert_called_once()
-    call_args = mock_query.order_by.call_args[0][0]
+    mock_query.filter.assert_called_once()
+    mock_filtered.order_by.assert_called_once()
+    call_args = mock_filtered.order_by.call_args[0][0]
     # Перевіряємо що викликано Review.created_at.desc()
     assert "Review.created_at.desc()" in str(call_args) or hasattr(call_args, 'desc')
 
@@ -764,11 +804,14 @@ def test_get_user_reviews_order_by():
     mock_all = MagicMock()
     mock_all.return_value = mock_reviews
     
-    mock_order_by = MagicMock()
-    mock_order_by.all = mock_all
+    mock_order_by_source = MagicMock()
+    mock_order_by_source.all = mock_all
+
+    mock_filter = MagicMock()
+    mock_filter.order_by.return_value = mock_order_by_source
     
     mock_filter_by = MagicMock()
-    mock_filter_by.order_by.return_value = mock_order_by
+    mock_filter_by.filter.return_value = mock_filter
     
     mock_query = MagicMock()
     mock_query.filter_by.return_value = mock_filter_by
@@ -778,7 +821,8 @@ def test_get_user_reviews_order_by():
     
     result = get_user_reviews(mock_db, 1)
     
-    mock_filter_by.order_by.assert_called_once()
+    mock_filter_by.filter.assert_called_once()
+    mock_filter.order_by.assert_called_once()
     mock_all.assert_called_once()
 
  
