@@ -66,9 +66,20 @@ function displayRooms(rooms) {
             'DELUXE': 'Делюкс'
         };
         
-        const statusBadge = room.status === 'AVAILABLE' 
-            ? '<span class="status-badge available">Доступний</span>'
-            : '<span class="status-badge occupied">Зайнятий</span>';
+        let statusBadge = '';
+        switch(room.status) {
+            case 'AVAILABLE':
+                statusBadge = '<span class="status-badge available">Доступний</span>';
+                break;
+            case 'OCCUPIED':
+                statusBadge = '<span class="status-badge occupied">Зайнятий</span>';
+                break;
+            case 'MAINTENANCE':
+                statusBadge = '<span class="status-badge maintenance">На обслуговуванні</span>';
+                break;
+            default:
+                statusBadge = `<span class="status-badge">${room.status}</span>`;
+        }
 
         const adminButtons = isAdmin ? `
             <div class="admin-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
