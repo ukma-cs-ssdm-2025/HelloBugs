@@ -256,6 +256,7 @@ def get_current_user():
         'email': g.current_user.email,
         'first_name': g.current_user.first_name,
         'last_name': g.current_user.last_name,
+        'phone': g.current_user.phone,
         'role': role_value,
         'is_admin': is_admin
     })

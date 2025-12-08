@@ -112,6 +112,7 @@ def test_me_authorized(client, monkeypatch):
     mock_user.first_name = "Test"
     mock_user.last_name = "User"
     mock_user.role = UserRole.GUEST
+    mock_user.phone = "+380661234567"  
     mock_query = MagicMock()
     mock_query.get.return_value = mock_user
     import src.api.auth as auth_module
@@ -133,7 +134,8 @@ def test_me_authorized_role_as_string(client, monkeypatch):
     mock_user.email = email
     mock_user.first_name = "Role"
     mock_user.last_name = "String"
-    mock_user.role = "GUEST"  
+    mock_user.role = "GUEST"
+    mock_user.phone = "+380661234567"  
     mock_query = MagicMock()
     mock_query.get.return_value = mock_user
     import src.api.auth as auth_module
