@@ -59,11 +59,14 @@ function showNoRoomSelected() {
 function autofillGuestData() {
     if (window.authManager && authManager.isAuthenticated()) {
         const user = authManager.user;
-        document.getElementById('user_id').value = user.id || '';
-        document.getElementById('guest_email').value = user.email || '';
-        document.getElementById('guest_first_name').value = user.first_name || '';
-        document.getElementById('guest_last_name').value = user.last_name || '';
-        document.getElementById('guest_phone').value = user.phone || '';
+
+        if (user.role === 'GUEST') {
+            document.getElementById('user_id').value = user.id || '';
+            document.getElementById('guest_email').value = user.email || '';
+            document.getElementById('guest_first_name').value = user.first_name || '';
+            document.getElementById('guest_last_name').value = user.last_name || '';
+            document.getElementById('guest_phone').value = user.phone || '';
+        }
     } else {
         const userId = localStorage.getItem('user_id');
         if (!userId) return;

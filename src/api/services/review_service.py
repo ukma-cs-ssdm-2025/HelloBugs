@@ -4,8 +4,13 @@ from datetime import datetime
 
 
 def get_all_reviews(db):
-    """Get all reviews"""
-    reviews = db.query(Review).order_by(Review.created_at.desc()).all()
+    """Get all approved reviews"""
+    reviews = (
+        db.query(Review)
+          .filter(Review.is_approved == True)
+          .order_by(Review.created_at.desc())
+          .all()
+    )
     return reviews
 
 
@@ -17,7 +22,13 @@ def get_review_by_id(db, review_id):
 
 def get_user_reviews(db, user_id):
     """Get all reviews by a specific user"""
-    reviews = db.query(Review).filter_by(user_id=user_id).order_by(Review.created_at.desc()).all()
+    reviews = (
+        db.query(Review)
+          .filter_by(user_id=user_id)
+          .filter(Review.is_approved == True)
+          .order_by(Review.created_at.desc())
+          .all()
+    )
     return reviews
 
 
@@ -31,13 +42,24 @@ def create_review(db, review_data):
         user_id=review_data['user_id'],
         room_id=review_data['room_id'],
         rating=review_data['rating'],
-        comment=review_data.get('comment')
+        comment=review_data.get('comment'),
+        is_approved=False
     )
     
     db.add(new_review)
     db.commit()
     
     return new_review
+
+def approve_review(db, review_id):
+    """Approve a review for public display"""
+    review = db.get(Review, review_id)
+    if not review:
+        raise ValueError(f"Review with ID {review_id} not found")
+    review.is_approved = True
+    review.updated_at = datetime.utcnow()
+    db.commit()
+    return review
 
 
 def update_review(db, review_id, update_data):
@@ -70,7 +92,18 @@ def delete_review(db, review_id):
 
 
 def get_average_rating(db):
-    """Calculate average rating from all reviews"""
+    """Calculate average rating from approved reviews only"""
     from sqlalchemy import func
-    avg_rating = db.query(func.avg(Review.rating)).scalar()
+    avg_rating = db.query(func.avg(Review.rating)).filter(Review.is_approved == True).scalar()
     return round(avg_rating, 1) if avg_rating else 0
+
+
+def get_pending_reviews(db):
+    """Get all reviews that are not yet approved"""
+    reviews = (
+        db.query(Review)
+          .filter(Review.is_approved == False)
+          .order_by(Review.created_at.asc())
+          .all()
+    )
+    return reviews

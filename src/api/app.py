@@ -203,6 +203,11 @@ def reviews_create():
     """Форма створення відгуку"""
     return render_template('review_create.html')
 
+@app.route('/reviews/pending')
+def reviews_pending_page():
+    """Сторінка модерації відгуків для персоналу"""
+    return render_template('reviews_pending.html')
+
 
 if __name__ == "__main__":
     create_tables()

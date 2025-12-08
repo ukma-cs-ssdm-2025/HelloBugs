@@ -1836,6 +1836,11 @@ border-color: #B8963E;
     color: white;
 }
 
+.status-badge.maintenance {
+    background-color: #ffc107; 
+    color: #212529; 
+}
+
 .room-type {
     color: #B8963E;
     font-weight: 600;

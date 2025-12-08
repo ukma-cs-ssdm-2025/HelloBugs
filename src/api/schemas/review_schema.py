@@ -35,6 +35,7 @@ class ReviewOutSchema(Schema):
     room_id = fields.Integer(dump_only=True)
     rating = fields.Integer()
     comment = fields.String(allow_none=True)
+    is_approved = fields.Boolean(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
     user = fields.Nested(
