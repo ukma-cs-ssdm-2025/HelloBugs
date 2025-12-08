@@ -93,6 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(form);
+
+        const rawRoomId = formData.get('room_id');
+
+        if (!rawRoomId || isNaN(Number.parseInt(rawRoomId))) {
+            alert('Будь ласка, оберіть номер перед бронюванням.');
+            return;
+        }
+
         const data = {
             room_id: Number.parseInt(formData.get('room_id')),
             check_in_date: formData.get('check_in_date'),
