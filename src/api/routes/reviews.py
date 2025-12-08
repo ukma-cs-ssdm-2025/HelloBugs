@@ -1,7 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from flask import g
-from src.api.auth import token_required
+from src.api.auth import token_required, staff_required
 from src.api.schemas.review_schema import (
     ReviewInSchema, ReviewOutSchema, ReviewPatchSchema
 )
@@ -12,7 +12,8 @@ from src.api.services.review_service import (
     create_review,
     update_review,
     delete_review,
-    get_average_rating
+    get_average_rating,
+    get_pending_reviews
 )
 from src.api.db import db
 from src.api.models.user_model import UserRole
@@ -59,6 +60,52 @@ class ReviewList(MethodView):
                 abort(400, message=str(e))
 
 
+@blp.route("/<int:review_id>/approve")
+class ReviewApproval(MethodView):
+
+    @blp.response(200, ReviewOutSchema, description="Review approved successfully")
+    @blp.alt_response(401, description="Authentication required")
+    @blp.alt_response(403, description="Staff/Admin access required or booking not found")
+    @blp.alt_response(404, description="Review not found")
+    @token_required
+    @staff_required
+    def post(self, review_id):
+        """Approve review after verifying the user had a booking for the room"""
+        try:
+            review = get_review_by_id(db, review_id)
+            if not review:
+                abort(404, message=f"Review with ID {review_id} not found")
+
+            # Verify booking exists for this user and room (not cancelled)
+            from src.api.models.booking_model import Booking, BookingStatus
+            booking = (
+                db.query(Booking)
+                  .filter(Booking.user_id == review.user_id)
+                  .filter(Booking.room_id == review.room_id)
+                  .filter(Booking.status != BookingStatus.CANCELLED)
+                  .first()
+            )
+            if not booking:
+                abort(403, message="Неможливо підтвердити відгук без наявного бронювання для цього номера")
+
+            from src.api.services.review_service import approve_review
+            approved = approve_review(db, review_id)
+            return approved
+        except ValueError as e:
+            abort(400, message=str(e))
+
+
+@blp.route("/pending")
+class PendingReviews(MethodView):
+
+    @blp.response(200, ReviewOutSchema(many=True), description="Pending reviews (staff only)")
+    @blp.alt_response(401, description="Authentication required")
+    @blp.alt_response(403, description="Staff/Admin access required")
+    @token_required
+    @staff_required
+    def get(self):
+        """Get list of reviews awaiting approval"""
+        return get_pending_reviews(db)
 @blp.route("/user/<int:user_id>")
 class UserReviews(MethodView):
 
@@ -89,6 +136,13 @@ class ReviewResource(MethodView):
         review = get_review_by_id(db, review_id)
         if not review:
             abort(404, message=f"Review with ID {review_id} not found")
+        # Незатверджені відгуки не повинні бути видимими публічно
+        current_user = getattr(g, "current_user", None)
+        user_role = getattr(current_user, "role", None)
+        is_staff = user_role in (UserRole.STAFF, UserRole.ADMIN)
+        is_owner = current_user and getattr(current_user, "user_id", None) == review.user_id
+        if not review.is_approved and not (is_staff or is_owner):
+            abort(404, message="Review is awaiting approval")
         return review
 
     @blp.arguments(ReviewPatchSchema)
