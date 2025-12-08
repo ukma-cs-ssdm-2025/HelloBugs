@@ -59,12 +59,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="review-comment">${r.comment || ''}</div>
       <div class="review-actions">
         <button class="btn btn-primary" data-id="${r.review_id}">Підтвердити</button>
+        <button class="btn btn-secondary" data-id="${r.review_id}" data-action="reject">Скасувати</button>
       </div>
     `;
 
-    card.querySelector('button').addEventListener('click', async (e) => {
+    const approveBtn = card.querySelector('button.btn.btn-primary');
+    const rejectBtn = card.querySelector('button[data-action="reject"]');
+
+    approveBtn.addEventListener('click', async (e) => {
       const id = e.currentTarget.getAttribute('data-id');
-      e.currentTarget.disabled = true;
+      approveBtn.disabled = true;
+      rejectBtn.disabled = true;
       try {
         const resp = await fetch(`/api/v1/reviews/${id}/approve`, {
           method: 'POST',
@@ -79,12 +84,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
           const err = await resp.json().catch(() => ({}));
           alert(err.message || 'Не вдалося підтвердити відгук');
-          e.currentTarget.disabled = false;
+          approveBtn.disabled = false;
+          rejectBtn.disabled = false;
         }
       } catch (networkErr) {
-        // Уникаємо дублювання алертів: лог і розблокувати кнопку
         console.error('Network error approving review', networkErr);
-        e.currentTarget.disabled = false;
+        approveBtn.disabled = false;
+        rejectBtn.disabled = false;
+      }
+    });
+
+    rejectBtn.addEventListener('click', async (e) => {
+      const id = e.currentTarget.getAttribute('data-id');
+      approveBtn.disabled = true;
+      rejectBtn.disabled = true;
+      try {
+        const resp = await fetch(`/api/v1/reviews/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (resp.status === 204 || resp.ok) {
+          card.remove();
+          if (!container.children.length) {
+            container.style.display = 'none';
+            empty.style.display = 'flex';
+          }
+        } else {
+          const err = await resp.json().catch(() => ({}));
+          alert(err.message || 'Не вдалося скасувати відгук');
+          approveBtn.disabled = false;
+          rejectBtn.disabled = false;
+        }
+      } catch (networkErr) {
+        console.error('Network error rejecting review', networkErr);
+        approveBtn.disabled = false;
+        rejectBtn.disabled = false;
       }
     });
 
