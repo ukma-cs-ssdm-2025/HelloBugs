@@ -96,7 +96,7 @@ function createReviewCard(review) {
         : 'Анонімний користувач';
     
     const roomInfo = review.room 
-        ? `<span class="review-room">Номер ${review.room.room_number} - ${review.room.room_type}</span>`
+        ? `<span class="review-room">Номер ${review.room.room_number}</span>`
         : '<span class="review-room">Номер не вказано</span>';
     
     card.innerHTML = `
