@@ -48,7 +48,7 @@
                         <a href="/reviews" class="nav-link">♦ ВІДГУКИ</a>
                         <ul class="dropdown-menu">
                             <li><a href="/reviews">♦ Переглянути відгуки</a></li>
-                            <li class="auth-only" style="display: none;"><a href="/reviews/create">♦ Створити відгук</a></li>
+                            <li class="guest-only" style="display: none;"><a href="/reviews/create">♦ Створити відгук</a></li>
                         </ul>
                     </li>
                     <li class="nav-item admin-only" style="display: none;">
@@ -149,11 +149,17 @@
                 if (response.ok) {
                     const user = await response.json();
                     
-                    // Показуємо елементи для авторизованих користувачів
-                    const authOnlyElements = document.querySelectorAll('.auth-only');
-                    authOnlyElements.forEach(element => {
-                        element.style.display = 'block';
-                    });
+                    // Показуємо елементи лише для гостей (не STAFF/ADMIN)
+                    const guestOnlyElements = document.querySelectorAll('.guest-only');
+                    if (user.role === 'GUEST') {
+                        guestOnlyElements.forEach(element => {
+                            element.style.display = 'block';
+                        });
+                    } else {
+                        guestOnlyElements.forEach(element => {
+                            element.style.display = 'none';
+                        });
+                    }
                     
                     // Показуємо кнопку "Користувачі" тільки для адміністраторів
                     if (user.role === 'ADMIN') {

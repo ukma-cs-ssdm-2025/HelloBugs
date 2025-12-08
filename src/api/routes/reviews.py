@@ -44,6 +44,9 @@ class ReviewList(MethodView):
     def post(self, new_review):
         """Create a new review (requires authentication)"""
         current_user = g.current_user
+        from src.api.models.user_model import UserRole
+        if getattr(current_user, 'role', None) != UserRole.GUEST:
+            abort(403, message="Лише гості можуть створювати відгуки")
         new_review['user_id'] = current_user.user_id
 
         try:

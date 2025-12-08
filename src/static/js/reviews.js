@@ -22,11 +22,23 @@ async function loadReviews() {
             container.style.display = 'none';
             emptyState.style.display = 'flex';
             
-            // Показуємо кнопку "Залишити відгук" для авторизованих користувачів
+            // Показуємо кнопку "Залишити відгук" лише для гостей (GUEST)
             const token = localStorage.getItem('access_token');
             if (token) {
-                const authOnlyElements = emptyState.querySelectorAll('.auth-only');
-                authOnlyElements.forEach(el => el.style.display = 'inline-block');
+                try {
+                    const meRes = await fetch('/api/v1/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (meRes.ok) {
+                        const user = await meRes.json();
+                        const guestOnlyElements = emptyState.querySelectorAll('.guest-only');
+                        if (user.role === 'GUEST') {
+                            guestOnlyElements.forEach(el => el.style.display = 'inline-block');
+                        } else {
+                            guestOnlyElements.forEach(el => el.style.display = 'none');
+                        }
+                    }
+                } catch (_) {
+                    // ignore
+                }
             }
         } else {
             container.innerHTML = '';
